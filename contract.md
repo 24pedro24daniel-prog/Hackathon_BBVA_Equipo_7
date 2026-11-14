@@ -54,13 +54,15 @@
 | 404 | `NO_ENCONTRADO` | Empresa, borrador o registro inexistente |
 | 409 | `CONFLICTO` | Borrador ya confirmado / idempotency key repetida con otro payload |
 | 422 | `NO_INTERPRETABLE` | El LLM/OCR no pudo extraer un movimiento |
-| 503 | `SERVICIO_NO_DISPONIBLE` | LLM o Whisper caídos (se responde con fallback cuando existe) |
+| 503 | `SERVICIO_NO_DISPONIBLE` | LLM, Whisper o R2 (almacenamiento de media) caídos o sin configurar (se responde con fallback cuando existe) |
 
 ### Enums compartidos
 
 ```text
-tipo_movimiento : venta | compra | retiro_personal | gasto_negocio | cobro_fiado | pago_proveedor | pago_impuesto | ingreso_billetera
-metodo_pago     : efectivo | billetera_digital | transferencia | tarjeta | credito
+tipo_movimiento : venta | cobro_fiado | prestamo_recibido | otro_ingreso                                        (ingresos)
+                | compra | gasto_negocio | retiro_personal | pago_proveedor | pago_prestamo | pago_impuesto   (egresos)
+metodo_pago     : efectivo | billetera_digital | transferencia | tarjeta | credito   (credito = fiado o pedido a crédito: no mueve caja)
+tipo_deuda      : proveedor | prestamo_informal | familiar | entidad_financiera
 canal           : voz | texto | foto | billetera_api | manual
 estado_cuenta   : pendiente | por_vencer | vencido | pagado
 nivel_riesgo    : bajo | medio | alto
@@ -73,6 +75,48 @@ tipo_alerta     : faltante_caja | pedido_excesivo | retiro_excesivo | obligacion
 ## 1. F1 — Ingesta (registro multicanal)
 
 Flujo: **interpretar → (aclarar) → confirmar → guardar**. Nada se guarda sin confirmación, salvo `billetera_api`.
+
+### 1.0 `POST /media/subidas` (subir audio o foto a Cloudflare R2)
+Pide una **URL prefirmada** para subir el archivo directo a R2 (el archivo no pasa por el backend). Requiere `X-API-Key`.
+
+Flujo de 3 pasos:
+1. `POST /media/subidas` → devuelve `upload_url` y el `media_url` definitivo (`r2://…`).
+2. El cliente hace `PUT` del archivo a `upload_url` con el header `Content-Type` exacto de `headers_requeridos`
+   (sin `X-API-Key` ni otros headers; R2 responde `200` sin cuerpo).
+3. Llama a `/ingesta/interpretar` (canal `voz`), `/ingesta/cuaderno` o `/webhooks/whatsapp` con `media_url: "r2://…"`.
+
+**Request**
+```json
+{ "empresa_id": "EMP-0001", "tipo": "audio", "content_type": "audio/ogg", "tamano_bytes": 48213 }
+```
+- `tipo`: `audio | imagen`. `content_type` permitido por tipo: audio → `audio/ogg`, `audio/webm`, `audio/mpeg`, `audio/mp4`,
+  `audio/wav`; imagen → `image/jpeg`, `image/png`, `image/webp`. Los parámetros (`audio/webm;codecs=opus`) se ignoran:
+  usa el `Content-Type` que devuelve `headers_requeridos`.
+- `tamano_bytes` máximo: 10 MB (audio) y 8 MB (imagen); el valor real se devuelve en `tamano_max_bytes`.
+
+**Response 201**
+```json
+{
+  "media_url": "r2://empresas/EMP-0001/audios/2026/11/0b7c9f0e-6a41-4c52-9d2b-3f1e8a7d5c10.ogg",
+  "upload_url": "https://<cuenta>.r2.cloudflarestorage.com/cajaclara-media/empresas/EMP-0001/audios/2026/11/0b7c….ogg?X-Amz-Algorithm=…&X-Amz-Signature=…",
+  "metodo": "PUT",
+  "headers_requeridos": { "Content-Type": "audio/ogg" },
+  "expira_en": "2026-11-14T10:52:00-05:00",
+  "tamano_max_bytes": 10485760
+}
+```
+- La URL vale 10 minutos (`R2_PRESIGN_TTL_S`). Si expira, se pide otra.
+- El backend solo lee `r2://` con clave bajo `empresas/{empresa_id}/…` de la empresa que consulta; verifica tipo y tamaño
+  del objeto antes de descargarlo y borra el temporal tras procesar.
+
+**Errores**: `400 VALIDACION` (tipo, `content_type` o tamaño no permitidos; campos faltantes), `401`, `404 NO_ENCONTRADO`
+(empresa), `503 SERVICIO_NO_DISPONIBLE` (R2 sin configurar o caído).
+
+**Configuración del bucket (una vez, en Cloudflare)**
+- CORS del bucket: permitir `PUT` desde `http://localhost:5173` (y el dominio de la demo) con `AllowedHeaders: ["Content-Type"]`.
+  Ejemplo: `[{"AllowedOrigins":["http://localhost:5173"],"AllowedMethods":["PUT"],"AllowedHeaders":["Content-Type"],"MaxAgeSeconds":3600}]`.
+- Recomendado: regla de lifecycle que borre los objetos tras N días (p. ej. 30 en `empresas/`); los audios son datos
+  personales y el backend no los necesita después de transcribir.
 
 ### 1.1 `POST /webhooks/whatsapp`
 Recibe mensajes del proveedor (sandbox de Twilio o chat simulado). Uso interno del bot.
@@ -91,6 +135,8 @@ Recibe mensajes del proveedor (sandbox de Twilio o chat simulado). Uso interno d
 ```
 - `tipo`: `texto | audio | imagen | boton`
 - Nunca se guarda el número real: solo `telefono_hash`.
+- `media_url`: `r2://…` (devuelto por `POST /media/subidas`) o, solo para demo/tests, `file://data/…` y `demo://…`.
+  Nunca se aceptan `http(s)://`.
 
 **Response 200**
 ```json
@@ -116,6 +162,9 @@ Convierte texto, audio o foto en un **borrador** de movimiento.
   "media_url": "file://data/audios/demo_001.ogg"
 }
 ```
+
+- `media_url` (canal `voz`): `r2://…` (§1.0) o, solo para demo, `file://data/…` / `demo://…`. Si no se encuentra el
+  archivo y no viene `texto` → `422 NO_INTERPRETABLE`; si es de otra empresa o excede tipo/tamaño → `400 VALIDACION`.
 
 **Response 200**
 ```json
@@ -148,11 +197,15 @@ Convierte texto, audio o foto en un **borrador** de movimiento.
 | Frase | `tipo` | Destino al confirmar |
 |---|---|---|
 | "vendí dos cervezas" | `venta` | `transacciones` |
-| "saqué 50 para la casa" | `retiro_personal` | `transacciones` (`es_retiro_personal = true`) |
-| "le fié a la señora Carmen 2 panes y una leche" | `venta` + `metodo_pago = credito` | `transacciones` + `cuaderno_fiado` |
-| "la señora Carmen me pagó 50" | `cobro_fiado` | `transacciones` + actualiza `cuaderno_fiado` |
-| "pedí 2 400 a Andina para pagar el 30" | `compra` + `metodo_pago = credito` | `prestamos_proveedor` (+ dispara chequeo de pedido, §4.4) |
+| "saqué 50 para la casa" | `retiro_personal` | `transacciones` |
+| "pagué el colegio de mi hijo" | — | No se registra: el bot explica que la app solo lleva el negocio y pregunta si la plata salió de la caja de la tienda; si es así, se anota como `retiro_personal` |
+| "le fié a la señora Carmen 2 panes y una leche" | `venta` + `metodo_pago = credito` | `transacciones` (`afecta_caja = false`) + `cuaderno_fiado` |
+| "la señora Carmen me pagó 50" | `cobro_fiado` | `transacciones` (con `fiado_id`) |
+| "pedí 2 400 a Andina para pagar el 30" | `compra` + `metodo_pago = credito` | `transacciones` (`afecta_caja = false`) + `deudas` con `tipo = proveedor` (+ dispara chequeo de pedido, §4.5) |
+| "me prestaron 1 000, pago 40 diarios" | `prestamo_recibido` | `transacciones` + `deudas` con `tipo = prestamo_informal` |
 | "pagué mi RUS, 20 soles" | `pago_impuesto` | `transacciones` + `impuestos` |
+
+Tablas y campos: [modelo_datos.dbml](modelo_datos.dbml) · [diccionario_datos.md](diccionario_datos.md) (§4, cómo se registra cada caso).
 
 ### 1.3 `POST /ingesta/confirmar`
 
@@ -183,21 +236,34 @@ Convierte texto, audio o foto en un **borrador** de movimiento.
 
 **Request**
 ```json
-{ "empresa_id": "EMP-0001", "media_url": "file://data/fotos/cuaderno_01.jpg" }
+{ "empresa_id": "EMP-0001", "media_url": "r2://empresas/EMP-0001/fotos/2026/11/9a1c….jpg" }
 ```
+- `media_url`: `r2://…` (§1.0, `tipo: "imagen"`) o, solo para demo, `file://data/fotos/…` / `demo://fotos/…`.
+  La foto se lee con un modelo de visión (VLM) vía OpenRouter (`VLM_MODEL`); la imagen viaja al proveedor como data
+  URL base64. Si el VLM no está disponible (sin key, timeout, error o salida inválida) se usa un fixture por nombre
+  de foto (`cuaderno_01..03`, `meta.fallback_usado = true`) o, si la foto es desconocida, `fiados_propuestos: []`.
+  Las líneas tachadas (ya pagadas) no se proponen: se cuentan en `lineas_tachadas`. Objeto inexistente → `422`;
+  ajeno/tipo/tamaño → `400`.
 
 **Response 200**
 ```json
 {
   "borrador_id": "BOR-7790",
   "fiados_propuestos": [
-    { "cliente": "Sra. Carmen", "detalle": "2 panes, 1 leche", "monto": 120.00, "fecha": "2026-10-27", "confianza": 0.81 },
-    { "cliente": "Don Luis", "detalle": "arroz, aceite", "monto": 95.00, "fecha": "2026-11-02", "confianza": 0.64 }
+    { "cliente": "Vecina Rosa", "detalle": "pan y huevos", "monto": 12.50, "fecha": "2026-11-12", "confianza": 0.85,
+      "cliente_id": "CLI-0110", "cliente_nuevo": false, "posible_duplicado": false },
+    { "cliente": "Marcos", "detalle": "fideos y atún", "monto": 8.00, "fecha": "2026-11-10", "confianza": 0.85,
+      "cliente_id": null, "cliente_nuevo": true, "posible_duplicado": null }
   ],
-  "lineas_no_legibles": 1,
-  "meta": { "modelo": "ocr-manuscrito + llm-estructurador", "modelo_version": "0.1.0", "prompt_version": "cuaderno-v1", "fallback_usado": false }
+  "lineas_no_legibles": 0,
+  "lineas_tachadas": 1,
+  "meta": { "modelo": "vlm-openrouter", "modelo_version": "openai/gpt-4o-mini", "prompt_version": "cuaderno-v2", "fallback_usado": false }
 }
 ```
+Campos extra (opcionales, el front puede ignorarlos): `cliente_id` / `cliente_nuevo` (el nombre se empareja con los
+clientes existentes por alias y se devuelve con el nombre del catálogo; si es nuevo se crea recién al confirmar),
+`posible_duplicado` (ya existe un fiado igual en `cuaderno_fiado`; al confirmar se omite y vuelve en `duplicados`) y
+`lineas_tachadas`. Con fallback a fixture, `meta.modelo = "fixture-cuaderno"`.
 Se confirma con `POST /ingesta/confirmar` (puede aceptar o editar cada fiado).
 
 ### 1.5 `POST /empresas/{empresa_id}/impuestos`
@@ -247,7 +313,7 @@ Query: `desde`, `hasta`, `tipo`, `categoria`, `canal`, `limit`, `cursor`.
       "contraparte": null,
       "canal": "voz",
       "confianza_extraccion": 0.93,
-      "es_retiro_personal": false,
+      "afecta_caja": true,
       "saldo_post": 2353.00
     }
   ],
@@ -358,7 +424,7 @@ Ajuste manual de partidas ("este mes no pago alquiler").
 ```
 
 ### 4.4 `GET /empresas/{empresa_id}/pedidos?estado=pendiente`
-Préstamos de proveedor (cuentas por pagar).
+Préstamos de proveedor (cuentas por pagar). Lee la tabla `deudas` con `tipo = proveedor`; `pedido_id` es su `deuda_id`. `monto_pendiente`, `estado` y `dias_para_vencer` se calculan al momento de responder (no se guardan). Los préstamos de dinero (`tipo ≠ proveedor`) entran al forecast y al asistente; su endpoint de consulta queda como roadmap.
 ```json
 {
   "total_pendiente": 2400.00,
@@ -613,7 +679,9 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
   "componentes": {
     "base_datos": "ok",
     "whisper": { "estado": "ok", "modelo": "faster-whisper-small" },
-    "llm": { "estado": "ok", "modelo": "qwen2.5-7b-instruct", "prompt_versions": { "extractor": "v3", "asistente": "v2", "cuaderno": "v1" } },
+    "almacenamiento": { "estado": "ok", "bucket": "cajaclara-media" },
+    "llm": { "estado": "ok", "modelo": "qwen2.5-7b-instruct", "prompt_versions": { "extractor": "v3", "asistente": "v2", "cuaderno": "v2" } },
+    "vlm": { "estado": "ok", "modelo": "openai/gpt-4o-mini", "proveedor": "openrouter" },
     "forecast": { "estado": "ok", "modelo_version": "0.3.1" },
     "riesgo_atraso": { "estado": "ok", "modelo_version": "0.2.0" }
   }
@@ -626,7 +694,7 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
 
 | Funcionalidad | Endpoints | Responsable sugerido |
 |---|---|---|
-| F1 Ingesta | `/webhooks/whatsapp`, `/ingesta/*`, `/impuestos`, `/billeteras/movimientos` | Backend + GenAI |
+| F1 Ingesta | `/webhooks/whatsapp`, `/media/subidas`, `/ingesta/*`, `/impuestos`, `/billeteras/movimientos` | Backend + GenAI |
 | F2 Resumen | `/resumen` | Backend |
 | F3 Forecast | `/forecast`, `/forecast/ajustes` | ML |
 | F4 Cuentas | `/fiados`, `/fiados/{id}/recordatorio`, `/pedidos`, `/pedidos/chequeo` | ML + Backend |

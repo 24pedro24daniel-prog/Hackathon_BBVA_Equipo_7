@@ -1,0 +1,604 @@
+// CajaClara — Modelo de datos (v2)
+// Visualizar en https://dbdiagram.io (pegar este archivo).
+// Diccionario de datos: diccionario_datos.md
+// Todos los datos son sintéticos. Montos en PEN con DECIMAL(12,2). Fechas con hora en timestamptz (America/Lima).
+// Campos calculados (saldo, monto pendiente, días de atraso, estados por vencer/vencido) NO se guardan: salen de vistas.
+
+Project CajaClara {
+  database_type: 'PostgreSQL'
+  Note: 'Gestor financiero para bodegas y pymes no bancarizadas. Entidad central: empresas.'
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ENUMS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Enum tipo_flujo {
+  ingreso
+  egreso
+}
+
+Enum tipo_movimiento {
+  venta              [note: 'ingreso · al contado o fiada (metodo_pago = credito)']
+  cobro_fiado        [note: 'ingreso · un cliente paga (total o parcial) un fiado']
+  prestamo_recibido  [note: 'ingreso · entra dinero prestado (gota a gota, familiar, entidad)']
+  otro_ingreso       [note: 'ingreso · ingresos recurrentes u otros']
+  compra             [note: 'egreso · al contado o a crédito (metodo_pago = credito)']
+  gasto_negocio      [note: 'egreso · luz, agua, alquiler, transporte']
+  retiro_personal    [note: 'egreso · plata que sale del negocio para la casa (incluye el sueldo)']
+  pago_proveedor     [note: 'egreso · pago (total o parcial) de un pedido a crédito']
+  pago_prestamo      [note: 'egreso · cuota de un préstamo de dinero']
+  pago_impuesto      [note: 'egreso · pago de Nuevo RUS u otro tributo']
+}
+
+Enum metodo_pago {
+  efectivo
+  billetera_digital
+  transferencia
+  tarjeta
+  credito [note: 'no mueve caja: fiado (venta) o pedido a crédito (compra)']
+}
+
+Enum canal_registro {
+  voz
+  texto
+  foto
+  billetera_api
+  manual [note: 'formulario web']
+}
+
+Enum origen_monto {
+  dicho_por_usuario
+  catalogo
+  estimado
+}
+
+Enum estado_borrador {
+  pendiente
+  confirmado
+  descartado
+}
+
+Enum tipo_deuda {
+  proveedor          [note: 'pedido de mercadería a crédito']
+  prestamo_informal  [note: 'gota a gota u otro prestamista']
+  familiar
+  entidad_financiera
+}
+
+Enum frecuencia {
+  diaria
+  semanal
+  quincenal
+  mensual
+}
+
+Enum origen_billetera {
+  api
+  captura
+}
+
+Enum plantilla_meta {
+  registrar_30_dias
+  sueldo_fijo
+  colchon_caja
+  apartar_para_pedido
+  reservar_impuestos
+}
+
+Enum tipo_regla {
+  porcentaje_de_venta
+  monto_fijo
+}
+
+Enum estado_meta {
+  activa
+  lograda
+  pausada
+}
+
+Enum tipo_alerta {
+  faltante_caja
+  pedido_excesivo
+  retiro_excesivo
+  obligacion_proxima
+  gasto_inusual
+  caida_ventas
+  fiado_vencido
+  meta_lograda
+  resumen_semanal
+}
+
+Enum nivel_riesgo {
+  bajo
+  medio
+  alto
+}
+
+Enum canal_notificacion {
+  whatsapp
+  app
+  email
+}
+
+Enum estado_alerta {
+  activa
+  atendida
+  descartada
+}
+
+Enum rol_mensaje {
+  usuario
+  asistente
+}
+
+Enum perfil_pago {
+  puntual
+  ocasional
+  moroso
+}
+
+Enum tipo_evento {
+  cliente_no_paga
+  mes_bajo
+  alza_proveedor
+  gasto_extra
+  retiro_excesivo
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MAESTRAS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Table rubros {
+  rubro_id varchar(20) [pk]
+  nombre varchar(50) [not null, unique, note: 'bodega, restaurante, taller, distribuidora']
+}
+
+Table empresas {
+  empresa_id varchar(20) [pk, note: 'EMP-0001']
+  rubro_id varchar(20) [not null, ref: > rubros.rubro_id]
+  nombre_ficticio varchar(100) [not null]
+  telefono_whatsapp varchar(20) [not null, unique, note: 'Ficticio. Enruta los mensajes del webhook a la empresa']
+  zona varchar(50) [not null]
+  n_trabajadores smallint [not null, default: 1]
+  tiene_ruc boolean [not null, default: false, note: 'Estadio 3: formalización']
+  regimen_tributario varchar(20) [note: 'nuevo_rus, null si es informal']
+  saldo_inicial decimal(12,2) [not null]
+  fecha_saldo_inicial date [not null]
+  minimo_operativo decimal(12,2) [not null]
+  fecha_alta timestamptz [not null]
+  Note: 'El sueldo fijo NO vive aquí: es un movimiento_programado con es_sueldo = true.'
+}
+
+Table preferencias_alertas {
+  empresa_id varchar(20) [pk, ref: - empresas.empresa_id]
+  canales json [not null, note: '["whatsapp"]']
+  max_por_dia smallint [not null, default: 2]
+  silencio_desde time [not null, default: '21:00']
+  silencio_hasta time [not null, default: '07:00']
+  resumen_semanal boolean [not null, default: true]
+}
+
+Table categorias {
+  categoria_id varchar(20) [pk]
+  nombre varchar(50) [not null, unique, note: 'bebidas, abarrotes, servicios, impuestos, retiro personal…']
+  tipo tipo_flujo [not null]
+  es_del_negocio boolean [not null, default: true, note: 'false para retiro personal (no cuenta como gasto del negocio)']
+  Note: 'No hay categorías de gastos del hogar: lo único personal que se registra es el retiro personal desde la caja del negocio (context.md §3, Alcance).'
+}
+
+Table productos {
+  producto_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  categoria_id varchar(20) [not null, ref: > categorias.categoria_id]
+  nombre varchar(100) [not null]
+  alias json [note: '["chela", "cerveza grande"] para que el extractor encuentre el producto']
+  precio_venta decimal(12,2) [not null]
+  costo_unitario decimal(12,2) [note: 'null si no se conoce: la ganancia se muestra como rango']
+  activo boolean [not null, default: true]
+}
+
+Table clientes {
+  cliente_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  nombre_ficticio varchar(100) [not null, note: '"Sra. Carmen", "Don Luis"']
+  alias json [note: 'Variantes del nombre para emparejar lo que dice la voz o el OCR']
+  telefono_ficticio varchar(20) [note: 'Para el botón "Enviar recordatorio"']
+  perfil_pago perfil_pago [note: 'OCULTO: solo lo usa el generador sintético. Nunca es feature']
+  creado_en timestamptz [not null]
+}
+
+Table proveedores {
+  proveedor_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  nombre_ficticio varchar(100) [not null, note: '"Distribuidora Andina"']
+  telefono_ficticio varchar(20)
+  plazo_pago_dias smallint [not null]
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// INGESTA Y TRANSACCIONES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Table borradores {
+  borrador_id varchar(20) [pk, note: 'BOR-7781']
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  mensaje_id varchar(20) [ref: > conversaciones.mensaje_id, note: 'Mensaje que lo originó (null si es formulario)']
+  canal canal_registro [not null]
+  media_url varchar(255) [note: 'Audio o foto. Null si es texto o formulario']
+  texto_original text [note: 'Texto escrito o transcripción de Whisper']
+  payload_propuesto json [not null, note: 'Lo que entendió el extractor. Una foto del cuaderno puede traer varios fiados']
+  origen_monto origen_monto
+  confianza decimal(4,3) [note: '0 a 1']
+  campos_faltantes json
+  pregunta_aclaratoria text
+  correcciones json [note: 'Lo que corrigió el usuario. Base de la métrica % de registros corregidos']
+  estado estado_borrador [not null, default: 'pendiente']
+  modelo_version varchar(30)
+  prompt_version varchar(30)
+  fallback_usado boolean [not null, default: false]
+  creado_en timestamptz [not null]
+  resuelto_en timestamptz
+}
+
+Table transacciones {
+  transaccion_id varchar(20) [pk, note: 'MOV-000123']
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  borrador_id varchar(20) [ref: > borradores.borrador_id, note: 'Null si es formulario o API']
+  fecha_hora timestamptz [not null]
+  tipo tipo_movimiento [not null]
+  categoria_id varchar(20) [not null, ref: > categorias.categoria_id]
+  descripcion varchar(255)
+  monto decimal(12,2) [not null, note: 'Siempre positivo; el signo sale de tipo']
+  moneda char(3) [not null, default: 'PEN']
+  metodo_pago metodo_pago [not null]
+  afecta_caja boolean [not null, note: 'false cuando metodo_pago = credito (fiado o pedido a crédito)']
+  canal canal_registro [not null]
+  confianza_extraccion decimal(4,3) [note: 'Null si es manual o billetera_api']
+  fue_corregida boolean [not null, default: false]
+  fiado_id varchar(20) [ref: > cuaderno_fiado.fiado_id]
+  deuda_id varchar(20) [ref: > deudas.deuda_id]
+  impuesto_id varchar(20) [unique, ref: - impuestos.impuesto_id]
+  programado_id varchar(20) [ref: > movimientos_programados.programado_id]
+  billetera_mov_id varchar(20) [unique, ref: - billeteras_digitales.billetera_mov_id]
+  anulada boolean [not null, default: false, note: 'Nunca se borra: se anula (trazabilidad)']
+  creado_en timestamptz [not null]
+
+  indexes {
+    (empresa_id, fecha_hora)
+    (empresa_id, tipo)
+  }
+
+  Note: '''
+  Saldo de caja = empresas.saldo_inicial + Σ monto (con signo) de transacciones con afecta_caja = true y anulada = false.
+  CHECKs:
+  - monto > 0
+  - afecta_caja = (metodo_pago <> 'credito')
+  - a lo más una de fiado_id, deuda_id, impuesto_id, programado_id puede estar llena
+  - tipo IN (cobro_fiado) → fiado_id NOT NULL; tipo IN (pago_proveedor, pago_prestamo, prestamo_recibido) → deuda_id NOT NULL; tipo = pago_impuesto → impuesto_id NOT NULL
+  - tipo = venta y metodo_pago = credito → fiado_id NOT NULL; tipo = compra y metodo_pago = credito → deuda_id NOT NULL
+  '''
+}
+
+Table detalle_transaccion {
+  detalle_id varchar(20) [pk]
+  transaccion_id varchar(20) [not null, ref: > transacciones.transaccion_id]
+  producto_id varchar(20) [ref: > productos.producto_id, note: 'Null si el producto no está en el catálogo']
+  descripcion varchar(100) [note: 'Texto libre si no hay producto_id']
+  cantidad decimal(10,3) [not null]
+  precio_unitario decimal(12,2) [not null]
+  costo_unitario decimal(12,2) [note: 'Copia del costo al momento de la venta (margen histórico)']
+  subtotal decimal(12,2) [not null]
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CUENTAS POR COBRAR Y POR PAGAR
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Table cuaderno_fiado {
+  fiado_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  cliente_id varchar(20) [not null, ref: > clientes.cliente_id]
+  borrador_id varchar(20) [ref: > borradores.borrador_id]
+  detalle varchar(255) [note: '"2 panes, 1 leche"']
+  monto decimal(12,2) [not null]
+  fecha_fiado date [not null]
+  fecha_compromiso date [note: 'Cuándo prometió pagar. Null si no se pactó']
+  fecha_pago_total date [note: 'Fecha en que terminó de pagar. Null si aún debe']
+  canal canal_registro [not null]
+  pago_tardio boolean [note: 'ETIQUETA: solo para evaluar. Nunca es feature']
+
+  indexes {
+    (empresa_id, cliente_id)
+  }
+
+  Note: 'monto_pendiente y dias_atraso se calculan en la vista v_fiados (a una fecha de corte).'
+}
+
+Table deudas {
+  deuda_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  tipo tipo_deuda [not null]
+  proveedor_id varchar(20) [ref: > proveedores.proveedor_id, note: 'Obligatorio si tipo = proveedor']
+  acreedor_nombre varchar(100) [note: '"prestamista", "mi hermano". Para tipos distintos de proveedor']
+  borrador_id varchar(20) [ref: > borradores.borrador_id]
+  monto_recibido decimal(12,2) [not null, note: 'Dinero recibido o mercadería valorizada']
+  monto_total_a_pagar decimal(12,2) [not null, note: 'Incluye intereses. Permite mostrar el costo real']
+  frecuencia_cuota frecuencia [note: 'diaria en gota a gota. Null si es un solo pago']
+  monto_cuota decimal(12,2)
+  fecha_inicio date [not null]
+  fecha_vencimiento date [not null, note: 'Fecha del último pago pactado']
+  fecha_pago_total date [note: 'Null mientras siga pendiente']
+  canal canal_registro [not null]
+  notas varchar(255)
+
+  indexes {
+    (empresa_id, fecha_vencimiento)
+  }
+
+  Note: '''
+  CHECK: (tipo = 'proveedor') = (proveedor_id IS NOT NULL).
+  monto_pendiente y estado (pendiente / por_vencer / vencido / pagado) se calculan en la vista v_deudas.
+  '''
+}
+
+Table billeteras_digitales {
+  billetera_mov_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  proveedor_billetera varchar(30) [not null]
+  operacion_id varchar(50) [not null, note: 'ID del proveedor de la billetera']
+  tipo tipo_flujo [not null]
+  monto decimal(12,2) [not null]
+  contraparte_nombre varchar(100)
+  fecha_hora timestamptz [not null]
+  origen origen_billetera [not null]
+
+  indexes {
+    (empresa_id, proveedor_billetera, operacion_id) [unique, note: 'Evita duplicados']
+  }
+}
+
+Table impuestos {
+  impuesto_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  regimen varchar(20) [not null, note: 'nuevo_rus']
+  periodo char(7) [not null, note: 'AAAA-MM']
+  monto decimal(12,2) [not null]
+  fecha_vencimiento date [not null]
+  fecha_pago date [note: 'Null si no se ha pagado']
+  canal canal_registro [not null]
+
+  indexes {
+    (empresa_id, regimen, periodo) [unique]
+  }
+
+  Note: 'Semáforo al_dia / vencido calculado en la vista v_impuestos.'
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PLANIFICACIÓN: RECURRENTES, SUELDO, METAS Y AJUSTES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Table movimientos_programados {
+  programado_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  categoria_id varchar(20) [not null, ref: > categorias.categoria_id]
+  tipo tipo_flujo [not null]
+  descripcion varchar(100) [not null, note: 'luz, agua, alquiler del local, sueldo, venta fija a un comedor. Nunca gastos o ingresos del hogar']
+  monto decimal(12,2) [not null]
+  frecuencia frecuencia [not null]
+  dia_semana smallint [note: '1 = lunes … 7 = domingo. Para semanal']
+  dia_mes smallint [note: '1 a 31. Para quincenal (primer día) y mensual']
+  es_sueldo boolean [not null, default: false, note: 'Sueldo fijo del dueño (egreso, categoría retiro personal)']
+  fecha_inicio date [not null]
+  fecha_fin date [note: 'Null si sigue vigente. Cambiar el sueldo = cerrar este y abrir otro']
+  activo boolean [not null, default: true]
+
+  Note: '''
+  Única fuente del sueldo fijo y de los ingresos/egresos recurrentes. El forecast los proyecta.
+  Índice único parcial: un solo sueldo activo por empresa → UNIQUE (empresa_id) WHERE es_sueldo AND activo.
+  '''
+}
+
+Table reglas_meta {
+  meta_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  plantilla plantilla_meta [not null]
+  programado_id varchar(20) [ref: > movimientos_programados.programado_id, note: 'Para sueldo_fijo: el sueldo que se compromete a respetar']
+  tipo_regla tipo_regla
+  valor decimal(12,4) [note: '0.10 = 10% de cada venta, o monto fijo']
+  destino varchar(30) [note: 'fondo_pedidos, fondo_impuestos, colchon']
+  objetivo decimal(12,2) [note: 'Monto o días meta. Null si no aplica']
+  acumulado decimal(12,2) [not null, default: 0, note: 'Apartado virtual: no sale de la caja']
+  recordatorio_frecuencia frecuencia
+  recordatorio_dia smallint
+  estado estado_meta [not null, default: 'activa']
+  fecha_inicio date [not null]
+  fecha_logro date
+}
+
+Table forecast_ajustes {
+  ajuste_id varchar(20) [pk, note: 'AJU-0003']
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  programado_id varchar(20) [ref: > movimientos_programados.programado_id, note: 'Si ajusta un recurrente']
+  fecha date [not null]
+  concepto varchar(100) [not null]
+  monto decimal(12,2) [not null, note: '0 = no se paga ese mes']
+  motivo varchar(255)
+  activo boolean [not null, default: true]
+  creado_en timestamptz [not null]
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ALERTAS, CONVERSACIÓN Y CONSENTIMIENTO
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Table alertas {
+  alerta_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  tipo tipo_alerta [not null]
+  prioridad smallint [not null, note: '1 (faltante de caja) a 8 (resumen semanal)']
+  fecha_evento date [not null, note: 'Cuándo ocurriría el problema']
+  monto decimal(12,2)
+  probabilidad decimal(4,3)
+  nivel_riesgo nivel_riesgo
+  causas json [note: '[{"causa": "retiro_mayor_al_usual", "impacto": 700}]']
+  accion_sugerida varchar(50) [note: 'ajustar_pedido, recordar_cliente, ver_por_que']
+  entidad_tipo varchar(30) [note: 'cuaderno_fiado, deudas, impuestos, transacciones, reglas_meta']
+  entidad_id varchar(20) [note: 'Registro que causa la alerta (lo usa el botón de acción)']
+  canal canal_notificacion [not null]
+  estado estado_alerta [not null, default: 'activa']
+  accion_tomada varchar(50) [note: 'Null si no tomó ninguna. Base de la métrica % alertas con acción']
+  fecha_accion timestamptz
+  creada_en timestamptz [not null]
+  enviada_en timestamptz [note: 'Null si quedó retenida por max_por_dia u horario silencioso']
+  modelo_version varchar(30)
+}
+
+Table conversaciones {
+  mensaje_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  conversacion_id varchar(20) [not null]
+  rol rol_mensaje [not null]
+  canal canal_notificacion [not null]
+  texto text
+  media_url varchar(255)
+  intencion varchar(50)
+  herramientas_llamadas json [note: 'Function calls del LLM y sus resultados']
+  cifras_verificadas boolean [note: 'true si todas las cifras de la respuesta existen en los datos']
+  fallback_usado boolean [not null, default: false]
+  derivado_a_humano boolean [not null, default: false]
+  prompt_version varchar(30)
+  modelo_version varchar(30)
+  fecha_hora timestamptz [not null]
+
+  indexes {
+    (empresa_id, conversacion_id, fecha_hora)
+  }
+}
+
+Table consentimientos {
+  consentimiento_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  alcance json [not null, note: '["resumen_12_meses", "score"]']
+  activo boolean [not null, default: false]
+  fecha_otorgado timestamptz
+  vigencia_hasta date
+  fecha_revocado timestamptz
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ETIQUETAS Y RESULTADOS (EVALUACIÓN Y TRAZABILIDAD)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Table saldo_diario {
+  empresa_id varchar(20) [ref: > empresas.empresa_id]
+  fecha date
+  saldo_cierre decimal(12,2) [not null, note: 'Materializado desde transacciones; se regenera si llega un registro con fecha pasada']
+  deficit_14d boolean [note: 'ETIQUETA: target de la alerta de faltante. Nunca es feature']
+
+  indexes {
+    (empresa_id, fecha) [pk]
+  }
+}
+
+Table eventos {
+  evento_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  tipo_evento tipo_evento [not null]
+  fecha_inicio date [not null]
+  fecha_fin date
+  descripcion varchar(255)
+  Note: 'ETIQUETA (toda la tabla): shocks insertados por el generador. Ground truth, nunca feature.'
+}
+
+Table predicciones_saldo {
+  prediccion_id varchar(20) [pk]
+  empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
+  fecha_corte date [not null]
+  fecha_objetivo date [not null]
+  p10 decimal(12,2) [not null]
+  p50 decimal(12,2) [not null]
+  p90 decimal(12,2) [not null]
+  modelo_version varchar(30) [not null, note: 'naive_estacional-1.0, lgbm_cuantiles-0.3…']
+  creado_en timestamptz [not null]
+
+  indexes {
+    (empresa_id, fecha_corte, fecha_objetivo, modelo_version) [unique]
+  }
+}
+
+Table predicciones_fiado {
+  prediccion_id varchar(20) [pk]
+  fiado_id varchar(20) [not null, ref: > cuaderno_fiado.fiado_id]
+  fecha_corte date [not null]
+  prob_atraso decimal(4,3) [not null]
+  prob_pago_14d decimal(4,3) [note: 'Pondera el cobro esperado en el forecast']
+  nivel_riesgo nivel_riesgo [not null]
+  modelo_version varchar(30) [not null]
+  creado_en timestamptz [not null]
+
+  indexes {
+    (fiado_id, fecha_corte, modelo_version) [unique]
+  }
+}
+
+Table score_salud {
+  empresa_id varchar(20) [ref: > empresas.empresa_id]
+  mes char(7) [note: 'AAAA-MM']
+  score smallint [not null, note: '0 a 100']
+  subindicadores json [not null, note: '{"constancia_registro": 80, "separacion_personal": 55, …}']
+  version_formula varchar(30) [not null]
+
+  indexes {
+    (empresa_id, mes) [pk]
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// GRUPOS (para el diagrama)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TableGroup maestras {
+  rubros
+  empresas
+  preferencias_alertas
+  categorias
+  productos
+  clientes
+  proveedores
+}
+
+TableGroup ingesta_y_transacciones {
+  borradores
+  transacciones
+  detalle_transaccion
+}
+
+TableGroup cobrar_y_pagar {
+  cuaderno_fiado
+  deudas
+  billeteras_digitales
+  impuestos
+}
+
+TableGroup planificacion {
+  movimientos_programados
+  reglas_meta
+  forecast_ajustes
+}
+
+TableGroup interaccion {
+  alertas
+  conversaciones
+  consentimientos
+}
+
+TableGroup etiquetas_y_resultados {
+  saldo_diario
+  eventos
+  predicciones_saldo
+  predicciones_fiado
+  score_salud
+}

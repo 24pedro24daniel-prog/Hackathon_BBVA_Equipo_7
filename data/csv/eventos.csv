@@ -1,0 +1,14 @@
+evento_id,empresa_id,tipo_evento,fecha_inicio,fecha_fin,descripcion
+EVT-0001,EMP-0001,retiro_excesivo,2026-11-05,2026-11-13,"Retiro de S/ 700 extra para la casa por encima del sueldo mínimo para vivir (S/ 1,350/mes)"
+EVT-0002,EMP-0001,alza_proveedor,2026-11-13,2026-11-30,"Sobrecompra de stock pre-Campaña Navideña a Distribuidora Andina (PED-0012 por S/ 2,400) y Nuevo RUS mal informado en S/ 20 en lugar de S/ 50"
+EVT-0003,EMP-0001,cliente_no_paga,2026-11-05,,"Sra. Carmen (FIA-0045, S/ 120) y Don Luis (FIA-0046, S/ 95) se atrasaron en pagar"
+EVT-0010,EMP-0003,retiro_excesivo,2026-10-25,2026-11-14,Retiros personales extraordinarios por encima del mínimo para vivir que descapitalizan la caja
+EVT-0011,EMP-0006,alza_proveedor,2026-10-25,2026-11-14,Sobrecompra de mercadería para Campaña Navideña y Nuevo RUS mal informado en S/ 20 en lugar de S/ 50
+EVT-0012,EMP-0009,mes_bajo,2026-10-25,2026-11-14,Caída temporal de ventas previa a campaña navideña
+EVT-0013,EMP-0012,retiro_excesivo,2026-10-25,2026-11-14,Retiros personales extraordinarios por encima del mínimo para vivir que descapitalizan la caja
+EVT-0014,EMP-0015,mes_bajo,2026-10-25,2026-11-14,Caída temporal de ventas previa a campaña navideña
+EVT-0015,EMP-0018,alza_proveedor,2026-10-25,2026-11-14,Sobrecompra de mercadería para Campaña Navideña y Nuevo RUS mal informado en S/ 20 en lugar de S/ 50
+EVT-0016,EMP-0021,retiro_excesivo,2026-10-25,2026-11-14,Retiros personales extraordinarios por encima del mínimo para vivir que descapitalizan la caja
+EVT-0017,EMP-0024,alza_proveedor,2026-10-25,2026-11-14,Sobrecompra de mercadería para Campaña Navideña y Nuevo RUS mal informado en S/ 20 en lugar de S/ 50
+EVT-0018,EMP-0027,mes_bajo,2026-10-25,2026-11-14,Caída temporal de ventas previa a campaña navideña
+EVT-0019,EMP-0030,retiro_excesivo,2026-10-25,2026-11-14,Retiros personales extraordinarios por encima del mínimo para vivir que descapitalizan la caja

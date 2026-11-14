@@ -79,6 +79,13 @@ Esto lo empuja a préstamos informales ("gota a gota") con intereses impagables,
 
 Ayudar a bodegas y pymes no bancarizadas a ordenar su flujo de caja, anticipar faltantes y adoptar hábitos financieros saludables, construyendo un historial que les permita acceder a crédito formal de forma más rápida.
 
+### Alcance: solo las finanzas del negocio
+
+- **CajaClara no registra ni analiza los gastos personales o de la casa** (comida del hogar, colegio, salud, servicios de la vivienda, etc.). La aplicación gestiona únicamente la caja del negocio.
+- Lo único que se registra del lado personal es el **retiro personal**: la plata que Pedro saca de la caja del negocio para la casa ("saqué 50 para la casa"). Se trata como una salida de caja del negocio, sin detallar en qué se gasta después.
+- Así, los retiros personales sí alimentan el resumen (F2), la proyección y el "disponible para gastar" (F3), las alertas (F6) y el score (F8), pero no existe un módulo, categoría ni tabla para gastos del hogar.
+- Si Pedro intenta registrar un gasto de la casa pagado con plata de la casa (p. ej. "pagué el colegio de mi hijo"), el bot le explica que la app solo lleva el negocio y le pregunta si esa plata salió de la caja de la tienda; si es así, se anota como retiro personal.
+
 ### Los 3 estadios del usuario
 
 **Estadio 1 — Pyme desorganizada ("no cliente" informal) · punto de partida**
@@ -165,7 +172,7 @@ Principio: Pedro registra donde ya está (WhatsApp). Todo lo demás es automáti
   - LLM con function calling extrae: tipo (venta / compra / retiro personal), producto, cantidad, monto y método de pago.
   - Si no se dice el monto, se calcula con el catálogo de precios de la bodega (2 cervezas × S/ 6.50).
   - El JSON se valida con un esquema (pydantic); si falta un dato o la confianza es baja, el bot repregunta.
-- **¿Qué se obtiene?** JSON que se guarda en `transacciones_venta` (o en la tabla según el tipo), con `canal` y `confianza_extraccion`.
+- **¿Qué se obtiene?** JSON que se guarda primero como `borradores` y, al confirmar, en `transacciones` (más `cuaderno_fiado`, `deudas` o `impuestos` según el tipo), con `canal` y `confianza_extraccion`.
 - **¿Cómo se informa el cliente?** El bot confirma: "Anotado: 2 cervezas, S/ 13, efectivo ✅" con opción ✏️ Corregir.
 - **¿Cómo se visualiza?** Recibe audio y texto de confirmación en WhatsApp.
 - **Métricas:** WER de la transcripción; exactitud por campo del JSON sobre 100–150 frases de prueba (jerga, errores, montos ambiguos); % de registros corregidos por el usuario.
@@ -197,7 +204,8 @@ Principio: Pedro registra donde ya está (WhatsApp). Todo lo demás es automáti
 
 #### 1.5 Préstamos de proveedor (pedidos a crédito)
 - **¿Cómo ingresa?** Chat guiado paso a paso (producto, cantidad, proveedor, plazo), o foto de factura/guía. También por voz: "pedí 2 400 a Andina para pagar el 30".
-- **¿Cómo opera?** El bot arma el registro estructurado en `prestamos_proveedor` y calcula plazo y monto pendiente. Al registrarlo, ejecuta el chequeo antes del pedido (ver F4).
+- **¿Cómo opera?** El bot arma el registro estructurado en `deudas` (`tipo = proveedor`) y calcula plazo y monto pendiente. Al registrarlo, ejecuta el chequeo antes del pedido (ver F4).
+- **Préstamos de dinero:** la misma tabla `deudas` registra préstamos informales, familiares o de entidades ("me prestaron 1 000, pago 40 diarios"), con monto recibido, total a pagar y cuotas. Así el forecast incluye las cuotas y el asistente muestra el costo real del préstamo.
 - **¿Qué se obtiene?** Trazabilidad de deudas con proveedores y su cumplimiento.
 - **¿Cómo se informa el cliente?** Confirmación del registro + recordatorio antes del vencimiento del plazo pactado.
 - **¿Cómo se visualiza?** Lista de deudas vigentes y vencidas en el dashboard, con impacto en el score.
@@ -400,6 +408,9 @@ Principio: Pedro registra donde ya está (WhatsApp). Todo lo demás es automáti
 - F8 (score con 3 subindicadores)
 - F5 (2 gráficos)
 
+**Fuera de alcance (no se incluirá)**
+- Registro y análisis de gastos personales o de la casa (ver sección 3, "Alcance"); solo se registra el retiro personal desde la caja del negocio.
+
 **Roadmap**
 - WhatsApp Business oficial
 - Integración real con billeteras digitales (F1.3)
@@ -414,30 +425,52 @@ Principio: Pedro registra donde ya está (WhatsApp). Todo lo demás es automáti
 
 Entidad central: la bodega/empresa. Todas las tablas se relacionan con ella.
 
+- **Esquema formal (DBML):** [modelo_datos.dbml](modelo_datos.dbml) — se visualiza pegándolo en <https://dbdiagram.io>.
+- **Diccionario de datos:** [diccionario_datos.md](diccionario_datos.md) — campos, tipos, ejemplos, uso en modelos y cómo se registra cada caso.
+
 | Tabla | Tipo | Contenido |
 |---|---|---|
 | `rubros` | Maestra | Rubro del negocio (bodega, restaurante, taller, distribuidora) |
-| `empresas` | Maestra | Pyme ficticia: rubro, tamaño, saldo inicial, mínimo operativo |
-| `productos` | Maestra | Catálogo: precio, costo y categoría (para calcular montos y margen) |
-| `clientes` | Maestra | Vecinos/clientes de fiado; `perfil_pago` oculto (no es feature) |
+| `empresas` | Maestra | Pyme ficticia: rubro, tamaño, zona, teléfono de WhatsApp (ficticio), saldo inicial, mínimo operativo |
+| `preferencias_alertas` | Maestra | Canales, máximo de alertas por día y horario silencioso |
+| `categorias` | Maestra | Bebidas, abarrotes, servicios, impuestos, retiro personal, etc. (no hay categorías de gastos del hogar; ver §3 "Alcance") |
+| `productos` | Maestra | Catálogo: precio, costo, categoría y alias (para calcular montos y margen) |
+| `clientes` | Maestra | Vecinos/clientes de fiado con teléfono ficticio; `perfil_pago` oculto (no es feature) |
 | `proveedores` | Maestra | Proveedores y plazo de pago acordado |
-| `categorias` | Maestra | Ventas, compras, servicios, impuestos, retiros personales, etc. |
-| `transacciones_venta` (y compras/retiros) | Transaccional | Cada movimiento de caja; campos `canal` (voz/texto/foto/billetera), `confianza_extraccion`, `es_retiro_personal` |
-| `cuaderno_fiado` | Transaccional | Fiados digitalizados: cliente, monto, fecha, fecha de pago real, días de atraso |
-| `prestamos_proveedor` | Transaccional | Pedidos a crédito: proveedor, monto, plazo, monto pendiente, fecha de pago |
-| `billeteras_digitales` | Transaccional | Movimientos digitales normalizados |
-| `impuestos` | Transaccional | Periodo, monto, fecha de pago y estado (al día / vencido) |
-| `egresos_programados` | Transaccional | Gastos fijos recurrentes (luz, alquiler) |
-| `reglas_meta` | Transaccional | Metas y reglas automáticas activadas por el usuario |
+| `borradores` | Ingesta | Lo que entendió la IA (transcripción, propuesta, confianza, correcciones) antes de que el usuario confirme |
+| `transacciones` | Transaccional | **Única tabla** de movimientos: ventas, compras, gastos, retiros, cobros y pagos. Campos `tipo`, `metodo_pago`, `afecta_caja`, `canal`, `confianza_extraccion` |
+| `detalle_transaccion` | Transaccional | Productos de cada venta o compra, con el costo del momento |
+| `cuaderno_fiado` | Transaccional | Fiados digitalizados: cliente, monto, fecha, fecha de compromiso y de pago |
+| `deudas` | Transaccional | Lo que el negocio debe: pedidos a crédito a proveedores **y** préstamos de dinero (gota a gota, familiar, entidad), con cuotas |
+| `billeteras_digitales` | Transaccional | Movimientos digitales normalizados (sin duplicados por `operacion_id`) |
+| `impuestos` | Transaccional | Periodo, monto, vencimiento y fecha de pago |
+| `movimientos_programados` | Planificación | Ingresos y egresos recurrentes del negocio (luz, alquiler del local) y el **sueldo fijo** del dueño (`es_sueldo`) |
+| `reglas_meta` | Planificación | Metas y reglas automáticas activadas por el usuario |
+| `forecast_ajustes` | Planificación | Ajustes manuales de partidas ("este mes no pago alquiler") |
+| `alertas` | Interacción | Alertas con causas, entidad que la causa, acción sugerida y acción tomada |
+| `conversaciones` | Interacción | Mensajes del asistente con intención, herramientas usadas y verificación de cifras |
+| `consentimientos` | Interacción | Permiso para compartir el historial (desactivado por defecto) |
 | `saldo_diario` | Etiqueta | Saldo de cierre por día + etiqueta `deficit_14d` (target de la alerta) |
 | `eventos` | Etiqueta | Shocks insertados en el dataset sintético (ground truth) |
-| `predicciones` | Resultado | Salidas del forecast (p10/p50/p90) con versión de modelo (trazabilidad) |
+| `predicciones_saldo` | Resultado | Salidas del forecast (p10/p50/p90) con versión de modelo |
+| `predicciones_fiado` | Resultado | Riesgo de atraso y probabilidad de pago de cada fiado |
+| `score_salud` | Resultado | Score mensual y subindicadores |
+
+### Decisiones de diseño
+
+- **Una sola tabla de movimientos.** Todo pasa por `transacciones`; las tablas de fiados, deudas, impuestos, billeteras y recurrentes se enlazan por FK.
+- **Lo fiado o pedido a crédito no mueve caja.** `metodo_pago = credito` → `afecta_caja = false`. Saldo de caja = saldo inicial + Σ movimientos con `afecta_caja`.
+- **Nada calculado se guarda.** Saldo, monto pendiente, días de atraso y estados (por vencer, vencido, al día) salen de vistas a una fecha de corte; así no se desfasan ni filtran información del futuro.
+- **El sueldo vive en un solo lugar:** `movimientos_programados` con `es_sueldo = true`, con historial por `fecha_inicio` / `fecha_fin`. El forecast lo proyecta y la alerta de retiro excesivo lo compara.
+- **Préstamos de dinero incluidos.** `deudas` guarda lo recibido y lo que se devolverá, para mostrar el costo real del préstamo informal con los datos del propio usuario.
+- **Nada se borra:** se anula (`anulada = true`), por trazabilidad.
 
 ### Reglas para evitar fuga de datos
 
-- En una `fecha_corte`, solo se usan pagos y atrasos ocurridos **antes** de esa fecha.
+- En una `fecha_corte`, solo se usan registros guardados (`creado_en`) y pagos y atrasos ocurridos **antes** de esa fecha.
 - `pago_tardio`, `deficit_14d` y `eventos` son **solo etiquetas**, nunca features.
 - `perfil_pago` del cliente nunca entra al modelo; se infiere del historial.
+- `dias_atraso`, `monto_pendiente` y los estados se calculan a la fecha de corte, nunca se leen de una columna guardada.
 - Split temporal (entrenar con los primeros meses, evaluar con los últimos) y por empresa.
 
 ---

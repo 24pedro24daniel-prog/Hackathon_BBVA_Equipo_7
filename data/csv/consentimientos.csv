@@ -1,0 +1,2 @@
+consentimiento_id,empresa_id,alcance,activo,fecha_otorgado,vigencia_hasta,fecha_revocado
+CNS-0001,EMP-0001,"[""resumen_12_meses"",""score""]",false,,,

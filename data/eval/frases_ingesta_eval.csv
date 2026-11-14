@@ -1,0 +1,151 @@
+caso_id,canal,frase,tipo_esperado,metodo_pago_esperado,monto_esperado,producto_id_esperado,origen_monto_esperado,confianza_simulada,requiere_doble_confirmacion,pregunta_aclaratoria,posible_duplicado,dentro_alcance
+EVF-001,voz,vendí dos cervezas,venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
+EVF-002,voz,bendi 3 chelas bien heladas pero no se oye bien el monto,venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
+EVF-003,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90",venta,efectivo,16.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
+EVF-004,voz,saqué 50 para la casa,retiro_personal,efectivo,50,,dicho_por_usuario,0.95,false,,false,true
+EVF-005,texto,agarré 80 soles de la caja para el almuerzo familiar,retiro_personal,efectivo,80,,dicho_por_usuario,0.9,false,,false,true
+EVF-006,voz,pagué el colegio de mi hijo con mi plata,,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-007,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50",venta,credito,9.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
+EVF-008,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz)",venta,credito,95,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
+EVF-009,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno,cobro_fiado,efectivo,50,,dicho_por_usuario,0.94,false,,false,true
+EVF-010,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330),compra,efectivo,380,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
+EVF-011,voz,pedí 2400 a Andina por campaña navideña para pagar el 30,compra,credito,2400,,dicho_por_usuario,0.9,false,,false,true
+EVF-012,voz,le pagué 1200 a Distribuidora Andina en efectivo,pago_proveedor,efectivo,1200,,dicho_por_usuario,0.93,false,,false,true
+EVF-013,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios",prestamo_recibido,efectivo,1000,,dicho_por_usuario,0.91,false,,false,true
+EVF-014,texto,"pagué la luz del local en efectivo, 180 soles",gasto_negocio,efectivo,180,,dicho_por_usuario,0.95,false,,false,true
+EVF-015,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
+EVF-016,voz,vendí dos cervezas (muestra 2),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
+EVF-017,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 2),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
+EVF-018,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 2)",venta,efectivo,21.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
+EVF-019,voz,saqué 50 para la casa (muestra 2),retiro_personal,efectivo,55,,dicho_por_usuario,0.95,false,,false,true
+EVF-020,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 2),retiro_personal,efectivo,85,,dicho_por_usuario,0.9,false,,false,true
+EVF-021,voz,pagué el colegio de mi hijo con mi plata (muestra 2),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-022,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 2)",venta,credito,14.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
+EVF-023,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 2)",venta,credito,100,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
+EVF-024,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 2),cobro_fiado,efectivo,55,,dicho_por_usuario,0.94,false,,false,true
+EVF-025,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 2),compra,efectivo,385,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
+EVF-026,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 2),compra,credito,2405,,dicho_por_usuario,0.9,false,,false,true
+EVF-027,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 2),pago_proveedor,efectivo,1205,,dicho_por_usuario,0.93,false,,false,true
+EVF-028,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 2)",prestamo_recibido,efectivo,1005,,dicho_por_usuario,0.91,false,,false,true
+EVF-029,texto,"pagué la luz del local en efectivo, 180 soles (muestra 2)",gasto_negocio,efectivo,185,,dicho_por_usuario,0.95,false,,false,true
+EVF-030,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 2)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
+EVF-031,voz,vendí dos cervezas (muestra 3),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
+EVF-032,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 3),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
+EVF-033,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 3)",venta,efectivo,26.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
+EVF-034,voz,saqué 50 para la casa (muestra 3),retiro_personal,efectivo,60,,dicho_por_usuario,0.95,false,,false,true
+EVF-035,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 3),retiro_personal,efectivo,90,,dicho_por_usuario,0.9,false,,false,true
+EVF-036,voz,pagué el colegio de mi hijo con mi plata (muestra 3),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-037,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 3)",venta,credito,19.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
+EVF-038,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 3)",venta,credito,105,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
+EVF-039,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 3),cobro_fiado,efectivo,60,,dicho_por_usuario,0.94,false,,false,true
+EVF-040,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 3),compra,efectivo,390,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
+EVF-041,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 3),compra,credito,2410,,dicho_por_usuario,0.9,false,,false,true
+EVF-042,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 3),pago_proveedor,efectivo,1210,,dicho_por_usuario,0.93,false,,false,true
+EVF-043,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 3)",prestamo_recibido,efectivo,1010,,dicho_por_usuario,0.91,false,,false,true
+EVF-044,texto,"pagué la luz del local en efectivo, 180 soles (muestra 3)",gasto_negocio,efectivo,190,,dicho_por_usuario,0.95,false,,false,true
+EVF-045,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 3)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
+EVF-046,voz,vendí dos cervezas (muestra 4),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
+EVF-047,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 4),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
+EVF-048,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 4)",venta,efectivo,31.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
+EVF-049,voz,saqué 50 para la casa (muestra 4),retiro_personal,efectivo,65,,dicho_por_usuario,0.95,false,,false,true
+EVF-050,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 4),retiro_personal,efectivo,95,,dicho_por_usuario,0.9,false,,false,true
+EVF-051,voz,pagué el colegio de mi hijo con mi plata (muestra 4),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-052,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 4)",venta,credito,24.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
+EVF-053,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 4)",venta,credito,110,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
+EVF-054,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 4),cobro_fiado,efectivo,65,,dicho_por_usuario,0.94,false,,false,true
+EVF-055,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 4),compra,efectivo,395,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
+EVF-056,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 4),compra,credito,2415,,dicho_por_usuario,0.9,false,,false,true
+EVF-057,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 4),pago_proveedor,efectivo,1215,,dicho_por_usuario,0.93,false,,false,true
+EVF-058,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 4)",prestamo_recibido,efectivo,1015,,dicho_por_usuario,0.91,false,,false,true
+EVF-059,texto,"pagué la luz del local en efectivo, 180 soles (muestra 4)",gasto_negocio,efectivo,195,,dicho_por_usuario,0.95,false,,false,true
+EVF-060,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 4)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
+EVF-061,voz,vendí dos cervezas (muestra 5),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
+EVF-062,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 5),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
+EVF-063,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 5)",venta,efectivo,36.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
+EVF-064,voz,saqué 50 para la casa (muestra 5),retiro_personal,efectivo,70,,dicho_por_usuario,0.95,false,,false,true
+EVF-065,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 5),retiro_personal,efectivo,100,,dicho_por_usuario,0.9,false,,false,true
+EVF-066,voz,pagué el colegio de mi hijo con mi plata (muestra 5),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-067,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 5)",venta,credito,29.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
+EVF-068,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 5)",venta,credito,115,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
+EVF-069,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 5),cobro_fiado,efectivo,70,,dicho_por_usuario,0.94,false,,false,true
+EVF-070,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 5),compra,efectivo,400,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
+EVF-071,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 5),compra,credito,2420,,dicho_por_usuario,0.9,false,,false,true
+EVF-072,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 5),pago_proveedor,efectivo,1220,,dicho_por_usuario,0.93,false,,false,true
+EVF-073,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 5)",prestamo_recibido,efectivo,1020,,dicho_por_usuario,0.91,false,,false,true
+EVF-074,texto,"pagué la luz del local en efectivo, 180 soles (muestra 5)",gasto_negocio,efectivo,200,,dicho_por_usuario,0.95,false,,false,true
+EVF-075,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 5)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
+EVF-076,voz,vendí dos cervezas (muestra 6),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
+EVF-077,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 6),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
+EVF-078,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 6)",venta,efectivo,41.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
+EVF-079,voz,saqué 50 para la casa (muestra 6),retiro_personal,efectivo,75,,dicho_por_usuario,0.95,false,,false,true
+EVF-080,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 6),retiro_personal,efectivo,105,,dicho_por_usuario,0.9,false,,false,true
+EVF-081,voz,pagué el colegio de mi hijo con mi plata (muestra 6),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-082,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 6)",venta,credito,34.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
+EVF-083,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 6)",venta,credito,120,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
+EVF-084,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 6),cobro_fiado,efectivo,75,,dicho_por_usuario,0.94,false,,false,true
+EVF-085,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 6),compra,efectivo,405,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
+EVF-086,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 6),compra,credito,2425,,dicho_por_usuario,0.9,false,,false,true
+EVF-087,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 6),pago_proveedor,efectivo,1225,,dicho_por_usuario,0.93,false,,false,true
+EVF-088,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 6)",prestamo_recibido,efectivo,1025,,dicho_por_usuario,0.91,false,,false,true
+EVF-089,texto,"pagué la luz del local en efectivo, 180 soles (muestra 6)",gasto_negocio,efectivo,205,,dicho_por_usuario,0.95,false,,false,true
+EVF-090,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 6)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
+EVF-091,voz,vendí dos cervezas (muestra 7),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
+EVF-092,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 7),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
+EVF-093,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 7)",venta,efectivo,46.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
+EVF-094,voz,saqué 50 para la casa (muestra 7),retiro_personal,efectivo,80,,dicho_por_usuario,0.95,false,,false,true
+EVF-095,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 7),retiro_personal,efectivo,110,,dicho_por_usuario,0.9,false,,false,true
+EVF-096,voz,pagué el colegio de mi hijo con mi plata (muestra 7),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-097,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 7)",venta,credito,39.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
+EVF-098,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 7)",venta,credito,125,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
+EVF-099,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 7),cobro_fiado,efectivo,80,,dicho_por_usuario,0.94,false,,false,true
+EVF-100,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 7),compra,efectivo,410,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
+EVF-101,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 7),compra,credito,2430,,dicho_por_usuario,0.9,false,,false,true
+EVF-102,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 7),pago_proveedor,efectivo,1230,,dicho_por_usuario,0.93,false,,false,true
+EVF-103,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 7)",prestamo_recibido,efectivo,1030,,dicho_por_usuario,0.91,false,,false,true
+EVF-104,texto,"pagué la luz del local en efectivo, 180 soles (muestra 7)",gasto_negocio,efectivo,210,,dicho_por_usuario,0.95,false,,false,true
+EVF-105,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 7)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
+EVF-106,voz,vendí dos cervezas (muestra 8),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
+EVF-107,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 8),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
+EVF-108,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 8)",venta,efectivo,51.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
+EVF-109,voz,saqué 50 para la casa (muestra 8),retiro_personal,efectivo,85,,dicho_por_usuario,0.95,false,,false,true
+EVF-110,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 8),retiro_personal,efectivo,115,,dicho_por_usuario,0.9,false,,false,true
+EVF-111,voz,pagué el colegio de mi hijo con mi plata (muestra 8),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-112,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 8)",venta,credito,44.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
+EVF-113,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 8)",venta,credito,130,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
+EVF-114,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 8),cobro_fiado,efectivo,85,,dicho_por_usuario,0.94,false,,false,true
+EVF-115,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 8),compra,efectivo,415,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
+EVF-116,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 8),compra,credito,2435,,dicho_por_usuario,0.9,false,,false,true
+EVF-117,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 8),pago_proveedor,efectivo,1235,,dicho_por_usuario,0.93,false,,false,true
+EVF-118,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 8)",prestamo_recibido,efectivo,1035,,dicho_por_usuario,0.91,false,,false,true
+EVF-119,texto,"pagué la luz del local en efectivo, 180 soles (muestra 8)",gasto_negocio,efectivo,215,,dicho_por_usuario,0.95,false,,false,true
+EVF-120,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 8)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
+EVF-121,voz,vendí dos cervezas (muestra 9),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
+EVF-122,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 9),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
+EVF-123,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 9)",venta,efectivo,56.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
+EVF-124,voz,saqué 50 para la casa (muestra 9),retiro_personal,efectivo,90,,dicho_por_usuario,0.95,false,,false,true
+EVF-125,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 9),retiro_personal,efectivo,120,,dicho_por_usuario,0.9,false,,false,true
+EVF-126,voz,pagué el colegio de mi hijo con mi plata (muestra 9),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-127,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 9)",venta,credito,49.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
+EVF-128,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 9)",venta,credito,135,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
+EVF-129,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 9),cobro_fiado,efectivo,90,,dicho_por_usuario,0.94,false,,false,true
+EVF-130,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 9),compra,efectivo,420,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
+EVF-131,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 9),compra,credito,2440,,dicho_por_usuario,0.9,false,,false,true
+EVF-132,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 9),pago_proveedor,efectivo,1240,,dicho_por_usuario,0.93,false,,false,true
+EVF-133,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 9)",prestamo_recibido,efectivo,1040,,dicho_por_usuario,0.91,false,,false,true
+EVF-134,texto,"pagué la luz del local en efectivo, 180 soles (muestra 9)",gasto_negocio,efectivo,220,,dicho_por_usuario,0.95,false,,false,true
+EVF-135,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 9)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
+EVF-136,voz,vendí dos cervezas (muestra 10),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
+EVF-137,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 10),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
+EVF-138,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 10)",venta,efectivo,61.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
+EVF-139,voz,saqué 50 para la casa (muestra 10),retiro_personal,efectivo,95,,dicho_por_usuario,0.95,false,,false,true
+EVF-140,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 10),retiro_personal,efectivo,125,,dicho_por_usuario,0.9,false,,false,true
+EVF-141,voz,pagué el colegio de mi hijo con mi plata (muestra 10),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-142,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 10)",venta,credito,54.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
+EVF-143,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 10)",venta,credito,140,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
+EVF-144,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 10),cobro_fiado,efectivo,95,,dicho_por_usuario,0.94,false,,false,true
+EVF-145,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 10),compra,efectivo,425,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
+EVF-146,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 10),compra,credito,2445,,dicho_por_usuario,0.9,false,,false,true
+EVF-147,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 10),pago_proveedor,efectivo,1245,,dicho_por_usuario,0.93,false,,false,true
+EVF-148,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 10)",prestamo_recibido,efectivo,1045,,dicho_por_usuario,0.91,false,,false,true
+EVF-149,texto,"pagué la luz del local en efectivo, 180 soles (muestra 10)",gasto_negocio,efectivo,225,,dicho_por_usuario,0.95,false,,false,true
+EVF-150,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 10)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true

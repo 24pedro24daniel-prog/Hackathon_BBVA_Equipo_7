@@ -1,0 +1,4 @@
+# Scripts y env files que se leen dentro de contenedores Linux: siempre LF
+*.sh text eol=lf
+*.env text eol=lf
+Dockerfile text eol=lf

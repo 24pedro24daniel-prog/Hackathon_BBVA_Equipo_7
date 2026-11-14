@@ -40,7 +40,7 @@ CajaClara is a **door in**, not a bank app. Existing business banking tools see 
 
 Its edge is **anticipation, not bookkeeping**: it tells Pedro what will happen on the 30th and what he can do about it today, in his own words.
 
-It must not look or present itself as a BBVA product: no BBVA name, logo, colors, typography or banking-interface patterns in the UI. Bank products may only be mentioned in the pitch as the user's natural next step (roadmap).
+It must not present itself as a BBVA product: no BBVA name or logo in the UI. Team decision (14/11, hackathon): the UI uses the BBVA 2025 colour palette (Electric #001391, Midnight #070E46) and banking-app interface patterns (Nu, Monzo, SoFi) so it reads as a natural step towards formal banking; typography uses free look-alikes, not BBVA fonts. Bank products may only be mentioned in the pitch as the user's natural next step (roadmap).
 
 ## Operating Context
 - Two surfaces that must feel like one product:

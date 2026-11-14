@@ -1,0 +1,267 @@
+/* Primitivas compartidas. Prefijo .cc- para no chocar con estilos de páginas.
+   Referencias: Nu, Monzo, SoFi (estructura) + paleta BBVA 2025 (color).
+   - Fondo off-white, tarjetas blancas SIN borde con sombra suave; un tema por tarjeta.
+   - Color de marca escaso: un botón principal, enlaces, tarjeta de cuenta.
+   - Estado = texto de color + ícono. Nada de tarjetas tintadas de rojo/verde ni etiquetas con fondo. */
+
+/* ---------- Tarjeta ---------- */
+.cc-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.cc-card--flush { padding: 0; overflow: hidden; }
+.cc-card--dashed { box-shadow: none; border: 1px dashed var(--border-strong); background: transparent; }
+/* Compat: la variante "danger" ya no tiñe la tarjeta; el estado va en el texto. */
+.cc-card--danger { background: var(--surface); }
+.cc-card__head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 16px 16px 4px;
+}
+.cc-card__title { font-size: 16px; font-weight: 600; color: var(--title); }
+
+/* ---------- Botones ---------- */
+.cc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 12px 24px;
+  border-radius: var(--radius-pill);
+  border: 0;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.2;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.12s var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.cc-btn:active:not(:disabled) { transform: scale(0.98); }
+.cc-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.cc-btn--primary { background: var(--brand); color: var(--on-brand); }
+.cc-btn--primary:hover:not(:disabled) { background: var(--brand-hover); }
+/* Secundario: relleno gris, texto Electric (Monzo / Nu) */
+.cc-btn--secondary { background: var(--surface-sunken); color: var(--brand); }
+.cc-btn--secondary:hover:not(:disabled) { background: var(--border); }
+/* Enlace de acción: texto Electric con flecha (Nu "Simular →") */
+.cc-btn--ghost { background: transparent; color: var(--brand); padding-inline: 4px; min-height: var(--tap); }
+.cc-btn--ghost:hover:not(:disabled) { text-decoration: underline; }
+.cc-btn--block { width: 100%; }
+.cc-btn--lg { min-height: 52px; font-size: 17px; }
+.cc-btn--sm { min-height: var(--tap); padding: 8px 16px; font-size: 15px; }
+
+/* Botón circular de ícono (volver, cerrar, ayuda) */
+.cc-iconbtn {
+  width: var(--tap); height: var(--tap); flex: none;
+  display: grid; place-items: center;
+  border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--surface); color: var(--title);
+  box-shadow: var(--shadow);
+}
+.cc-iconbtn:hover { background: var(--surface-sunken); }
+
+/* ---------- Estado: texto de color, sin fondo ---------- */
+.cc-status { font-size: var(--fs-note); font-weight: 600; line-height: 1.3; color: var(--text-muted); }
+.cc-status--danger { color: var(--danger); }
+.cc-status--warning { color: var(--warning); }
+.cc-status--ok { color: var(--ok); }
+.cc-status--neutral { color: var(--text-muted); font-weight: 500; }
+
+/* ---------- Monto ---------- */
+.cc-money {
+  font-family: var(--font-amount);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  color: var(--title);
+}
+.cc-money__cur { font-size: 0.6em; font-weight: 600; margin-right: 0.18em; vertical-align: 0.42em; letter-spacing: 0; }
+.cc-money--hero { font-size: var(--fs-hero); line-height: 1.05; letter-spacing: -0.025em; }
+.cc-money--lg { font-size: 28px; line-height: 1.1; }
+.cc-money--md { font-size: 17px; }
+.cc-money--md .cc-money__cur { font-size: 0.8em; vertical-align: 0.08em; margin-right: 0.28em; }
+.cc-money--pos { color: var(--ok); }
+.cc-money--neg { color: var(--danger); }
+.cc-money--warning { color: var(--warning); }
+.cc-money--inverse { color: var(--on-brand); }
+
+/* ---------- Sección: título en frase fuera de la tarjeta ---------- */
+.cc-section { display: grid; gap: 10px; }
+.cc-section__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 0 4px; }
+.cc-section__title {
+  font-size: var(--fs-section);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--title);
+  scroll-margin-top: 16px;
+}
+.cc-section__title:focus { outline: none; }
+.cc-section__action {
+  font-size: 15px; font-weight: 600; color: var(--brand); text-decoration: none;
+  background: none; border: 0; padding: 10px 0; margin: -10px 0; cursor: pointer;
+}
+.cc-section__action:hover { text-decoration: underline; }
+
+/* ---------- Lista agrupada (movimientos) ---------- */
+.cc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.cc-card .cc-list, .cc-list--plain { box-shadow: none; border-radius: 0; background: transparent; }
+.cc-list > li { position: relative; }
+/* Divisor inset: empieza en la columna de texto (Monzo / SoFi) */
+.cc-list > li + li::before {
+  content: ''; position: absolute; top: 0; right: 0; left: 16px;
+  border-top: 1px solid var(--hairline);
+}
+.cc-list > li.has-lead + li::before, .cc-list > li + li.has-lead::before { left: 68px; }
+.cc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px 16px;
+  width: 100%;
+  background: none;
+  border: 0;
+  text-align: left;
+  color: inherit;
+  text-decoration: none;
+  font: inherit;
+}
+a.cc-row,
+button.cc-row { cursor: pointer; transition: background-color 0.15s ease; }
+a.cc-row:hover,
+button.cc-row:hover { background: var(--row-hover); }
+/* Ícono / iniciales en círculo gris (Nu) */
+.cc-row__lead {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  color: var(--title);
+  background: var(--surface-sunken);
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 14px;
+}
+.cc-row__main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.cc-row__title { font-weight: 500; font-size: 16px; color: var(--text); line-height: 1.3; }
+.cc-row__sub { font-size: var(--fs-note); color: var(--text-muted); line-height: 1.35; }
+.cc-row__end { flex: none; display: grid; gap: 2px; justify-items: end; text-align: right; }
+.cc-row__amount {
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--title);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cc-row__amount--pos { color: var(--ok); }
+.cc-row__amount--neg { color: var(--danger); }
+.cc-row__chev { flex: none; color: var(--text-muted); margin-right: -4px; }
+
+/* ---------- Control segmentado ---------- */
+.cc-seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-pill);
+}
+.cc-seg__opt {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.cc-seg__opt[aria-checked='true'],
+.cc-seg__opt[aria-selected='true'] { background: var(--surface); color: var(--title); box-shadow: var(--shadow); }
+
+/* ---------- Barra de progreso ---------- */
+.cc-bar { height: 6px; border-radius: var(--radius-pill); background: var(--surface-sunken); overflow: hidden; }
+.cc-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--brand); }
+.cc-bar--ok > span { background: var(--ok); }
+.cc-bar--warning > span { background: var(--warning); }
+.cc-bar--danger > span { background: var(--danger); }
+
+/* ---------- Encabezado de página ---------- */
+.cc-header {
+  padding: 20px var(--gutter) 16px;
+  max-width: var(--content-max, none);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cc-header__text { flex: 1; min-width: 0; }
+.cc-header__title {
+  color: var(--title);
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: var(--fs-title);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.cc-header__sub { font-size: 15px; color: var(--text-muted); margin-top: 4px; }
+.cc-header--sub { padding-top: 12px; padding-bottom: 12px; }
+.cc-header__center { flex: 1; min-width: 0; text-align: center; }
+.cc-header__subtitle-title { font-size: 17px; font-weight: 600; color: var(--title); line-height: 1.25; }
+.cc-header--sub .cc-header__sub { font-size: 13px; margin-top: 0; }
+.cc-header__right { width: var(--tap); flex: none; display: flex; justify-content: flex-end; }
+
+/* "¿De dónde sale este número?" */
+.cc-trace { padding: 0; }
+.cc-trace__toggle {
+  width: 100%; min-height: 56px; padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px;
+  background: none; border: 0; cursor: pointer; text-align: left;
+  color: var(--title); font-weight: 500; font-size: 15px;
+}
+.cc-trace__toggle > svg:first-child { color: var(--brand); }
+.cc-trace__toggle:hover { background: var(--row-hover); }
+.cc-trace__toggle .cc-trace__chev { margin-left: auto; transition: transform 0.2s var(--ease-out); color: var(--text-muted); }
+.cc-trace__toggle[aria-expanded='true'] .cc-trace__chev { transform: rotate(180deg); }
+.cc-trace__body { padding: 0 16px 16px 48px; display: grid; gap: 12px; font-size: 15px; color: var(--text-muted); }
+.cc-trace__body dt { font-weight: 600; color: var(--text); font-size: 14px; }
+.cc-trace__body dd { margin: 2px 0 0; }
+.cc-trace__meta { font-size: 12px; color: var(--text-subtle); border-top: 1px solid var(--hairline); padding-top: 8px; }
+
+/* Estados */
+.cc-skel {
+  background: linear-gradient(90deg, #eceff2 0%, #f7f8f8 50%, #eceff2 100%);
+  background-size: 200% 100%;
+  animation: cc-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-lg);
+}
+@keyframes cc-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.cc-error { display: grid; gap: 12px; text-align: left; justify-items: start; }
+
+.cc-footnote { text-align: center; font-size: 13px; color: var(--text-muted); padding: 24px var(--gutter) 16px; }
+
+.cc-muted { color: var(--text-muted); }
+.cc-small { font-size: var(--fs-note); }
+.cc-xs { font-size: 13px; }
+
+@media (min-width: 768px) {
+  .cc-header { padding-top: 32px; padding-bottom: 20px; }
+  .cc-header--sub { padding-top: 20px; }
+}

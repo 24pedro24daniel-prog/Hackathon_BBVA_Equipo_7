@@ -1,0 +1,2 @@
+ajuste_id,empresa_id,programado_id,fecha,concepto,monto,motivo,activo,creado_en
+AJU-0003,EMP-0001,PRG-0002,2026-11-28,alquiler,0.00,acuerdo con el dueño del local,false,2026-11-14T08:00:00-05:00

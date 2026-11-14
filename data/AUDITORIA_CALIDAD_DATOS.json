@@ -1,0 +1,72 @@
+{
+  "fecha_auditoria": "2026-11-14T17:15:00-05:00",
+  "semilla_rng": 42,
+  "total_tablas": 25,
+  "total_registros": 15945,
+  "total_casos_eval_f1": 150,
+  "total_reglas_evaluadas": 10,
+  "reglas_aprobadas": 10,
+  "reglas_fallidas": 0,
+  "detalle_checks": [
+    {
+      "categoria": "Esquema Multi-Tabla (DBML)",
+      "regla": "25 archivos CSV generados (24 tablas operativas pobladas + billeteras_digitales vacía con encabezados para roadmap)",
+      "estado": "PASS",
+      "detalle": "Pobladas: 24/24 | billeteras_digitales: 0 filas"
+    },
+    {
+      "categoria": "Público Objetivo (RUC 10)",
+      "regla": "100% de empresas son bodegas (rubro_id='RUB-01') con RUC 10 de 11 dígitos (^10\\d{9}$) activo (tiene_ruc=true) en 'nuevo_rus'",
+      "estado": "PASS",
+      "detalle": "30/30 bodegas RUC 10 (11 dígitos, ej. EMP-0001: 10456789012) en Nuevo RUS"
+    },
+    {
+      "categoria": "Operación 100% Efectivo",
+      "regla": "0 transacciones con métodos digitales (100% metodo_pago IN ('efectivo', 'credito') y 0 filas en billeteras_digitales)",
+      "estado": "PASS",
+      "detalle": "Transacciones digitales: 0 | Efectivo/Crédito: 8102/8102"
+    },
+    {
+      "categoria": "Canales Manuales y Doble Confirmación (F1)",
+      "regla": "100% canales manuales ('voz', 'texto', 'foto'), baja confianza (<0.75) con pregunta_aclaratoria y posibles duplicados etiquetados",
+      "estado": "PASS",
+      "detalle": "Canales no manuales: 0 | Borradores <0.75: 3 | Eval <0.75: 30 | Eval duplicados: 10"
+    },
+    {
+      "categoria": "Criterio Bancario Sueldo (\"Mínimo para vivir\")",
+      "regla": "EMP-0001 registra sueldo fijo mensual bajo criterio bancario de mínimo para vivir (S/ 1,350.00) separado de retiros extra",
+      "estado": "PASS",
+      "detalle": "Sueldo programado EMP-0001: S/ 1350.00 (sueldo fijo del dueño (criterio bancario mínimo para vivir S/ 1350/mes))"
+    },
+    {
+      "categoria": "Campaña Navideña y Nuevo RUS Mal Informado",
+      "regla": "Presencia de sobrecompra navideña en eventos.csv y casos donde ventas > S/ 5,000 pagan S/ 20 (Cat. 1) en vez de S/ 50 (Cat. 2)",
+      "estado": "PASS",
+      "detalle": "RUS mal informado (S/ 20 con ventas > S/ 5,000): 11 empresas (incl. EMP-0001) | Cat. 2 S/ 50 correcto: 14 | Eventos campaña: 4"
+    },
+    {
+      "categoria": "Dominio y Restricciones CHECK (Pandera)",
+      "regla": "monto > 0, moneda == 'PEN', afecta_caja == (metodo_pago != 'credito') y <= 1 FK satélite en 100% de transacciones",
+      "estado": "PASS",
+      "detalle": "8102/8102 transacciones válidas (0 violaciones CHECK)"
+    },
+    {
+      "categoria": "Integridad Referencial (PK/FK)",
+      "regla": "100% de llaves foráneas en transacciones existen en sus tablas padre",
+      "estado": "PASS",
+      "detalle": "Huérfanos detectados: 0"
+    },
+    {
+      "categoria": "Anti-Leakage (ML)",
+      "regla": "Cero transacciones o pagos de fiados con fecha posterior a fecha_corte (2026-11-14)",
+      "estado": "PASS",
+      "detalle": "Transacciones futuras: 0 | Pagos futuros en cuaderno_fiado: 0"
+    },
+    {
+      "categoria": "Storytelling Pedro (EMP-0001)",
+      "regla": "Saldo en efectivo al 2026-11-14 (S/ 2,340.00), Ingresos Nov (S/ 8,540.00), Egresos Nov (S/ 7,310.00) y Fiados (S/ 310.00) cuadran al céntimo",
+      "estado": "PASS",
+      "detalle": "Saldo: S/ 2340.00 | Ingresos: S/ 8540.00 | Egresos: S/ 7310.00 | Fiados: S/ 310.00"
+    }
+  ]
+}
