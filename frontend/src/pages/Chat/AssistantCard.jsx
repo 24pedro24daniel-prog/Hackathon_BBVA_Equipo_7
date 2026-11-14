@@ -3,6 +3,20 @@ import { Badge, Button } from '../../components/ui/index.jsx'
 import { soles } from '../../lib/format.js'
 import { HowIKnow, InBubble, KVTable, RichText } from './ChatParts.jsx'
 
+// Fuente técnica de una cifra → frase para Pedro. Si no la reconocemos, no se muestra.
+const FUENTES = [
+  [/^resumen\.saldo_caja/, 'tu caja de hoy'],
+  [/^forecast\.dia_critico/, 'lo que calculo para tu día más justo'],
+  [/^forecast/, 'lo que calculo que vas a vender'],
+  [/^pedidos\./, 'tu pedido'],
+  [/^simular/, 'cómo quedaría tu caja con ese cambio'],
+  [/prestamo_informal/, 'un ejemplo de préstamo informal'],
+  [/^fiados/, 'tus fiados'],
+]
+function fuenteTexto(fuente = '') {
+  return FUENTES.find(([re]) => re.test(fuente))?.[1] || null
+}
+
 export function AssistantCard({ msg, onAccion }) {
   const { res, time } = msg
   const fallback = !!res.meta?.fallback_usado
@@ -11,11 +25,14 @@ export function AssistantCard({ msg, onAccion }) {
   if (res.ofrecer_humano && !acciones.some((a) => a.tipo === 'hablar_humano')) {
     acciones.push({ tipo: 'hablar_humano', texto: 'Hablar con una persona' })
   }
+  const usadas = (res.cifras_usadas || [])
+    .map((c) => {
+      const f = fuenteTexto(c.fuente)
+      return f ? `${f} (${soles(c.valor)})` : null
+    })
+    .filter(Boolean)
   const extra = [
-    ...(res.cifras_usadas || []).map((c) => [soles(c.valor), `de ${c.fuente}`]),
-    ...(res.herramientas_llamadas?.length
-      ? [['Consultas que hizo', res.herramientas_llamadas.map((h) => h.nombre.replace(/_/g, ' ')).join(', ')]]
-      : []),
+    ...(usadas.length ? [['Usé', usadas.join(' · ')]] : []),
     ...(res.verificacion_cifras
       ? [['Cifras', res.verificacion_cifras.ok ? 'Verificadas con tus registros' : 'Algunas no se pudieron verificar']]
       : []),

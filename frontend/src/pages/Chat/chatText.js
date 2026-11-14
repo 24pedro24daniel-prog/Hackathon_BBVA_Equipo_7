@@ -4,8 +4,8 @@ import { ddmm, soles } from '../../lib/format.js'
 export const TIPO_LABEL = {
   venta: 'Venta',
   compra: 'Compra',
-  retiro_personal: 'Para la casa',
-  pago_impuesto: 'Impuesto',
+  retiro_personal: 'Saqué de la caja',
+  pago_impuesto: 'Pago de impuesto',
   cobro_fiado: 'Cobro de fiado',
   gasto: 'Gasto',
   gasto_operativo: 'Gasto del negocio',
@@ -52,7 +52,7 @@ export const isNegative = (text) => /^(no|corregir|no,? corregir)\b/.test(norm(t
 
 /**
  * Correcciones en texto libre mientras hay un borrador pendiente:
- * "Fue por billetera" → { metodo_pago: 'billetera_digital' }; "fueron 15" → { monto: 15 }; "era para la casa" → { tipo }
+ * "Fue por billetera" → { metodo_pago: 'billetera_digital' }; "fueron 15" → { monto: 15 }; "era una venta" → { tipo }
  */
 export function parseCorreccion(text) {
   const t = norm(text)
@@ -62,8 +62,7 @@ export function parseCorreccion(text) {
   else if (/tarjeta|\bpos\b/.test(t)) c.metodo_pago = 'tarjeta'
   else if (/transferencia/.test(t)) c.metodo_pago = 'transferencia'
   else if (/fiado|credito/.test(t)) c.metodo_pago = 'credito'
-  if (/para la casa|personal/.test(t)) c.tipo = 'retiro_personal'
-  else if (/\bventa\b|vendi/.test(t)) c.tipo = 'venta'
+  if (/\bventa\b|vendi/.test(t)) c.tipo = 'venta'
   const m = t.match(/^(?:s\/\s*)?(\d+(?:[.,]\d+)?)$/) || t.match(/\b(?:fue|fueron|era|eran|son|es)\b\D*(\d+(?:[.,]\d+)?)/)
   if (m) c.monto = Number(m[1].replace(',', '.'))
   return Object.keys(c).length ? c : null
@@ -127,14 +126,13 @@ export function textoConfirmado(mov, correcciones = {}, res) {
   if (corregidos.length) {
     let detalle = soles(final.monto, { cents: true })
     if (correcciones.metodo_pago) detalle += ` ${PAGO_CORTO[final.metodo_pago] || pagoLabel(final.metodo_pago)}`
-    else if (correcciones.tipo === 'retiro_personal') detalle += ' para la casa'
     else if (correcciones.tipo) detalle += ` (${tipoLabel(final.tipo).toLowerCase()})`
     lines.push('Listo, corregido:', `**${detalle}**`, '✅')
   } else if (final.tipo === 'compra') {
     const fecha = final.fecha_vencimiento ? `, lo pagas el ${ddmm(final.fecha_vencimiento)}` : ''
     lines.push('Listo, anotado ✅', `Pedido${final.contraparte ? ` a ${final.contraparte}` : ''} por **${soles(final.monto)}**${fecha}.`)
-  } else if (final.tipo === 'retiro_personal') {
-    lines.push('Listo, anotado ✅', `**${soles(final.monto)} para la casa.** Esa plata ya no cuenta como caja del negocio.`)
+  } else if (final.tipo === 'pago_impuesto') {
+    lines.push('Listo, anotado ✅', `Pagaste **${soles(final.monto)} de impuesto**. Ya salió de tu caja.`)
   } else {
     lines.push('Listo, anotado ✅')
   }
@@ -151,7 +149,7 @@ export function boldMonto(text = '', monto) {
   if (monto === null || monto === undefined) return text
   const grouped = String(Math.round(Math.abs(monto))).replace(/\B(?=(\d{3})+(?!\d))/g, '[\\s\\u202F\\u00A0]?')
   const re = new RegExp(`S/[\\s\\u00A0]?${grouped}(?:\\.\\d+)?`)
-  return text.replace(re, (m) => `**${m}**`)
+  return text.replace(re, (m) => `**${m.replace(/^S\/\s/, 'S/\u00A0')}**`)
 }
 
 const cap = (s = '') => s.charAt(0).toUpperCase() + s.slice(1)

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { useDemo } from '../../lib/useDemo.js'
-import { ddmm, pct, soles, weekdayDdmm } from '../../lib/format.js'
+import { ddmm, soles, weekdayDdmm } from '../../lib/format.js'
 import { Button, Card, ErrorState, LoadingBlock, PageHeader, TraceInfo } from '../../components/ui/index.jsx'
 import ForecastChart from './ForecastChart.jsx'
 import './Forecast.css'
@@ -75,28 +75,8 @@ function ForecastContent({ f }) {
   const minimo = f.minimo_operativo
   const eventos = f.proximos_eventos || []
 
-  const extra = []
-  if (critico?.probabilidad_deficit != null)
-    extra.push([
-      `Chance de que te falte el ${ddmm(critico.fecha)}`,
-      `${pct(critico.probabilidad_deficit)}, según lo que pasó en casos parecidos.`,
-    ])
-  if (f.modelo_metricas?.mae_backtest != null)
-    extra.push([
-      'Qué tan bien le atina',
-      `Probado con tus meses pasados, se equivoca en promedio ${soles(f.modelo_metricas.mae_backtest)} por día` +
-        (f.baseline?.mae_backtest != null
-          ? `; un cálculo simple (repetir la semana pasada) se equivoca ${soles(f.baseline.mae_backtest)}.`
-          : '.'),
-    ])
-  if (f.modelo_metricas?.cobertura_p10_p90 != null)
-    extra.push([
-      'El rango mejor–peor',
-      `En esas pruebas, tu saldo real cayó dentro del rango ${pct(f.modelo_metricas.cobertura_p10_p90)} de las veces.`,
-    ])
-
   return (
-    <>
+    <div className="fc-layout">
       <Card className="fc-chart-card">
         <div className="fc-kpis">
           <div>
@@ -135,32 +115,34 @@ function ForecastContent({ f }) {
         </ul>
       </Card>
 
-      <Card className="fc-next">
-        <h2 className="fc-card-title">Lo que viene</h2>
-        {eventos.length ? (
-          <ul className="fc-events">
-            {eventos.map((e) => (
-              <li key={`${e.fecha}-${e.concepto}`}>
-                <span>
-                  {weekdayDdmm(e.fecha)} · {e.concepto}
-                </span>
-                <strong className={'num' + (e.monto > 0 ? ' fc-pos' : '')}>{soles(e.monto, { sign: true })}</strong>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="cc-muted">No tienes pagos ni cobros con fecha en los próximos 30 días.</p>
-        )}
-        {eventos.some((e) => e.tipo === 'cobro_fiado') && (
-          <p className="cc-small cc-muted">Fiados contados según qué tan probable es que te paguen.</p>
-        )}
-      </Card>
+      <div className="fc-side">
+        <Card className="fc-next">
+          <h2 className="fc-card-title">Lo que viene</h2>
+          {eventos.length ? (
+            <ul className="fc-events">
+              {eventos.map((e) => (
+                <li key={`${e.fecha}-${e.concepto}`}>
+                  <span>
+                    {weekdayDdmm(e.fecha)} · {e.concepto}
+                  </span>
+                  <strong className={'num' + (e.monto > 0 ? ' fc-pos' : '')}>{soles(e.monto, { sign: true })}</strong>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="cc-muted">No tienes pagos ni cobros con fecha en los próximos 30 días.</p>
+          )}
+          {eventos.some((e) => e.tipo === 'cobro_fiado') && (
+            <p className="cc-small cc-muted">Fiados contados según qué tan probable es que te paguen.</p>
+          )}
+        </Card>
 
-      <TraceInfo fundamento={f.fundamento} limites={f.limites} confianza={f.confianza} meta={f.meta} extra={extra} />
+        <TraceInfo fundamento={f.fundamento} limites={f.limites} confianza={f.confianza} meta={f.meta} />
 
-      <Button block size="lg" onClick={() => navigate('/simulador')}>
-        Probar qué hacer
-      </Button>
-    </>
+        <Button block size="lg" onClick={() => navigate('/simulador')}>
+          Probar qué hacer
+        </Button>
+      </div>
+    </div>
   )
 }

@@ -83,7 +83,7 @@ export function TypingBubble({ label }) {
 }
 
 /** Explicabilidad compacta dentro de una burbuja: fundamento, límites, confianza, cifras, modelo */
-export function HowIKnow({ label = '¿Cómo lo sé?', fundamento, limites, confianza, meta, extra = [] }) {
+export function HowIKnow({ label = '¿De dónde sale este número?', fundamento, limites, confianza, meta, extra = [] }) {
   const [open, setOpen] = useState(false)
   const id = useId()
   const hasContent = fundamento || limites || confianza || meta || extra.length

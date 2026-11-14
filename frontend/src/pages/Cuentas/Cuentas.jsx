@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { useDemo } from '../../lib/useDemo.js'
-import { ddmm, pct, soles, weekdayDdmm } from '../../lib/format.js'
+import { ddmm, soles, weekdayDdmm } from '../../lib/format.js'
 import { Badge, Button, Card, ErrorState, Footnote, Icon, LoadingBlock, PageHeader, TraceInfo } from '../../components/ui/index.jsx'
 import RecordatorioSheet from './RecordatorioSheet.jsx'
 import './Cuentas.css'
@@ -127,9 +127,7 @@ export default function Cuentas() {
           ref={(el) => (sectionRefs.current.deben = el)}
           className="cuentas-section"
         >
-          <h2 className="sr-only" tabIndex={-1} ref={(el) => (headingRefs.current.deben = el)}>
-            Te deben
-          </h2>
+          <SectionHead id="deben" label="Te deben" total={totals.deben} headingRefs={headingRefs} />
           <FiadosBlock state={fiados} onRecordar={setSheetFiado} />
         </section>
 
@@ -140,9 +138,7 @@ export default function Cuentas() {
           ref={(el) => (sectionRefs.current.debes = el)}
           className="cuentas-section cuentas-section--debes"
         >
-          <h2 className="cc-eyebrow cuentas-eyebrow" tabIndex={-1} ref={(el) => (headingRefs.current.debes = el)}>
-            Debes
-          </h2>
+          <SectionHead id="debes" label="Debes" total={totals.debes} headingRefs={headingRefs} />
           <DebesBlock state={pedidos} />
         </section>
 
@@ -150,6 +146,22 @@ export default function Cuentas() {
       </div>
 
       {sheetFiado && <RecordatorioSheet fiado={sheetFiado} onClose={() => setSheetFiado(null)} />}
+    </div>
+  )
+}
+
+/** Título de sección. En móvil "Te deben" queda solo para lectores (la pestaña lo nombra); en escritorio se ven ambos con su total. */
+function SectionHead({ id, label, total, headingRefs }) {
+  return (
+    <div className={`cuentas-sec-head cuentas-sec-head--${id}`}>
+      <h2 className="cc-eyebrow cuentas-eyebrow" tabIndex={-1} ref={(el) => (headingRefs.current[id] = el)}>
+        {label}
+      </h2>
+      {total !== undefined && total !== null && (
+        <p className="cuentas-sec-total display num">
+          {soles(total)}
+        </p>
+      )}
     </div>
   )
 }
@@ -175,8 +187,6 @@ function FiadosBlock({ state, onRecordar }) {
       </Card>
     )
   }
-
-  const riesgos = items.filter((f) => f.riesgo_atraso)
 
   return (
     <>
@@ -216,24 +226,6 @@ function FiadosBlock({ state, onRecordar }) {
 
       <TraceInfo
         fundamento={data.fundamento || 'Cada riesgo sale de cuánto se demoró esa persona antes y de cuántos días lleva este fiado.'}
-        extra={
-          riesgos.length
-            ? [
-                [
-                  'Riesgo de que se atrase',
-                  <ul key="r" className="cuentas-trace-list">
-                    {riesgos.map((f) => (
-                      <li key={f.fiado_id}>
-                        {f.cliente}: {pct(f.riesgo_atraso.probabilidad)}
-                        {f.riesgo_atraso.baseline_probabilidad != null &&
-                          ` (lo usual en tu bodega: ${pct(f.riesgo_atraso.baseline_probabilidad)})`}
-                      </li>
-                    ))}
-                  </ul>,
-                ],
-              ]
-            : []
-        }
         limites={data.limites || 'Es una estimación; no sabe si la persona tuvo un imprevisto.'}
         meta={data.meta}
       />

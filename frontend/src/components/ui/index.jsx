@@ -2,13 +2,14 @@ import { useId, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Icon from './Icon.jsx'
 import { confianzaLabel } from '../../lib/format.js'
+import { useDemo } from '../../lib/useDemo.js'
 import './ui.css'
 
 export { Icon }
 
 const cx = (...c) => c.filter(Boolean).join(' ')
 
-/** variant: default | danger | casa | dashed */
+/** variant: default | danger | dashed */
 export function Card({ variant, flush, className, as = 'section', children, ...rest }) {
   const Tag = as
   return (
@@ -103,9 +104,13 @@ export function TraceInfo({ label = '¿De dónde sale este número?', fundamento
   )
 }
 
-/** Línea de trazabilidad del bloque `meta` del contrato */
+/**
+ * Línea de trazabilidad del bloque `meta` (modelo, versión, respaldo).
+ * Oculta por defecto: no le sirve a Pedro. Se activa en el menú Demo → "Ver detalles técnicos".
+ */
 export function MetaLine({ meta }) {
-  if (!meta) return null
+  const [demo] = useDemo()
+  if (!meta || !demo.tecnico) return null
   return (
     <p className="cc-trace__meta">
       Modelo {meta.modelo} v{meta.modelo_version}

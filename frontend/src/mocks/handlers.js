@@ -102,7 +102,7 @@ async function handle(method, path, { query, body }) {
       return ok(nuevo ? { total_pendiente: 0, total_vencido: 0, items: [], meta: D.meta('riesgo-atraso-clf', '0.2.0') } : D.fiados())
 
     case 'POST /fiados/:id/recordatorio': {
-      const f = D.fiados().items.find((x) => path.endsWith(x.fiado_id))
+      const f = D.fiados().items.find((x) => path.includes(x.fiado_id))
       if (!f) return err(404, 'NO_ENCONTRADO', 'No encontré ese fiado.')
       return ok({ mensaje: `Hola, ${f.cliente} 😊 Le recuerdo amablemente los S/ ${f.monto} pendientes en la bodega. ¡Gracias!` })
     }
@@ -290,7 +290,7 @@ function asistente(mensaje, conversacion_id, fallback) {
       ...base,
       intencion: 'explicar_alerta',
       ofrecer_humano: true,
-      respuesta: 'El 30/11 vence tu pago de S/ 2 400 a Distribuidora Andina. Este mes sacaste S/ 700 más de lo usual para la casa, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ 310 en fiados sin cobrar. Si pides S/ 1 800 y pagas en 2 partes, ese día tendrías S/ 850.',
+      respuesta: 'El 30/11 vence tu pago de S/ 2 400 a Distribuidora Andina. Este mes vendiste unos S/ 560 menos que el mes pasado, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ 310 en fiados sin cobrar. Si pides S/ 1 800 y pagas en 2 partes, ese día tendrías S/ 850.',
       herramientas_llamadas: [{ nombre: 'obtener_alertas', args: { estado: 'activa' } }, { nombre: 'simular', args: { acciones: ['reducir_pedido:1800', 'pagar_en_partes:2'] } }],
       cifras_usadas: [{ valor: 2400, fuente: 'pedidos.PED-0012.monto' }, { valor: 850, fuente: 'simular.con_acciones.saldo_minimo' }],
     }

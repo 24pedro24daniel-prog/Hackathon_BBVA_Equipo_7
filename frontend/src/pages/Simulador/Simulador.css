@@ -3,6 +3,35 @@
   display: grid;
   gap: 12px;
 }
+.sim-options,
+.sim-aside {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  align-content: start;
+}
+
+/* Tablet/escritorio: opciones a la izquierda, resultado fijo a la derecha */
+@media (min-width: 768px) {
+  .sim-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 24px;
+  }
+  .sim-options {
+    gap: 16px;
+  }
+  .sim-aside {
+    position: sticky;
+    top: 24px;
+  }
+}
+@media (min-width: 1100px) {
+  .sim-body {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 32px;
+  }
+}
 
 .sim-group {
   border: 0;
@@ -48,7 +77,7 @@
 .sim-option:has(.sim-input:checked) {
   border: 2px solid var(--brand);
   padding: 11.5px 15.5px;
-  background: color-mix(in srgb, var(--brand-soft) 45%, var(--surface));
+  background: var(--brand-soft);
 }
 .sim-option:has(.sim-input:focus-visible) {
   outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent);
@@ -63,10 +92,13 @@
 .sim-option__amount {
   font-size: 20px;
   line-height: 1.15;
+  font-weight: var(--display-weight);
+  color: var(--title);
 }
 .sim-option__title {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 16px;
+  color: var(--title);
 }
 .sim-option__sub {
   font-size: 14px;
@@ -74,7 +106,7 @@
 }
 .sim-option__chosen {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--brand);
 }
 
@@ -83,7 +115,7 @@
   width: 26px;
   height: 26px;
   border: 2px solid var(--border-strong);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--surface);
   display: grid;
   place-items: center;
@@ -109,7 +141,7 @@
 }
 .sim-result__kicker {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -117,6 +149,15 @@
   font-size: 40px;
   line-height: 1.1;
   margin: 4px 0 6px;
+  font-weight: var(--display-weight);
+}
+@media (min-width: 768px) {
+  .sim-result {
+    padding: 24px;
+  }
+  .sim-result__amount {
+    font-size: 44px;
+  }
 }
 .sim-result__main {
   font-weight: 500;
@@ -144,12 +185,12 @@
 }
 
 .sim-result--te_alcanza {
-  background: var(--brand-soft);
-  border-color: var(--brand-band);
+  background: var(--ok-bg);
+  border-color: color-mix(in srgb, var(--ok) 25%, transparent);
 }
 .sim-result--te_alcanza .sim-result__kicker,
 .sim-result--te_alcanza .sim-result__amount {
-  color: var(--brand);
+  color: var(--ok);
 }
 
 .sim-stale {
@@ -162,12 +203,13 @@
   padding: 0;
   min-height: var(--tap);
   color: var(--brand);
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
 }
 
 .sim-foot {
+  max-width: 70ch;
   display: grid;
   gap: 8px;
   font-size: 14px;

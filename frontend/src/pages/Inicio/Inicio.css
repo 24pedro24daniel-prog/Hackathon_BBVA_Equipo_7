@@ -1,16 +1,30 @@
-/* Inicio (mockup págs. 5 y 10) */
+/* Inicio (mockup págs. 5 y 10). Mobile-first; grilla de tablero en 768 / 1100 px. */
 .inicio__body {
-  display: grid;
-  gap: 12px;
   padding: 4px var(--gutter) 0;
 }
 
-.inicio__pair {
+/* ---------- Grilla de Pedro ---------- */
+.inicio__dash {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    'alerta alerta'
+    'caja   caja'
+    'deben  debes'
+    'disp   disp'
+    'trace  trace'
+    'resumen resumen';
   gap: 12px;
+  align-items: start;
 }
-.inicio__pair > * { min-width: 0; }
+.inicio__dash > * { min-width: 0; }
+.inicio__a-alerta { grid-area: alerta; }
+.inicio__a-caja { grid-area: caja; }
+.inicio__a-deben { grid-area: deben; align-self: stretch; }
+.inicio__a-debes { grid-area: debes; align-self: stretch; }
+.inicio__a-disp { grid-area: disp; }
+.inicio__a-trace { grid-area: trace; }
+.inicio__a-resumen { grid-area: resumen; }
 
 /* Alerta principal */
 .inicio__alerta { display: grid; gap: 10px; justify-items: start; padding: 18px; }
@@ -20,12 +34,18 @@
   gap: 8px;
   color: var(--danger);
   font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.inicio__alerta-title { font-size: 24px; line-height: 1.18; }
-.inicio__alerta-why { font-size: 16px; color: var(--text); }
+.inicio__alerta-title {
+  font-size: 24px;
+  line-height: 1.18;
+  font-weight: var(--display-weight);
+  color: var(--title);
+  max-width: 34ch;
+}
+.inicio__alerta-why { font-size: 16px; color: var(--text); max-width: 65ch; }
 .inicio__alerta .cc-btn { margin-top: 6px; }
 
 .inicio__ok {
@@ -33,31 +53,50 @@
   align-items: center;
   gap: 10px;
   background: var(--ok-bg);
-  border-color: var(--brand-band);
+  border-color: var(--ok-bg);
   color: var(--ok);
   font-weight: 600;
 }
 .inicio__ok svg { flex: none; }
 
-/* Negocio / Casa */
-.inicio__saldo { display: grid; gap: 4px; align-content: start; }
-.inicio__saldo-label {
+/* Caja del negocio (cifra principal) */
+.inicio__caja { display: grid; gap: 4px; align-content: start; height: 100%; }
+.inicio__caja-label {
   display: flex;
   align-items: center;
   gap: 6px;
+  color: var(--negocio);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.inicio__saldo--negocio .inicio__saldo-label { color: var(--negocio); }
-.inicio__saldo--casa .inicio__saldo-label { color: var(--casa); }
-.inicio__saldo-value { font-size: 30px; line-height: 1.1; margin-top: 4px; white-space: nowrap; }
+.inicio__caja-value {
+  font-size: 40px;
+  line-height: 1.05;
+  margin-top: 4px;
+  font-weight: var(--display-weight);
+  color: var(--title);
+  white-space: nowrap;
+}
 
 /* Disponible para gastar */
-.inicio__disponible { display: grid; gap: 4px; }
-.inicio__disp-value { font-size: 34px; line-height: 1.1; }
-.inicio__disp-msg { font-size: 16px; color: var(--text); margin-top: 2px; }
+.inicio__disponible { display: grid; gap: 4px; align-content: start; height: 100%; }
+.inicio__disp-label {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.inicio__disp-value {
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: var(--display-weight);
+  color: var(--title);
+  white-space: nowrap;
+}
+.inicio__disp-msg { font-size: 16px; color: var(--text); margin-top: 2px; max-width: 65ch; }
 
 .inicio__desglose {
   list-style: none;
@@ -71,8 +110,8 @@
 .inicio__desglose-total {
   border-top: 1px solid var(--border);
   padding-top: 4px;
-  font-weight: 700;
-  color: var(--text);
+  font-weight: 600;
+  color: var(--title);
 }
 
 /* Te deben / Debes */
@@ -83,53 +122,144 @@
   border-radius: var(--radius-lg);
 }
 .inicio__link-card:hover .cc-card { border-color: var(--border-strong); }
-.inicio__mini { display: grid; gap: 2px; height: 100%; min-height: var(--tap); }
+.inicio__mini { display: grid; gap: 2px; align-content: start; height: 100%; min-height: var(--tap); }
 .inicio__mini-label { font-size: 15px; color: var(--text-muted); }
-.inicio__mini-value { font-size: 24px; line-height: 1.15; white-space: nowrap; }
+.inicio__mini-value {
+  font-size: 24px;
+  line-height: 1.15;
+  font-weight: var(--display-weight);
+  color: var(--title);
+  white-space: nowrap;
+}
 
-/* Filas de resumen */
-.inicio__rows { margin: 0; display: grid; gap: 8px; }
+/* Resumen del mes */
+.inicio__resumen-title { margin-bottom: 8px; }
+.inicio__rows { margin: 0; display: grid; gap: 10px; }
 .inicio__row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: baseline;
-  gap: 12px;
+  column-gap: 12px;
+  row-gap: 2px;
 }
 .inicio__row dt { font-size: 16px; color: var(--text-muted); }
-.inicio__row dd {
-  margin: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  white-space: nowrap;
-  font-size: 16px;
+.inicio__row dd { margin: 0; font-size: 16px; white-space: nowrap; }
+.inicio__row dd strong { color: var(--title); font-weight: 600; }
+.inicio__row .inicio__delta {
+  grid-column: 1 / -1;
+  justify-self: end;
+  white-space: normal;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
 }
-.inicio__delta { font-weight: 600; color: var(--text-muted); }
-.inicio__delta--mala { color: var(--danger); }
-.inicio__vs { margin-top: 8px; }
+.inicio__row .inicio__delta--mala { color: var(--danger); }
+.inicio__vs { margin-top: 10px; }
 
-/* Día 3: progreso */
+/* ---------- Día 3 ---------- */
+.inicio__nuevo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.inicio__nuevo > * { min-width: 0; }
+
 .inicio__progreso { display: grid; gap: 12px; }
-.inicio__progreso-title { font-size: 18px; font-weight: 700; line-height: 1.25; }
+.inicio__progreso-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: var(--display-weight);
+  line-height: 1.25;
+  color: var(--title);
+  max-width: 40ch;
+}
+.inicio__progreso .cc-btn { width: 100%; }
 .inicio__segs { display: flex; gap: 4px; }
 .inicio__segs span {
   flex: 1;
   height: 10px;
-  border-radius: 3px;
+  border-radius: var(--radius-pill);
   background: var(--border);
 }
 .inicio__segs span.is-on { background: var(--brand); }
 
-.inicio__proximos { display: grid; gap: 6px; background: transparent; box-shadow: none; }
+.inicio__proximos { display: grid; gap: 6px; background: transparent; }
+.inicio__proximos p { max-width: 65ch; }
 .inicio__proximos-title {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--title);
 }
 
 @media (max-width: 359px) {
-  .inicio__saldo-value { font-size: 26px; }
+  .inicio__caja-value { font-size: 34px; }
+  .inicio__disp-value { font-size: 30px; }
   .inicio__mini-value { font-size: 21px; }
+}
+
+/* ---------- Tablet: 2 columnas ---------- */
+@media (min-width: 768px) {
+  .inicio__dash {
+    gap: 16px;
+    grid-template-areas:
+      'alerta alerta'
+      'caja   disp'
+      'deben  debes'
+      'trace  trace'
+      'resumen resumen';
+  }
+  .inicio__a-caja,
+  .inicio__a-disp { align-self: stretch; }
+  .inicio__alerta { padding: 24px; }
+  .inicio__alerta-title { font-size: 28px; }
+
+  .inicio__nuevo {
+    gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      'progreso progreso'
+      'caja     resumen'
+      'proximos proximos';
+  }
+  .inicio__n-progreso { grid-area: progreso; }
+  .inicio__n-caja { grid-area: caja; align-self: stretch; }
+  .inicio__n-resumen { grid-area: resumen; align-self: stretch; }
+  .inicio__n-proximos { grid-area: proximos; }
+  .inicio__progreso { padding: 24px; }
+  .inicio__progreso-title { font-size: 22px; }
+  .inicio__progreso .cc-btn { width: auto; justify-self: start; }
+}
+
+/* ---------- Escritorio: tablero ---------- */
+@media (min-width: 1100px) {
+  .inicio__dash {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-areas:
+      'alerta  alerta  alerta  alerta'
+      'caja    disp    deben   debes'
+      'resumen resumen trace   trace';
+  }
+  .inicio__alerta { padding: 28px 32px; }
+  .inicio__caja-value { font-size: 44px; }
+  .inicio__disp-value { font-size: 44px; }
+  .inicio__mini { padding: 16px 20px; }
+  .inicio__mini-label { font-size: 14px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .inicio__mini-value { font-size: 32px; margin-top: 4px; line-height: 1.05; }
+  .inicio__a-resumen { padding: 20px 24px; }
+
+  .inicio__nuevo {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-areas:
+      'progreso caja'
+      'progreso resumen'
+      'proximos proximos';
+  }
+  .inicio__n-caja,
+  .inicio__n-resumen { align-self: start; }
+  .inicio__n-progreso { align-self: stretch; align-content: start; }
 }

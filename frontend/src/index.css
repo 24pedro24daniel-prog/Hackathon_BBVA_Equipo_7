@@ -1,56 +1,58 @@
 /* CajaClara — design tokens + base. Mobile-first (360px). */
 :root {
-  /* Surfaces */
-  --bg: #f1f3f0;
+  /* Paleta CajaClara — "patrones ux ui.pdf" (azules propios + acento aqua). Pares texto/fondo ≥ 4.5:1 */
+  /* Neutros */
+  --bg: #f4f6f9;
   --surface: #ffffff;
-  --surface-sunken: #f3f5f2;
-  --border: #dde2dc;
-  --border-strong: #c9d0c8;
+  --surface-sunken: #f4f6f9;
+  --border: #d5dce5;
+  --border-strong: #b9c4d2;
 
-  /* Text */
-  --text: #16201c;
-  --text-muted: #4c5752;
-  --text-subtle: #6b746f;
+  /* Texto */
+  --title: #0b2447;          /* Azul noche: títulos y cifras clave */
+  --text: #13202f;           /* Texto principal */
+  --text-muted: #4a5868;     /* Texto secundario: etiquetas, fechas, notas */
+  --text-subtle: #4a5868;
 
-  /* Brand (teal) */
-  --brand: #13695b;
-  --brand-strong: #0e5247;
-  --brand-soft: #e2efea;
-  --brand-band: #c9e2da;
+  /* Acción (azul medio) */
+  --brand: #1464a5;
+  --brand-strong: #0b2447;
+  --brand-soft: #e3eef9;     /* Fondo de tarjetas informativas y chips seleccionados */
+  --brand-band: #c3d9ef;     /* Banda de rango del forecast, barras pasadas */
   --on-brand: #ffffff;
+  --negocio: #1464a5;
 
-  /* Negocio / Casa */
-  --negocio: #13695b;
-  --casa: #5a4fa0;
-  --casa-bg: #ecebf8;
-  --casa-border: #cfcaf0;
-
-  /* Status */
-  --danger: #b4441a;
-  --danger-bg: #fbe7dd;
-  --danger-border: #efc2ab;
-  --warning: #7a5a00;
-  --warning-bg: #fcefc4;
-  --ok: #13695b;
-  --ok-bg: #e2efea;
+  /* Estados */
+  --ok: #096b67;             /* Aqua oscuro: te alcanza, metas, montos a favor */
+  --ok-bg: #d3f2f0;
+  --danger: #b5450b;         /* Naranja: faltante de caja, días en riesgo */
+  --danger-bg: #fce9df;
+  --danger-border: #f3c7ad;
+  --warning: #6f4a00;        /* Ámbar: justo, por vencer */
+  --warning-bg: #fff2cc;
 
   /* Chat */
-  --chat-bg: #eef0ec;
-  --bubble-out: #13695b;
+  --chat-bg: #e8edf3;
+  --bubble-out: #1464a5;
   --bubble-in: #ffffff;
 
-  /* Type */
+  /* Tipografía */
   --font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --display-weight: 600;     /* títulos firmes pero no pesados (la guía evita 700) */
 
-  /* Shape & space */
-  --radius-sm: 8px;
-  --radius: 14px;
-  --radius-lg: 18px;
+  /* Forma: plana, sin sombras. Base de espaciado 8px */
+  --radius-sm: 12px;
+  --radius: 16px;
+  --radius-lg: 20px;
+  --radius-pill: 9999px;
   --gutter: 16px;
   --nav-h: 64px;
+  --rail-w: 88px;
+  --sidebar-w: 240px;
   --tap: 44px;
-  --shadow: 0 1px 2px rgba(22, 32, 28, 0.04);
+  --shadow: none;
+  --scrim: rgba(11, 36, 71, 0.45);
 
   color: var(--text);
   background: var(--bg);
@@ -96,7 +98,7 @@ a {
 }
 
 :focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
 
@@ -108,8 +110,9 @@ a {
 
 .display {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: var(--display-weight);
   letter-spacing: -0.01em;
+  color: var(--title);
 }
 
 .sr-only {
@@ -122,6 +125,14 @@ a {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Responsive: gutter más amplio en pantallas grandes */
+@media (min-width: 768px) {
+  :root { --gutter: 24px; }
+}
+@media (min-width: 1100px) {
+  :root { --gutter: 32px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

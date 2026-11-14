@@ -32,10 +32,14 @@ export default function Progreso() {
         {error && <ErrorState error={error} onRetry={reload} />}
         {data && (
           <>
-            <ScoreCard salud={data} />
-            <Etapas etapas={data.etapas || ETAPAS_DEFAULT} actual={data.etapa_actual} />
-            <Componentes salud={data} />
-            <Metas metas={data.metas_activas || []} />
+            <div className="progreso-col">
+              <ScoreCard salud={data} />
+              <Etapas etapas={data.etapas || ETAPAS_DEFAULT} actual={data.etapa_actual} />
+            </div>
+            <div className="progreso-col">
+              <Componentes salud={data} />
+              <Metas metas={data.metas_activas || []} />
+            </div>
             <p className="progreso-privacy cc-small">
               Tu historial es tuyo. Solo se comparte si tú lo activas, y puedes retirarlo cuando quieras.
             </p>
@@ -54,7 +58,7 @@ function ScoreCard({ salud }) {
   const desde = prev ? ` desde ${mesLabel(prev.mes).largo}` : ''
   let tendencia = null
   if (delta > 0) tendencia = `Subiste ${delta} ${delta === 1 ? 'punto' : 'puntos'}${desde}.`
-  else if (delta < 0) tendencia = `Bajaste ${-delta} ${delta === -1 ? 'punto' : 'puntos'}${desde}. Vamos viendo qué lo movió.`
+  else if (delta < 0) tendencia = `Bajaste ${-delta} ${delta === -1 ? 'punto' : 'puntos'}${desde}. Abajo ves qué parte lo movió.`
   else if (delta === 0) tendencia = `Te mantienes igual${desde}.`
 
   const alt = historial.map((h) => `${mesLabel(h.mes).largo}: ${h.score}`).join(', ')
@@ -84,7 +88,7 @@ function ScoreCard({ salud }) {
                     <span className="progreso-chart__val num">{h.score}</span>
                     <div
                       className={`progreso-chart__bar${actual ? ' progreso-chart__bar--now' : ''}`}
-                      style={{ height: `${Math.round(Math.max(4, Math.min(100, h.score)) * 0.9)}px` }}
+                      style={{ '--h': Math.max(4, Math.min(100, h.score)) }}
                     />
                   </div>
                   <span className={`progreso-chart__label${actual ? ' progreso-chart__label--now' : ''}`}>
@@ -127,7 +131,7 @@ function Etapas({ etapas, actual }) {
   )
 }
 
-function Indicador({ s, showPeso }) {
+function Indicador({ s }) {
   return (
     <li className="progreso-ind">
       <div className="progreso-ind__head">
@@ -138,9 +142,6 @@ function Indicador({ s, showPeso }) {
         <div className="progreso-ind__fill" style={{ width: `${Math.max(0, Math.min(100, s.valor))}%` }} />
       </div>
       {s.detalle && <p className="progreso-ind__detail cc-small">{s.detalle}</p>}
-      {showPeso && s.peso != null && (
-        <p className="progreso-ind__peso cc-xs num">Pesa {Math.round(s.peso * 100)}% en tu puntaje</p>
-      )}
     </li>
   )
 }
@@ -153,32 +154,26 @@ function Componentes({ salud }) {
   const resto = subs.filter((s) => !s.destacado)
   const visibles = destacados.length ? destacados : subs.slice(0, 3)
   const ocultos = destacados.length ? resto : subs.slice(3)
-  const tienePesos = subs.some((s) => s.peso != null)
-  const suma = subs.reduce((acc, s) => acc + (s.peso ?? 0) * s.valor, 0)
 
   if (!subs.length) return null
+  const porMejorar = subs.reduce((min, s) => (s.valor < min.valor ? s : min), subs[0])
 
   return (
     <Card aria-labelledby="progreso-comp-title">
       <h2 id="progreso-comp-title" className="progreso-h2">
         Qué lo compone
       </h2>
-      <ul className="progreso-inds" id={listId}>
-        {visibles.map((s) => (
-          <Indicador key={s.id} s={s} showPeso={open} />
-        ))}
-        {open && ocultos.map((s) => <Indicador key={s.id} s={s} showPeso />)}
-      </ul>
-
-      {open && tienePesos && (
-        <p className="progreso-formula cc-small">
-          Tu puntaje es el promedio de estas {subs.length} partes, cada una según lo que pesa:{' '}
-          <span className="num">
-            {subs.map((s) => `${s.valor}×${Math.round((s.peso ?? 0) * 100)}%`).join(' + ')} ≈ {Math.round(suma)}
-          </span>
-          . Son reglas fijas, no una opinión: si mejoras una parte, sube el puntaje.
+      {porMejorar.valor < 100 && (
+        <p className="progreso-hint cc-small">
+          Donde más puedes avanzar: <strong>{lowerFirst(porMejorar.nombre)}</strong>.
         </p>
       )}
+      <ul className="progreso-inds" id={listId}>
+        {visibles.map((s) => (
+          <Indicador key={s.id} s={s} />
+        ))}
+        {open && ocultos.map((s) => <Indicador key={s.id} s={s} />)}
+      </ul>
 
       {ocultos.length > 0 && (
         <button

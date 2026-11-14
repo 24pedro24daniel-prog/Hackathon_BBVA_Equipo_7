@@ -59,7 +59,7 @@ export const resumenNuevo = {
 }
 
 // ---------- F3 Forecast ----------
-// Serie determinística: la caja baja por retiros para la casa hasta el 29/11, cae con el pago de Andina el 30/11
+// Serie determinística: la caja baja por compras de mercadería hasta el 29/11, cae con el pago de Andina el 30/11
 // y se recupera despacio. Se generan p10/p50/p90 con una banda que se abre con el horizonte.
 function buildSerie() {
   const out = []
@@ -70,7 +70,7 @@ function buildSerie() {
     const d = new Date(start.getTime() + i * 86400000)
     const fecha = d.toISOString().slice(0, 10)
     let ingresos = 610 + (d.getDay() === 6 || d.getDay() === 0 ? 120 : 0)
-    let egresos = 640 // mercadería + plata para la casa por encima de lo usual
+    let egresos = 640 // mercadería y gastos del día
     if (fecha === '2026-11-16') egresos += 180 // luz y agua
     if (fecha === '2026-11-20') ingresos += 190 // fiados que esperas cobrar (ponderado)
     if (fecha === '2026-11-30') egresos += 2400 // pago a Andina
@@ -107,7 +107,7 @@ export const forecastPedro = () => ({
     valor: 0.0,
     formula: 'saldo_actual + cobros_esperados − pagos_comprometidos_hasta_proximo_vencimiento − minimo_operativo − reserva_impuestos',
     componentes: { saldo_actual: 2340.0, cobros_esperados: 190.0, pagos_comprometidos: 2420.0, minimo_operativo: 800.0, reserva_impuestos: 20.0 },
-    mensaje: 'Hoy no saques para la casa: arriesgas el pago del 30/11.',
+    mensaje: 'Hoy no hagas gastos extra: arriesgas el pago del 30/11.',
   },
   // EXT: lista "Lo que viene" del mockup (30 días)
   proximos_eventos: [
@@ -193,14 +193,14 @@ export const alertas = () => ({
       titulo: 'El 30/11 te faltarían S/ 650 para pagar a Andina',
       titulo_corto: 'El 30/11 no te alcanzará', // EXT (chat)
       insight: 'Para pagar S/ 2 400 a Distribuidora Andina te faltarían S/ 650.',
-      resumen_causas: 'más plata para la casa, pedido grande y fiados sin cobrar.', // EXT
+      resumen_causas: 'vendiste menos, pedido grande y fiados sin cobrar.', // EXT
       causas: [
-        { descripcion: 'Sacaste más para la casa', monto: 700.0 },
+        { descripcion: 'Vendiste menos que el mes pasado', monto: 560.0 },
         { descripcion: 'Pediste más de lo que vendes', monto: 400.0 },
         { descripcion: 'Fiados sin cobrar', monto: 310.0 },
       ],
       accion: { tipo: 'abrir_simulador', texto_boton: 'Ver qué puedo hacer', payload: { pedido_id: 'PED-0012' } },
-      microexplicacion: 'Cuando el dinero de la casa y del negocio se mezclan, es difícil saber cuánto puedes pedir.',
+      microexplicacion: 'Si pides más de lo que vendes en el plazo de pago, la caja no llega a la fecha.',
       canales: ['whatsapp', 'app'],
       estado: 'activa',
       meta: meta('reglas-alertas + forecast-lgbm-quantile', '0.3.1'),
@@ -216,9 +216,8 @@ export const salud = () => ({
   etapas: ['organizar', 'estabilizar', 'proteger', 'crecer'], // EXT
   subindicadores: [
     { id: 'constancia_registro', nombre: 'Anotar todos los días', valor: 92, detalle: '92 días anotando · 4 semanas seguidas', peso: 0.2, destacado: true },
-    { id: 'separacion_personal', nombre: 'Separar casa y negocio', valor: 70, detalle: 'Sueldo fijo de S/ 400 por semana; este mes te pasaste', peso: 0.2, destacado: true },
-    { id: 'colchon_caja', nombre: 'Colchón de caja', valor: 45, detalle: '5 días de gastos cubiertos', peso: 0.15 },
-    { id: 'pedidos_acordes', nombre: 'Pedidos acordes a ventas', valor: 60, detalle: '1 de 3 pedidos excedió tus ventas', peso: 0.15 },
+    { id: 'colchon_caja', nombre: 'Colchón de caja', valor: 45, detalle: '5 días de gastos cubiertos', peso: 0.25 },
+    { id: 'pedidos_acordes', nombre: 'Pedir según lo que vendes', valor: 60, detalle: '1 de 3 pedidos fue más grande que tus ventas', peso: 0.25, destacado: true },
     { id: 'cobro_fiados', nombre: 'Cobrar fiados a tiempo', valor: 80, detalle: '8 de cada 10 fiados cobrados en menos de 15 días', peso: 0.1, destacado: true },
     { id: 'impuestos_al_dia', nombre: 'Impuestos al día', valor: 100, detalle: 'Al día', peso: 0.1 },
     { id: 'meses_sin_faltante', nombre: 'Meses sin faltantes', valor: 50, detalle: '1 de 2 meses', peso: 0.1 },

@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { useDemo } from '../../lib/useDemo.js'
-import { soles, solesRange, weekdayDdmm, pct, daysBetween } from '../../lib/format.js'
+import { soles, solesRange, weekdayDdmm, daysBetween, diferenciaSoles } from '../../lib/format.js'
 import DemoMenu from '../../components/layout/DemoMenu.jsx'
 import {
   Card,
@@ -77,66 +77,55 @@ export default function Inicio() {
 
 function InicioPedro({ resumen, forecast, alertas }) {
   const ind = resumen.indicadores
-  const retiros = ind.retiros_personales
   const cobro = ind.pendiente_cobro
   const pagos = ind.pagos_pendientes
   const ganancia = ind.ganancia_neta
 
   return (
-    <>
-      <AlertaPrincipal alertas={alertas} corte={resumen.corte} />
-
-      <div className="inicio__pair">
-        <SaldoCard tipo="negocio" valor={ind.saldo_caja_negocio.valor} nota="en caja hoy" />
-        <SaldoCard
-          tipo="casa"
-          valor={retiros.valor}
-          nota={
-            retiros.promedio_historico != null
-              ? `sacaste este mes · lo usual ${soles(retiros.promedio_historico)}`
-              : 'sacaste este mes'
-          }
-        />
+    <div className="inicio__dash">
+      <div className="inicio__a-alerta">
+        <AlertaPrincipal alertas={alertas} corte={resumen.corte} />
       </div>
+
+      <CajaNegocio className="inicio__a-caja" valor={ind.saldo_caja_negocio.valor} nota="lo que tienes hoy" />
+
+      <Link to="/cuentas" className="inicio__link-card inicio__a-deben">
+        <Card as="div" className="inicio__mini">
+          <p className="inicio__mini-label">Te deben</p>
+          <p className="inicio__mini-value display num">{soles(cobro.valor)}</p>
+          <p className="cc-small cc-muted">{cobro.n_fiados} {cobro.n_fiados === 1 ? 'fiado' : 'fiados'}</p>
+        </Card>
+      </Link>
+      <Link to="/cuentas" className="inicio__link-card inicio__a-debes">
+        <Card as="div" className="inicio__mini">
+          <p className="inicio__mini-label">Debes</p>
+          <p className="inicio__mini-value display num">{soles(pagos.valor)}</p>
+          <p className="cc-small cc-muted">
+            {pagos.detalle || `${pagos.n_obligaciones} ${pagos.n_obligaciones === 1 ? 'pago' : 'pagos'}`}
+          </p>
+        </Card>
+      </Link>
 
       <Disponible forecast={forecast} />
 
-      <div className="inicio__pair">
-        <Link to="/cuentas" className="inicio__link-card">
-          <Card as="div" className="inicio__mini">
-            <p className="inicio__mini-label">Te deben</p>
-            <p className="inicio__mini-value display num">{soles(cobro.valor)}</p>
-            <p className="cc-small cc-muted">{cobro.n_fiados} {cobro.n_fiados === 1 ? 'fiado' : 'fiados'}</p>
-          </Card>
-        </Link>
-        <Link to="/cuentas" className="inicio__link-card">
-          <Card as="div" className="inicio__mini">
-            <p className="inicio__mini-label">Debes</p>
-            <p className="inicio__mini-value display num">{soles(pagos.valor)}</p>
-            <p className="cc-small cc-muted">
-              {pagos.detalle || `${pagos.n_obligaciones} ${pagos.n_obligaciones === 1 ? 'pago' : 'pagos'}`}
-            </p>
-          </Card>
-        </Link>
-      </div>
-
-      <Card aria-label="Resumen del mes">
+      <Card className="inicio__a-resumen" aria-label="Resumen del mes">
+        <p className="cc-eyebrow inicio__resumen-title">Este mes</p>
         <dl className="inicio__rows">
           <Fila
             label="Vendiste este mes"
-            valor={soles(ind.ingresos_mes.valor)}
+            valor={ind.ingresos_mes.valor}
             variacion={ind.ingresos_mes.variacion_pct}
             malaSiBaja
           />
-          <Fila label="Gastaste en el negocio" valor={soles(ind.egresos_mes.valor)} variacion={ind.egresos_mes.variacion_pct} />
+          <Fila label="Gastaste en el negocio" valor={ind.egresos_mes.valor} variacion={ind.egresos_mes.variacion_pct} />
           <Fila
             label="Ganancia aproximada"
-            valor={ganancia.rango ? solesRange(ganancia.rango) : soles(ganancia.valor)}
+            texto={ganancia.rango ? solesRange(ganancia.rango) : soles(ganancia.valor)}
           />
         </dl>
         {resumen.variacion_vs && <p className="cc-xs cc-muted inicio__vs">Comparado con el mes pasado al mismo día.</p>}
       </Card>
-    </>
+    </div>
   )
 }
 
@@ -158,9 +147,7 @@ function AlertaPrincipal({ alertas, corte }) {
 
   const dias = a.dias_para_evento ?? (corte && a.fecha_evento ? daysBetween(corte, a.fecha_evento) : null)
   const porque = a.resumen_causas || a.causas?.map((c) => c.descripcion.toLowerCase()).join(', ')
-  const kicker = [dias != null ? `En ${diasTxt(dias)}` : null, a.probabilidad != null ? `${pct(a.probabilidad)} probable` : null]
-    .filter(Boolean)
-    .join(' · ')
+  const kicker = dias != null ? `En ${diasTxt(dias)}` : null
 
   return (
     <Card variant="danger" className="inicio__alerta" role="region" aria-label="Alerta de caja">
@@ -179,15 +166,14 @@ function AlertaPrincipal({ alertas, corte }) {
   )
 }
 
-function SaldoCard({ tipo, valor, nota }) {
-  const casa = tipo === 'casa'
+function CajaNegocio({ valor, nota, className }) {
   return (
-    <Card variant={casa ? 'casa' : undefined} className={`inicio__saldo inicio__saldo--${tipo}`}>
-      <p className="inicio__saldo-label">
-        <Icon name={casa ? 'house' : 'store'} size={18} />
-        {casa ? 'Casa' : 'Negocio'}
+    <Card className={`inicio__caja ${className ?? ''}`} aria-labelledby="inicio-caja-label">
+      <p id="inicio-caja-label" className="inicio__caja-label">
+        <Icon name="store" size={18} />
+        Caja del negocio
       </p>
-      <p className="inicio__saldo-value display num">{soles(valor)}</p>
+      <p className="inicio__caja-value display num">{soles(valor)}</p>
       <p className="cc-small cc-muted">{nota}</p>
     </Card>
   )
@@ -202,8 +188,20 @@ const LABELS_COMPONENTES = {
 }
 
 function Disponible({ forecast }) {
-  if (forecast.loading && !forecast.data) return <Skeleton height={120} />
-  if (forecast.error) return <ErrorState error={forecast.error} onRetry={forecast.reload} />
+  if (forecast.loading && !forecast.data) {
+    return (
+      <div className="inicio__a-disp">
+        <Skeleton height={120} />
+      </div>
+    )
+  }
+  if (forecast.error) {
+    return (
+      <div className="inicio__a-disp">
+        <ErrorState error={forecast.error} onRetry={forecast.reload} />
+      </div>
+    )
+  }
   const f = forecast.data
   const d = f?.disponible_para_gastar
   if (!d) return null
@@ -235,44 +233,45 @@ function Disponible({ forecast }) {
 
   return (
     <>
-      <Card className="inicio__disponible" aria-labelledby="inicio-disp-label">
-        <p id="inicio-disp-label" className="cc-eyebrow">Disponible para gastar</p>
+      <Card className="inicio__disponible inicio__a-disp" aria-labelledby="inicio-disp-label">
+        <p id="inicio-disp-label" className="inicio__disp-label">Disponible para gastar</p>
         <p className="inicio__disp-value display num">{soles(d.valor)}</p>
         {d.mensaje && <p className="inicio__disp-msg">{d.mensaje}</p>}
       </Card>
-      <TraceInfo
-        fundamento={f.fundamento}
-        limites={f.limites}
-        confianza={f.confianza}
-        meta={f.meta}
-        extra={desglose ? [['Cómo se calcula', desglose]] : []}
-      />
+      <div className="inicio__a-trace">
+        <TraceInfo
+          fundamento={f.fundamento}
+          limites={f.limites}
+          confianza={f.confianza}
+          meta={f.meta}
+          extra={desglose ? [['Cómo se calcula', desglose]] : []}
+        />
+      </div>
     </>
   )
 }
 
-function Fila({ label, valor, variacion, malaSiBaja }) {
+/** Fila del resumen: monto + diferencia en soles frente al mes pasado (sin porcentajes). */
+function Fila({ label, valor, texto, variacion, malaSiBaja }) {
+  const dif = valor != null ? diferenciaSoles(valor, variacion) : null
   let delta = null
-  if (variacion != null && Math.round(Math.abs(variacion)) > 0) {
-    const baja = variacion < 0
-    const n = Math.round(Math.abs(variacion))
+  if (dif != null && dif !== 0) {
+    const baja = dif < 0
     const mala = malaSiBaja && baja
     delta = (
-      <span
-        className={`inicio__delta${mala ? ' inicio__delta--mala' : ''}`}
-        aria-label={`${baja ? 'bajó' : 'subió'} ${n}% frente al mes pasado`}
-      >
-        <span aria-hidden="true">{baja ? '▼' : '▲'}</span> {n}%
-      </span>
+      <dd className={`inicio__delta${mala ? ' inicio__delta--mala' : ''}`}>
+        <span aria-hidden="true">{baja ? '▼' : '▲'}</span> {soles(Math.abs(dif))} {baja ? 'menos' : 'más'} que el mes
+        pasado
+      </dd>
     )
   }
   return (
     <div className="inicio__row">
       <dt>{label}</dt>
       <dd className="num">
-        <strong>{valor}</strong>
-        {delta}
+        <strong>{texto ?? soles(valor)}</strong>
       </dd>
+      {delta}
     </div>
   )
 }
@@ -286,8 +285,8 @@ function InicioNuevo({ resumen, diasConDatos, diasRequeridos }) {
   const ganancia = ind?.ganancia_neta
 
   return (
-    <>
-      <Card className="inicio__progreso">
+    <div className="inicio__nuevo">
+      <Card className="inicio__progreso inicio__n-progreso">
         <h2 className="inicio__progreso-title">
           Necesito {diasRequeridos} días de tus ventas para avisarte antes de que te falte plata
         </h2>
@@ -306,19 +305,16 @@ function InicioNuevo({ resumen, diasConDatos, diasRequeridos }) {
         <p className="cc-small cc-muted">
           {diasConDatos} de {diasRequeridos} días · sigue mandando tus ventas por el chat.
         </p>
-        <Button size="lg" block icon="mic" onClick={() => navigate('/chat')}>
+        <Button size="lg" icon="mic" onClick={() => navigate('/chat')}>
           Anotar una venta
         </Button>
       </Card>
 
       {ind && (
         <>
-          <div className="inicio__pair">
-            <SaldoCard tipo="negocio" valor={ind.saldo_caja_negocio.valor} nota="según lo que anotaste" />
-            <SaldoCard tipo="casa" valor={ind.retiros_personales.valor} nota={`sacaste en ${diasTxt(diasConDatos)}`} />
-          </div>
+          <CajaNegocio className="inicio__n-caja" valor={ind.saldo_caja_negocio.valor} nota="según lo que anotaste" />
 
-          <Card>
+          <Card className="inicio__n-resumen">
             <dl className="inicio__rows">
               <div className="inicio__row">
                 <dt>Vendiste en {diasTxt(diasConDatos)}</dt>
@@ -346,7 +342,7 @@ function InicioNuevo({ resumen, diasConDatos, diasRequeridos }) {
         </>
       )}
 
-      <Card variant="dashed" className="inicio__proximos">
+      <Card variant="dashed" className="inicio__proximos inicio__n-proximos">
         <h2 className="inicio__proximos-title">
           <Icon name="clock" size={20} />
           Tus próximos 30 días
@@ -356,6 +352,6 @@ function InicioNuevo({ resumen, diasConDatos, diasRequeridos }) {
           30”) y te aviso antes de que venzan.
         </p>
       </Card>
-    </>
+    </div>
   )
 }

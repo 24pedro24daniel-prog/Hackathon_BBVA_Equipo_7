@@ -1,16 +1,39 @@
-import { useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ddmm, soles, solesRange, weekdayDdmm } from '../../lib/format.js'
 
-// Gráfico de 30 días dibujado a mano (SVG, sin librería). Escala uniforme vía viewBox: width 100%.
-const W = 320
-const H = 196
+// Gráfico de 30 días dibujado a mano (SVG, sin librería). El viewBox sigue el ancho real del contenedor
+// (1 unidad = 1 px), así el texto no crece y el alto se limita en pantallas anchas.
 const PAD = { top: 10, right: 6, bottom: 26, left: 6 }
-const PLOT_W = W - PAD.left - PAD.right
-const PLOT_H = H - PAD.top - PAD.bottom
+const MIN_W = 280
+const MIN_H = 196
+const MAX_H = 300
+
+function useWidth(ref, fallback) {
+  const [w, setW] = useState(fallback)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const measure = () => {
+      const cw = Math.round(el.getBoundingClientRect().width)
+      if (cw > 0) setW(cw)
+    }
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [ref])
+  return w
+}
 
 export default function ForecastChart({ points, minimo, worstFecha }) {
   const [sel, setSel] = useState(null)
   const svgRef = useRef(null)
+  const boxRef = useRef(null)
+  const W = Math.max(MIN_W, useWidth(boxRef, 320))
+  const H = Math.round(Math.min(MAX_H, Math.max(MIN_H, W * 0.42)))
+  const PLOT_W = W - PAD.left - PAD.right
+  const PLOT_H = H - PAD.top - PAD.bottom
 
   const geo = useMemo(() => {
     const n = points.length
@@ -38,7 +61,7 @@ export default function ForecastChart({ points, minimo, worstFecha }) {
     const risk = minimo == null ? [] : points.map((p, i) => (p.p50 < minimo ? i : -1)).filter((i) => i >= 0)
     const ticks = points.map((_, i) => i).filter((i) => i % 7 === 0)
     return { n, step, x, y, p50: line('p50'), band, worst, risk, ticks }
-  }, [points, minimo, worstFecha])
+  }, [points, minimo, worstFecha, PLOT_W, PLOT_H])
 
   const { n, step, x, y, worst, risk, ticks } = geo
 
@@ -80,6 +103,7 @@ export default function ForecastChart({ points, minimo, worstFecha }) {
         {summary} El detalle día por día está en la tabla siguiente.
       </figcaption>
       <div
+        ref={boxRef}
         className="fc-chart__plot"
         tabIndex={0}
         role="group"

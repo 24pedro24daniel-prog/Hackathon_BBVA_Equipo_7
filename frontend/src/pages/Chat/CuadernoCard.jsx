@@ -48,7 +48,7 @@ export function CuadernoCard({ msg, onGuardar, onCorregir }) {
       </div>
       {status === 'done' && <p className="chat-status">Guardado</p>}
       <HowIKnow
-        fundamento="Leí tu letra con un modelo de lectura de manuscritos; las líneas marcadas «Revisa» son las que leí con menos seguridad."
+        fundamento="Leí tu letra en la foto. Las líneas marcadas «Revisa» son las que leí con menos seguridad; revísalas antes de guardar."
         meta={res.meta}
       />
     </InBubble>
