@@ -6,6 +6,7 @@ import { ddmm } from '../../lib/format.js'
 import {
   Card,
   ErrorState,
+  Icon,
   List,
   ListRow,
   LoadingBlock,
@@ -43,8 +44,27 @@ function calificacionParte(valor) {
   const n = Number(valor) || 0
   if (n >= 80) return { texto: 'Muy bien', tono: 'ok' }
   if (n >= 60) return { texto: 'Bien', tono: 'neutral' }
-  return { texto: 'Mejorable', tono: 'warning' }
+  return { texto: 'Por mejorar', tono: 'warning' }
 }
+
+/** Peso del factor en palabras ("pesa 25%" sin cifras, como pide el sistema de diseño). */
+function pesoEnPalabras(peso) {
+  const p = Number(peso)
+  if (!(p > 0)) return null
+  if (p >= 0.25) return 'Es de lo que más pesa'
+  if (p >= 0.2) return 'Pesa bastante'
+  return 'Pesa menos'
+}
+
+/** Factores de más peso, para la frase que explica cómo se calcula. */
+function masPesados(subs) {
+  const max = Math.max(...subs.map((s) => Number(s.peso) || 0))
+  if (!(max > 0)) return []
+  return subs.filter((s) => Number(s.peso) === max)
+}
+
+const enFrase = (s = '') => s.charAt(0).toLowerCase() + s.slice(1)
+const unirY = (arr) => (arr.length <= 1 ? arr.join('') : `${arr.slice(0, -1).join(', ')} y ${arr[arr.length - 1]}`)
 
 /** El subindicador más bajo (donde más puede avanzar), o null si todos están en 100. */
 function masBajo(subs) {
@@ -159,16 +179,28 @@ function Score({ salud }) {
 /* ---------- Últimos meses: barras finas, mes actual en Electric ---------- */
 
 function Historial({ historial }) {
+  const [open, setOpen] = useState(false)
   const titleId = useId()
+  const panelId = useId()
   if (!historial.length) return null
   const alt = historial.map((h) => `${mesLabel(h.mes).largo}: ${h.score}`).join(', ')
 
   return (
-    <Card className="progreso-hist" aria-labelledby={titleId}>
-      <h2 id={titleId} className="cc-card__title">
-        Últimos meses
+    <Card flush className="progreso-hist" aria-labelledby={titleId}>
+      <h2 className="progreso-hist__heading">
+        <button
+          type="button"
+          id={titleId}
+          className="progreso-hist__toggle"
+          aria-expanded={open}
+          aria-controls={panelId}
+          onClick={() => setOpen((o) => !o)}
+        >
+          <span>Últimos meses</span>
+          <Icon name="chevronDown" size={20} className="progreso-hist__chev" />
+        </button>
       </h2>
-      <figure className="progreso-chart">
+      <figure className="progreso-chart" id={panelId} hidden={!open}>
         <div className="progreso-chart__bars" aria-hidden="true">
           {historial.map((h, i) => {
             const actual = i === historial.length - 1
@@ -229,14 +261,15 @@ function Etapa({ etapas, actual }) {
 
 function Factor({ s, esMasBajo }) {
   const { texto, tono } = calificacionParte(s.valor)
+  const explica = s.que_mide || s.detalle
+  const peso = pesoEnPalabras(s.peso)
   const sub = (
     <>
-      <span className="progreso-factor__detail">
-        {esMasBajo && <span className="progreso-factor__flag">Donde más puedes avanzar</span>}
-        {esMasBajo && s.detalle && ' · '}
-        {s.detalle}
-      </span>
+      {esMasBajo && <span className="progreso-factor__flag">Donde más puedes avanzar</span>}
+      {explica && <span className="progreso-factor__detail">{explica}</span>}
+      {s.que_mide && s.detalle && <span className="progreso-factor__detail">{s.detalle}</span>}
       <ProgressBar value={clamp(s.valor)} label={s.nombre} className="progreso-factor__bar" />
+      {peso && <span className="progreso-factor__peso">{peso}</span>}
     </>
   )
   return (
@@ -255,41 +288,27 @@ function Factor({ s, esMasBajo }) {
 }
 
 function Componentes({ salud }) {
-  const [open, setOpen] = useState(false)
   const titleId = useId()
-  const listId = useId()
-  const subs = salud.subindicadores || []
+  const subs = (salud.subindicadores || []).filter((s) => s && s.id)
   if (!subs.length) return null
 
   const porMejorar = masBajo(subs)
-  const destacados = subs.filter((s) => s.destacado)
-  // Siempre a la vista: los destacados y el más bajo (para que se vea dónde avanzar).
-  const visibles = destacados.length
-    ? subs.filter((s) => s.destacado || s === porMejorar)
-    : subs.slice(0, 3).concat(porMejorar && subs.indexOf(porMejorar) >= 3 ? [porMejorar] : [])
-  const ocultos = subs.filter((s) => !visibles.includes(s))
-  const mostrados = open ? subs : visibles
+  const pesados = masPesados(subs).map((s) => enFrase(s.nombre))
+  const cuantos = ['', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis'][subs.length] || String(subs.length)
 
   return (
     <Card flush className="progreso-factores" aria-labelledby={titleId}>
-      <div className="cc-card__head">
+      <div className="cc-card__head progreso-factores__head">
         <h2 id={titleId} className="cc-card__title">
           Qué lo compone
         </h2>
-        {ocultos.length > 0 && (
-          <button
-            type="button"
-            className="cc-section__action"
-            aria-expanded={open}
-            aria-controls={listId}
-            onClick={() => setOpen((o) => !o)}
-          >
-            {open ? 'Ver menos' : 'Ver todos →'}
-          </button>
-        )}
+        <p className="progreso-factores__intro">
+          Tu puntaje junta {cuantos} {subs.length === 1 ? 'cosa' : 'cosas'} de cómo manejas tu negocio.
+          {pesados.length > 0 && <> Lo que más pesa: {unirY(pesados)}.</>}
+        </p>
       </div>
-      <List id={listId}>
-        {mostrados.map((s) => (
+      <List>
+        {subs.map((s) => (
           <Factor key={s.id} s={s} esMasBajo={s === porMejorar} />
         ))}
       </List>

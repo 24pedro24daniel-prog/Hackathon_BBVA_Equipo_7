@@ -2,7 +2,7 @@
 //
 // Mensaje: { id, from: 'me' | 'bot', kind, time, ...datos }
 //   me:  text | audio | photo
-//   bot: text | error | confirm | clarify | warning | options | alert | assistant | cuaderno
+//   bot: text | error | confirm | clarify | warning | options | alert | assistant | cuaderno | plan
 // Las tarjetas con acciones llevan `status`: pending | editing | saving | done.
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -19,11 +19,12 @@ import {
 } from './chatText.js'
 import { capturarFotoCuaderno, capturarNotaDeVoz, DEMO_VOICE_NOTES } from './media.js'
 import { DEMO_SCRIPTS } from './demoScripts.js'
+import { armarPlanCaja, preguntaPlan } from './planCaja.js'
 
 const now = () => hhmm(new Date())
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
-export function useChat({ demo } = {}) {
+export function useChat({ demo, intent } = {}) {
   const navigate = useNavigate()
   const [messages, setMessages] = useState([])
   const [typing, setTyping] = useState(null) // texto del indicador "…" o null
@@ -228,6 +229,37 @@ export function useChat({ demo } = {}) {
     }
   }
 
+  // ---------- Plan de caja ("Probar qué hacer" desde 30 días) ----------
+
+  async function planCaja() {
+    setFlujo('Alertas y preguntas')
+    try {
+      const plan = await armarPlanCaja()
+      me('text', { text: preguntaPlan(plan.fecha) })
+      await withTyping('Revisando tus cuentas…', () => wait(700))
+      bot('plan', { plan, usadas: [] })
+    } catch (err) {
+      handleError(err, () => planCaja())
+    }
+  }
+
+  async function accionPlan(id, accion) {
+    const m = get(id)
+    if (!m) return
+    if (accion.tipo === 'abrir_simulador') return navigate('/simulador')
+    if (accion.tipo !== 'recordar_fiado' || m.usadas.includes(accion.tipo)) return
+    me('text', { text: accion.texto })
+    update(id, { usadas: [...m.usadas, accion.tipo] })
+    const f = accion.fiado
+    try {
+      const r = await withTyping('Preparando el mensaje…', () => api.recordatorioFiado(f.fiado_id))
+      bot('text', { text: `Este es el mensaje para ${f.cliente}:\n“${r.mensaje}”\n(En esta demo no se envía nada.)` })
+    } catch (err) {
+      update(id, { usadas: get(id).usadas.filter((t) => t !== accion.tipo) })
+      handleError(err, () => accionPlan(id, accion))
+    }
+  }
+
   // ---------- Cuaderno de fiados ----------
 
   async function leerCuaderno(media_url) {
@@ -366,7 +398,7 @@ export function useChat({ demo } = {}) {
 
   const actions = {
     enviarTexto, enviarVoz, enviarFoto, correcto, corregir, elegirOpcion, verOpciones, registrarIgual,
-    abrirAlerta, accionAsistente, guardarCuaderno, corregirCuaderno, retry,
+    abrirAlerta, accionAsistente, accionPlan, planCaja, guardarCuaderno, corregirCuaderno, retry,
   }
   const actionsRef = useRef(actions)
   actionsRef.current = actions
@@ -384,6 +416,8 @@ export function useChat({ demo } = {}) {
     if (started.current) return // StrictMode monta dos veces: la alerta se muestra una sola vez
     started.current = true
     ;(async () => {
+      // Llegó desde "Probar qué hacer": la respuesta es el plan, sin saludo ni alerta del día.
+      if (intent === 'plan_caja') return actionsRef.current.planCaja()
       try {
         const { items = [] } = await api.getAlertas()
         const top = [...items].sort((a, b) => (a.prioridad ?? 9) - (b.prioridad ?? 9))[0]

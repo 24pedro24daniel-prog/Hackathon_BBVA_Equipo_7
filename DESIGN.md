@@ -1,38 +1,49 @@
 # CajaClara — Sistema de diseño (aplicado)
 
-Fuente: `frontend/patrones ux ui.pdf` (patrones de Revolut adaptados) + decisiones del equipo del 14/11.
-Tokens en `frontend/src/index.css`. Las pantallas usan siempre los tokens, nunca hex sueltos.
+Versión 2 (14/11). Estructura tomada de apps bancarias de referencia (Nu, Monzo, SoFi) y color de la paleta BBVA 2025.
+Tokens en `frontend/src/index.css`, primitivas en `frontend/src/components/ui/`. Las pantallas usan siempre los tokens, nunca hex sueltos.
 
-## Principios visuales
+## Qué tomamos de cada app
 
-- **Plana, sin sombras.** La profundidad sale del contraste entre fondo (`--bg`) y tarjetas blancas con borde suave (`--border`).
-- **Pocos colores, una acción clara.** Un solo botón primario por tarjeta. Los colores de estado solo comunican estado.
-- **Botones en píldora** (`--radius-pill`), tarjetas de 20 px (`--radius-lg`), elementos pequeños 12 px. Hover = opacidad 0.85.
-- **Espaciado base 8 px** (4, 8, 12, 16, 24, 32, 40, 48).
-- **Toques de 44 px o más**, contraste alto para usar a pleno sol.
-- Propia identidad: no se usa logo, nombre, tipografía ni valores oficiales de ningún banco.
+| App | Patrón | Dónde lo usamos |
+|---|---|---|
+| Monzo | Tarjeta de cuenta de color con el saldo; tarjeta "Actividad" blanca con filas; "Left to spend"; línea de saldo con proyección y valor final etiquetado | Inicio, 30 días |
+| Nu | 90 % blanco/gris/navy; color de marca solo para la acción; círculos grises para íconos; alertas en tres partes (qué pasa, por qué, qué puedes hacer); recibo en filas etiqueta/valor | Inicio, Chat, Cuentas |
+| SoFi | Etiqueta debajo del número; tarjeta de puntaje (número + calificación + frase de tendencia + barra recta con marcador); frase de estado en color ("Pacing high"); línea de meta punteada | Progreso, 30 días |
 
-## Paleta
+## Reglas
 
-| Rol | Token | Hex | Uso |
+- **Fondo off-white, tarjetas blancas sin borde** con sombra suave (`--shadow`), radio 16. Un tema por tarjeta.
+- **Una sola superficie de color en toda la app**: la tarjeta de cuenta Electric de Inicio. Además, el color de marca solo aparece en el botón principal, enlaces, pestaña activa, selección y la línea del gráfico.
+- **Nada de tarjetas tintadas** (rojas, verdes, celestes) para alertas, resultados o selecciones. El estado es **texto de color + ícono** (`Status`, `Money tone`).
+- **Sin botones duplicados**: ningún atajo que solo lleve a una pestaña que ya está en la barra. Máximo un botón principal por pantalla.
+- **Montos** con `<Money>`: "S/" al 60 %, entero dominante, cifras tabulares. Entradas en verde con "+"; salidas en navy con "−" (no en rojo, salvo que sean un problema).
+- **Filas** (`List` + `ListRow`): 64 px, círculo gris de 40 px con ícono o iniciales, título 16, línea secundaria 14 en slate, monto a la derecha, divisor inset.
+- **Frases en vez de etiquetas**: títulos de sección en frase; prohibido rótulos en mayúsculas espaciadas, cifras en cajas de color, etiquetas con fondo, íconos decorativos, emoji como ícono.
+- **Sub-pantallas**: botón circular "volver" + título centrado de 17 px. Pantallas de pestaña: título serif grande a la izquierda.
+- Toques ≥ 44 px; botones principales 48 px.
+
+## Paleta (BBVA 2025, tokens "Spherica")
+
+| Rol | Token | Hex | Contraste |
 |---|---|---|---|
-| Base | `--title` | `#0B2447` | Títulos, cifras clave |
-| Acción | `--brand` | `#1464A5` | Botón principal, enlaces, línea del forecast |
-| Acción suave | `--brand-soft` | `#E3EEF9` | Tarjetas informativas, chip/opción elegida |
-| Positivo | `--ok` / `--ok-bg` | `#096B67` / `#D3F2F0` | "Te alcanza", metas, montos a favor |
-| Alerta | `--danger` / `--danger-bg` | `#B5450B` / `#FCE9DF` | Faltante de caja, días en riesgo |
-| Atención | `--warning` / `--warning-bg` | `#6F4A00` / `#FFF2CC` | "Justo", por vencer |
-| Fondo | `--bg` | `#F4F6F9` | Fondo general |
-| Borde | `--border` | `#D5DCE5` | Bordes y divisores |
-| Texto | `--text` / `--text-muted` | `#13202F` / `#4A5868` | Cuerpo / etiquetas, fechas, notas |
-
-Naranja vs. aqua para alerta vs. éxito: se distinguen también en claridad (daltonismo).
-El violeta "Casa" de la propuesta **no se usa**: la app ya no muestra plata de la casa.
+| Acción / tarjeta de cuenta | `--brand` | `#001391` Electric | 14:1 con blanco |
+| Títulos, texto, montos | `--title`, `--text` | `#070E46` Midnight | 18:1 sobre blanco |
+| Texto secundario | `--text-muted` | `#46536D` Slate | 7.7:1 |
+| Fondo | `--bg` | `#F7F8F8` | — |
+| Superficie | `--surface` | `#FFFFFF` | — |
+| Relleno gris (círculos, pistas) | `--surface-sunken` | `#EFF1F4` | — |
+| Divisores | `--hairline` / `--border-strong` | `#E9ECEF` / `#CAD1D8` | decorativo |
+| Light blue (solo relleno o texto sobre Electric) | `--accent` | `#85C8FF` | 7.8:1 sobre Electric |
+| Positivo | `--ok` | `#024700` | AAA |
+| Alerta | `--danger` | `#C30A0A` | 5.9:1 |
+| Atención | `--warning` | `#906401` | 5.0:1 |
 
 ## Tipografía
 
-- Títulos y cifras: Bricolage Grotesque 600 (`--font-display`, `--display-weight`). Cifras con `.num` (tabulares).
-- Texto: Inter 400/600, 16 px base.
+- Interfaz y montos: **Libre Franklin** 400/500/600 (equivalente libre de Benton Sans).
+- Títulos de pantalla y saludo: **Source Serif 4** 600 (equivalente libre de Tiempos Headline).
+- Escala: monto principal 40–48 / título 26–30 / sección 18 / cuerpo 16 / nota 14.
 
 ## Contenido para una persona poco digital
 
@@ -47,8 +58,6 @@ Pedro piensa en soles, días y nombres. Por eso:
 
 | Ancho | Navegación | Contenido |
 |---|---|---|
-| < 768 px | Barra inferior (oculta en el chat) | 1 columna, gutter 16 px |
-| 768–1099 px | Riel lateral con íconos | hasta 760 px, 2 columnas donde ayuda, gutter 24 px |
-| ≥ 1100 px | Barra lateral con marca | hasta 1120 px, dashboard en grilla, gutter 32 px |
-
-El contenido de cada página se centra con `max-width: var(--content-max)`.
+| < 768 px | Barra inferior; pestaña activa con cápsula celeste (oculta en el chat) | 1 columna, gutter 16 px |
+| 768–1099 px | Riel lateral con íconos | hasta 760 px, gutter 24 px |
+| ≥ 1100 px | Barra lateral con marca | hasta 1120 px, 2 columnas, gutter 32 px |

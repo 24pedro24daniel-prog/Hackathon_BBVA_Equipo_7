@@ -157,6 +157,25 @@
 .chat-st { display: inline-flex; align-items: center; gap: 4px; }
 .chat-st svg { flex: none; }
 
+/* Plan de caja: pasos numerados con lo que recupera cada uno */
+.chat-plan { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
+.chat-plan__step { display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: start; padding: 10px 0; }
+.chat-plan__step + .chat-plan__step { border-top: 1px solid var(--hairline); }
+.chat-plan__n {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface-sunken);
+  color: var(--title);
+  font-size: 13px;
+  font-weight: 600;
+}
+.chat-plan__text { font-size: 15px; line-height: 1.4; color: var(--text); }
+.chat-plan__amt { white-space: nowrap; padding-top: 1px; }
+.chat-plan__amt .cc-money--md { font-size: 16px; }
+
 /* Filas tipo comprobante (Nu): etiqueta izquierda, valor derecha, divisores finos */
 .chat-kv { margin: 0; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
 .chat-kv__row {

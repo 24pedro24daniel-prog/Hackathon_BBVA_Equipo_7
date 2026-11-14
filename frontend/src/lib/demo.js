@@ -2,7 +2,7 @@
 // Se guardan en localStorage con try/catch para que la app funcione aunque el storage esté bloqueado.
 
 const KEY = 'cajaclara-demo'
-// escenario: 'pedro' (92 días) | 'nuevo' (día 3). tecnico: muestra modelo/versión (para el jurado; Pedro no lo ve)
+// escenario: 'pedro' (92 días, no le alcanza el 30/11) | 'sano' (92 días, negocio sano: sí le alcanza) | 'nuevo' (día 3). tecnico: muestra modelo/versión (para el jurado; Pedro no lo ve)
 const DEFAULTS = { escenario: 'pedro', fallback: false, tecnico: false }
 
 export function getDemoSettings() {

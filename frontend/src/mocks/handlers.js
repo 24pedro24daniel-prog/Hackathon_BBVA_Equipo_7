@@ -1,6 +1,8 @@
 // Mock del backend: resuelve (método, ruta) con respuestas del contrato. Solo se usa con VITE_USE_MOCK=true.
 // El simulador es determinístico y coincide con contract.md §4.5–4.6:
-//   saldo_30/11 = −650 + (2400 − monto_pedido) + (2 partes ? monto/2 : 0) + (cobrar fiados ? 310 : 0)
+//   saldo_30/11 = base + (2400 − monto_pedido) + (2 partes ? monto/2 : 0) + (cobrar fiados ? monto de esos fiados : 0)
+// base: −650 en 'pedro'; en 'sano' el p50 del 30/11 de su serie (positivo, sobre el mínimo de S/ 800).
+// Escenarios: 'pedro' (92 días, no le alcanza) | 'sano' (92 días, sí le alcanza) | 'nuevo' (día 3).
 import * as D from './data.js'
 import { getDemoSettings } from '../lib/demo.js'
 
@@ -13,17 +15,29 @@ const err = (status, codigo, mensaje) => ({
 
 let seq = 7781
 const borradores = new Map()
-let saldoNegocio = 2340
-const movimientosNuevos = [] // lo que se confirma en el chat aparece en Últimos movimientos
+// Caja del negocio y movimientos confirmados en el chat, por escenario (no se mezclan al cambiar de demo)
+const saldos = { ...D.SALDO_INICIAL }
+const movimientosNuevos = { pedro: [], sano: [], nuevo: [] } // lo que se confirma en el chat aparece en Últimos movimientos
+const esc = (e) => (e === 'nuevo' || e === 'sano' ? e : 'pedro')
 
 const PEDIDO_BASE = 2400
-const SALDO_BASE = -650
-const FIADOS_TOTAL = 310
+const SALDO_BASE = -650 // 'pedro': p50 del 30/11
 
-export function simularSaldo({ monto = PEDIDO_BASE, partes = 1, cobrarFiados = false } = {}) {
-  let saldo = SALDO_BASE + (PEDIDO_BASE - monto)
+/** Saldo esperado el 30/11 sin acciones, según escenario */
+const saldoBase = (escenario) => (esc(escenario) === 'sano' ? D.saldoSanoAl3011() : SALDO_BASE)
+
+/** Monto que entra si cobras fiados: los fiado_ids pedidos o, si no vienen, el total pendiente */
+function montoFiados(escenario, fiadoIds) {
+  const f = D.fiadosDe(esc(escenario))
+  if (!fiadoIds?.length) return f.total_pendiente
+  return f.items.filter((x) => fiadoIds.includes(x.fiado_id)).reduce((s, x) => s + x.monto, 0)
+}
+
+export function simularSaldo({ monto = PEDIDO_BASE, partes = 1, cobrarFiados = false, fiadoIds = null, escenario } = {}) {
+  const e = escenario ?? getDemoSettings().escenario
+  let saldo = saldoBase(e) + (PEDIDO_BASE - monto)
   if (partes >= 2) saldo += monto / 2
-  if (cobrarFiados) saldo += FIADOS_TOTAL
+  if (cobrarFiados) saldo += montoFiados(e, fiadoIds)
   return saldo
 }
 
@@ -79,8 +93,9 @@ function interpretarTexto(texto = '') {
 }
 
 async function handle(method, path, { query, body }) {
-  const { escenario, fallback } = getDemoSettings()
-  const nuevo = escenario === 'nuevo'
+  const { fallback } = getDemoSettings()
+  const escenario = esc(getDemoSettings().escenario)
+  const sano = escenario === 'sano'
   const key = `${method} ${path.replace(/\/empresas\/[^/]+/, '/empresas/:id').replace(/\/(fiados|alertas)\/[A-Z]+-\d+/, '/$1/:id')}`
 
   switch (key) {
@@ -88,43 +103,48 @@ async function handle(method, path, { query, body }) {
       return ok({ estado: 'ok', version_api: '1.0.0', componentes: { base_datos: 'ok', llm: { estado: fallback ? 'caido' : 'ok' } } })
 
     case 'GET /empresas/:id/resumen': {
-      const r = structuredClone(nuevo ? D.resumenNuevo : D.resumenPedro)
-      if (!nuevo) r.indicadores.saldo_caja_negocio.valor = saldoNegocio
+      const r = structuredClone(D.resumenDe(escenario))
+      r.indicadores.saldo_caja_negocio.valor = saldos[escenario]
       return ok({ ...r, periodo: query.periodo || r.periodo })
     }
 
     case 'GET /empresas/:id/forecast':
-      return ok(nuevo ? D.forecastNuevo() : D.forecastPedro())
+      return ok(D.forecastDe(escenario))
 
     case 'POST /empresas/:id/forecast/ajustes':
       return ok({ ajuste_id: 'AJU-0003', forecast_recalculado: true }, 201)
 
     case 'GET /empresas/:id/fiados':
-      return ok(nuevo ? { total_pendiente: 0, total_vencido: 0, items: [], meta: D.meta('riesgo-atraso-clf', '0.2.0') } : D.fiados())
+      return ok(D.fiadosDe(escenario))
 
     case 'POST /fiados/:id/recordatorio': {
-      const f = D.fiados().items.find((x) => path.includes(x.fiado_id))
+      const f = D.fiadosDe(escenario).items.find((x) => path.includes(x.fiado_id))
       if (!f) return err(404, 'NO_ENCONTRADO', 'No encontré ese fiado.')
       return ok({ mensaje: `Hola, ${f.cliente} 😊 Le recuerdo amablemente los S/ ${f.monto} pendientes en la bodega. ¡Gracias!` })
     }
 
     case 'GET /empresas/:id/pedidos':
-      return ok(nuevo ? { total_pendiente: 0, items: [], impuestos: { estado: 'al_dia', proximo_vencimiento: '2026-12-15', monto_estimado: 20 } } : D.pedidos())
+      return ok(D.pedidosDe(escenario))
 
     case 'POST /empresas/:id/pedidos/chequeo': {
       const monto = Number(body?.monto ?? PEDIDO_BASE)
-      const saldo = simularSaldo({ monto })
+      const saldo = simularSaldo({ monto, escenario })
+      const ventaEsperada = sano ? 2600.0 : 2000.0
+      const estado = estadoCaja(saldo)
       return ok({
         saldo_proyectado_al_vencimiento: saldo,
-        estado_caja: estadoCaja(saldo),
-        venta_esperada_periodo: 2000.0,
-        exceso_vs_ventas: Math.max(0, monto - 2000),
-        sugerencias: [
-          { accion: 'reducir_pedido', monto_sugerido: 1800.0, saldo_resultante: simularSaldo({ monto: 1800 }) },
-          { accion: 'pagar_en_partes', partes: 2, saldo_resultante: simularSaldo({ monto, partes: 2 }) },
-          { accion: 'combinar', detalle: 'pedir 1 800 + pagar en 2 partes', saldo_resultante: simularSaldo({ monto: 1800, partes: 2 }) },
+        estado_caja: estado,
+        venta_esperada_periodo: ventaEsperada,
+        exceso_vs_ventas: Math.max(0, monto - ventaEsperada),
+        // Si ya te alcanza, no hay nada que sugerir
+        sugerencias: estado === 'te_alcanza' ? [] : [
+          { accion: 'reducir_pedido', monto_sugerido: 1800.0, saldo_resultante: simularSaldo({ monto: 1800, escenario }) },
+          { accion: 'pagar_en_partes', partes: 2, saldo_resultante: simularSaldo({ monto, partes: 2, escenario }) },
+          { accion: 'combinar', detalle: 'pedir 1 800 + pagar en 2 partes', saldo_resultante: simularSaldo({ monto: 1800, partes: 2, escenario }) },
         ],
-        fundamento: 'En 2 semanas sueles vender unos S/ 2 000 y ese día no tendrás colchón.',
+        fundamento: estado === 'te_alcanza'
+          ? 'En 2 semanas sueles vender unos S/ 2 600 y ese día te quedaría colchón.'
+          : 'En 2 semanas sueles vender unos S/ 2 000 y ese día no tendrás colchón.',
         limites: 'Proyección basada en tus ventas de los últimos 3 meses; no considera eventos que no hayas registrado.',
         confianza: 'media',
         meta: D.meta('forecast-lgbm-quantile', '0.3.1'),
@@ -133,17 +153,21 @@ async function handle(method, path, { query, body }) {
 
     case 'POST /empresas/:id/simular': {
       const acciones = body?.acciones || []
-      let monto = PEDIDO_BASE, partes = 1, cobrarFiados = false
+      let monto = PEDIDO_BASE, partes = 1, cobrarFiados = false, fiadoIds = null
       for (const a of acciones) {
         if (a.tipo === 'reducir_pedido') monto = Number(a.nuevo_monto)
         if (a.tipo === 'pagar_en_partes') partes = Number(a.partes || 2)
-        if (a.tipo === 'cobrar_fiados') cobrarFiados = true
+        if (a.tipo === 'cobrar_fiados') {
+          cobrarFiados = true
+          fiadoIds = a.fiado_ids || null
+        }
       }
-      const con = simularSaldo({ monto, partes, cobrarFiados })
+      const base = saldoBase(escenario)
+      const con = simularSaldo({ monto, partes, cobrarFiados, fiadoIds, escenario })
       return ok({
-        sin_acciones: { saldo_minimo: SALDO_BASE, fecha: '2026-11-30', estado_caja: 'no_te_alcanza' },
+        sin_acciones: { saldo_minimo: base, fecha: '2026-11-30', estado_caja: estadoCaja(base) },
         con_acciones: { saldo_minimo: con, fecha: '2026-11-30', estado_caja: estadoCaja(con) },
-        mejora: con - SALDO_BASE,
+        mejora: con - base,
         serie_con_acciones: [{ fecha: '2026-11-30', p50: con }],
         fundamento: 'Simulación con tus ventas de los últimos 3 meses.', // EXT
         limites: 'Tú decides; nada se ejecuta solo. Pagar en partes depende de que Andina acepte.', // EXT
@@ -153,19 +177,19 @@ async function handle(method, path, { query, body }) {
     }
 
     case 'GET /empresas/:id/alertas':
-      return ok(nuevo ? { items: [] } : D.alertas())
+      return ok(D.alertasDe(escenario))
 
     case 'POST /alertas/:id/accion':
       return ok({ estado: 'atendida' })
 
     case 'GET /empresas/:id/salud':
-      return ok(D.salud())
+      return ok(D.saludDe(escenario))
 
     case 'POST /empresas/:id/metas':
       return ok({ meta_id: 'MET-0005', estado: 'activa' }, 201)
 
     case 'GET /empresas/:id/movimientos': {
-      const todos = [...movimientosNuevos, ...D.movimientos(escenario)]
+      const todos = [...movimientosNuevos[escenario], ...D.movimientos(escenario)]
       const desde = Number(query.cursor || 0)
       const limit = Number(query.limit || 50)
       const items = todos.slice(desde, desde + limit)
@@ -174,7 +198,7 @@ async function handle(method, path, { query, body }) {
 
     case 'POST /empresas/:id/movimientos':
     case 'POST /empresas/:id/impuestos':
-      return ok({ movimiento_id: `MOV-000${++seq}`, registros_creados: [], alertas_disparadas: [], saldo_caja_negocio: saldoNegocio }, 201)
+      return ok({ movimiento_id: `MOV-000${++seq}`, registros_creados: [], alertas_disparadas: [], saldo_caja_negocio: saldos[escenario] }, 201)
 
     case 'GET /empresas/:id/analisis':
       return ok({ agrupar_por: query.agrupar_por || 'categoria', tipo: query.tipo || 'egreso', grupos: [] })
@@ -203,10 +227,10 @@ async function handle(method, path, { query, body }) {
       }
       const final = { ...mov, ...(body.correcciones || {}) }
       borradores.delete(body.borrador_id)
-      if (final.tipo === 'venta' && final.metodo_pago !== 'credito') saldoNegocio += final.monto
-      if (final.tipo === 'retiro_personal' || final.tipo === 'pago_impuesto') saldoNegocio -= final.monto
+      if (final.tipo === 'venta' && final.metodo_pago !== 'credito') saldos[escenario] += final.monto
+      if (final.tipo === 'retiro_personal' || final.tipo === 'pago_impuesto') saldos[escenario] -= final.monto
       const movimiento_id = `MOV-000${++seq}`
-      movimientosNuevos.unshift({
+      movimientosNuevos[escenario].unshift({
         movimiento_id,
         fecha_hora: final.fecha_hora || new Date().toISOString(),
         tipo: final.tipo,
@@ -220,13 +244,13 @@ async function handle(method, path, { query, body }) {
         canal: 'voz',
         confianza_extraccion: 0.93,
         afecta_caja: final.metodo_pago !== 'credito',
-        saldo_post: saldoNegocio,
+        saldo_post: saldos[escenario],
       })
       return ok({
         movimiento_id,
         registros_creados: [{ tabla: final.tipo === 'compra' ? 'deudas' : 'transacciones', id: `MOV-000${seq}` }],
-        alertas_disparadas: final.tipo === 'compra' ? D.alertas().items : [],
-        saldo_caja_negocio: saldoNegocio,
+        alertas_disparadas: final.tipo === 'compra' ? D.alertasDe(escenario).items : [],
+        saldo_caja_negocio: saldos[escenario],
       }, 201)
     }
 
@@ -248,15 +272,20 @@ async function handle(method, path, { query, body }) {
 
     case 'POST /empresas/:id/asistente/mensajes':
       await wait(900)
-      return ok(asistente(body?.mensaje || '', body?.conversacion_id, fallback))
+      return ok(asistente(body?.mensaje || '', body?.conversacion_id, fallback, escenario))
 
     default:
       return err(404, 'NO_ENCONTRADO', `Mock sin ruta para ${method} ${path}`)
   }
 }
 
-function asistente(mensaje, conversacion_id, fallback) {
+function asistente(mensaje, conversacion_id, fallback, escenario = 'pedro') {
   const m = mensaje.toLowerCase()
+  const saldoNegocio = saldos[escenario]
+  const teDeben = D.fiadosDe(escenario).total_pendiente
+  const sano = escenario === 'sano'
+  const nuevo = escenario === 'nuevo'
+  const saldo3011 = saldoBase(escenario)
   const base = {
     conversacion_id: conversacion_id || 'CNV-0031',
     herramientas_llamadas: [],
@@ -277,7 +306,9 @@ function asistente(mensaje, conversacion_id, fallback) {
       respuesta: 'No te puedo recomendar un préstamo ni una entidad, pero sí mostrarte el costo:',
       // EXT: bloque de ejemplo ilustrativo de préstamo informal
       ejemplo_prestamo_informal: { recibes: 1000, devuelves: 1200, dias: 30, cuota_diaria: 40 },
-      respuesta_post: 'Antes, prueba esto: pedir menos, pagar en 2 partes y cobrar fiados. Con eso ya llegas al 30/11.',
+      respuesta_post: sano
+        ? 'Además, con lo que vendes ya llegas al 30/11 sin pedir prestado.'
+        : 'Antes, prueba esto: pedir menos, pagar en 2 partes y cobrar fiados. Con eso ya llegas al 30/11.',
       acciones: [{ tipo: 'abrir_simulador', texto: 'Ver mi plan' }, { tipo: 'hablar_humano', texto: 'Hablar con una persona' }], // EXT
       cifras_usadas: [{ valor: 1000, fuente: 'microexplicaciones.prestamo_informal.ejemplo' }],
     }
@@ -286,8 +317,8 @@ function asistente(mensaje, conversacion_id, fallback) {
   if (/c[oó]mo va|mi caja|cu[aá]nto tengo/.test(m) || fallback) {
     const tabla = [ // EXT: cifras crudas para el "Modo básico"
       { etiqueta: 'Caja del negocio', valor: saldoNegocio },
-      { etiqueta: 'Te deben (fiados)', valor: 310 },
-      { etiqueta: 'Debes (30/11)', valor: 2400 },
+      { etiqueta: 'Te deben (fiados)', valor: teDeben },
+      ...(nuevo ? [] : [{ etiqueta: 'Debes (30/11)', valor: 2400 }]),
     ]
     if (fallback) {
       return {
@@ -301,10 +332,24 @@ function asistente(mensaje, conversacion_id, fallback) {
     return {
       ...base,
       intencion: 'estado_caja',
-      respuesta: `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Te deben S/ 310 en fiados y el 30/11 pagas S/ 2 400 a Andina. Si no cambias nada, ese día te faltarían S/ 650.`,
+      respuesta: nuevo
+        ? `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Con unos días más de datos te digo cómo vienen tus próximas semanas.`
+        : sano
+          ? `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Te deben S/ ${teDeben} en fiados y el 30/11 pagas S/ 2 400 a Andina. Ese día te quedarían unos S/ ${saldo3011}: sí te alcanza.`
+          : `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Te deben S/ ${teDeben} en fiados y el 30/11 pagas S/ 2 400 a Andina. Si no cambias nada, ese día te faltarían S/ 650.`,
       tabla,
       herramientas_llamadas: [{ nombre: 'obtener_resumen', args: { periodo: '2026-11' } }, { nombre: 'obtener_forecast', args: { horizonte_dias: 30 } }],
-      cifras_usadas: [{ valor: saldoNegocio, fuente: 'resumen.saldo_caja_negocio' }, { valor: 650, fuente: 'forecast.dia_critico.saldo_p50' }],
+      cifras_usadas: [{ valor: saldoNegocio, fuente: 'resumen.saldo_caja_negocio' }, ...(nuevo ? [] : [{ valor: sano ? saldo3011 : 650, fuente: sano ? 'forecast.serie.p50' : 'forecast.dia_critico.saldo_p50' }])],
+    }
+  }
+
+  if (/por qu[eé]|falta|alcanza/.test(m) && sano) {
+    return {
+      ...base,
+      intencion: 'explicar_alerta',
+      respuesta: `Sí te alcanza: el 30/11 pagas S/ 2 400 a Distribuidora Andina y ese día te quedarían unos S/ ${saldo3011}, por encima de tu mínimo de S/ 800. Vendes parejo todos los días y tus fiados son pocos (S/ ${teDeben}).`,
+      herramientas_llamadas: [{ nombre: 'obtener_forecast', args: { horizonte_dias: 30 } }],
+      cifras_usadas: [{ valor: 2400, fuente: 'pedidos.PED-0012.monto' }, { valor: saldo3011, fuente: 'forecast.serie.p50' }],
     }
   }
 
@@ -313,7 +358,7 @@ function asistente(mensaje, conversacion_id, fallback) {
       ...base,
       intencion: 'explicar_alerta',
       ofrecer_humano: true,
-      respuesta: 'El 30/11 vence tu pago de S/ 2 400 a Distribuidora Andina. Este mes vendiste unos S/ 560 menos que el mes pasado, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ 310 en fiados sin cobrar. Si pides S/ 1 800 y pagas en 2 partes, ese día tendrías S/ 850.',
+      respuesta: `El 30/11 vence tu pago de S/ 2 400 a Distribuidora Andina. Este mes vendiste unos S/ 560 menos que el mes pasado, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ ${teDeben} en fiados sin cobrar. Si pides S/ 1 800 y pagas en 2 partes, ese día tendrías S/ 850.`,
       herramientas_llamadas: [{ nombre: 'obtener_alertas', args: { estado: 'activa' } }, { nombre: 'simular', args: { acciones: ['reducir_pedido:1800', 'pagar_en_partes:2'] } }],
       cifras_usadas: [{ valor: 2400, fuente: 'pedidos.PED-0012.monto' }, { valor: 850, fuente: 'simular.con_acciones.saldo_minimo' }],
     }
@@ -323,9 +368,9 @@ function asistente(mensaje, conversacion_id, fallback) {
     return {
       ...base,
       intencion: 'simular',
-      respuesta: `Si pagas a Andina en 2 partes (30/11 y 15/12), ese día te quedarían S/ ${simularSaldo({ partes: 2 })}. Tendrías que pedírselo a Andina.`,
+      respuesta: `Si pagas a Andina en 2 partes (30/11 y 15/12), ese día te quedarían S/ ${simularSaldo({ partes: 2, escenario })}. Tendrías que pedírselo a Andina.`,
       herramientas_llamadas: [{ nombre: 'simular', args: { acciones: ['pagar_en_partes:2'] } }],
-      cifras_usadas: [{ valor: simularSaldo({ partes: 2 }), fuente: 'simular.con_acciones.saldo_minimo' }],
+      cifras_usadas: [{ valor: simularSaldo({ partes: 2, escenario }), fuente: 'simular.con_acciones.saldo_minimo' }],
     }
   }
 

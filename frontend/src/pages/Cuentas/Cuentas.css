@@ -41,7 +41,6 @@
   gap: 16px;
 }
 .cuentas-panel { scroll-margin-top: 72px; /* deja ver el control segmentado fijo */ }
-.cuentas-stack { display: grid; gap: 12px; }
 
 /* Tarjeta con título dentro (Monzo "Activity") */
 .cuentas-card__title { scroll-margin-top: 72px; }

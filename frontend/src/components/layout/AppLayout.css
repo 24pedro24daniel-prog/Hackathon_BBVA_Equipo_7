@@ -71,7 +71,7 @@
     display: flex; justify-content: center; align-items: center; height: 44px; margin-bottom: 16px;
     font-family: var(--font-display); font-weight: var(--display-weight); color: var(--title);
   }
-  .cc-nav__logo { font-size: 20px; letter-spacing: -0.03em; }
+  .cc-nav__logo { flex: none; display: block; color: var(--brand); }
   .cc-nav__name { display: none; }
   .cc-nav__link { min-height: 64px; border-radius: var(--radius); font-size: 13px; }
   .cc-nav__link:hover { background: var(--row-hover); }
@@ -84,8 +84,7 @@
   .cc-app { --content-max: 1120px; padding-left: var(--sidebar-w); }
   .cc-nav,
   .cc-app--chat .cc-nav { width: var(--sidebar-w); padding: 24px 16px; }
-  .cc-nav__brand { justify-content: flex-start; padding: 0 16px; margin-bottom: 24px; }
-  .cc-nav__logo { display: none; }
+  .cc-nav__brand { justify-content: flex-start; gap: 10px; padding: 0 12px; margin-bottom: 24px; }
   .cc-nav__name { display: inline; font-size: 22px; letter-spacing: -0.03em; }
   .cc-nav__link {
     flex-direction: row;

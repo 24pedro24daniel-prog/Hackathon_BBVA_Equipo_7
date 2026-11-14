@@ -16,7 +16,6 @@ import {
   PageHeader,
   ProgressBar,
   Status,
-  TraceInfo,
 } from '../../components/ui/index.jsx'
 import ForecastChart from './ForecastChart.jsx'
 import './Forecast.css'
@@ -106,7 +105,7 @@ function ForecastContent({ f }) {
 
   let estado
   if (riesgo.size > 0) estado = riesgo.size === 1 ? '1 día por debajo de tu mínimo' : `${riesgo.size} días por debajo de tu mínimo`
-  else if (minimo != null) estado = 'No bajarías de tu mínimo'
+  else if (minimo != null) estado = `Te mantienes sobre tu mínimo los ${points.length - 1} días`
   const statusTone = riesgo.size === 0 ? 'ok' : tone === 'ok' ? 'warning' : tone
 
   return (
@@ -192,9 +191,7 @@ function ForecastContent({ f }) {
           )}
         </Card>
 
-        <TraceInfo fundamento={f.fundamento} limites={f.limites} confianza={f.confianza} meta={f.meta} />
-
-        <Button block size="lg" onClick={() => navigate('/simulador')}>
+        <Button block size="lg" onClick={() => navigate('/chat', { state: { intent: 'plan_caja' } })}>
           Probar qué hacer
         </Button>
       </div>

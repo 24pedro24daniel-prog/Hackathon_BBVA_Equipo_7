@@ -16,7 +16,6 @@ import {
   PageHeader,
   Skeleton,
   Status,
-  TraceInfo,
 } from '../../components/ui/index.jsx'
 import RecordatorioSheet from './RecordatorioSheet.jsx'
 import './Cuentas.css'
@@ -40,6 +39,35 @@ function fiadoStatus(f) {
 
 // Solo los vencidos y por vencer llevan el botón "Recordar"; los demás, nada
 const necesitaRecordatorio = (f) => Boolean(f.accion_sugerida) && (f.estado === 'vencido' || f.estado === 'por_vencer')
+
+// Listas largas: se ven las primeras 5 y un botón para ver todas.
+const LIMITE = 5
+
+/** "Ver los N →" / "Ver menos" de una lista. El botón va en la cabecera y no se mueve al abrir, así el foco queda en él. */
+function useVerTodos(total) {
+  const [open, setOpen] = useState(false)
+  const listId = useId()
+  const hayMas = total > LIMITE
+  const corta = (arr) => (open || !hayMas ? arr : arr.slice(0, LIMITE))
+  const action = hayMas ? (
+    <button
+      type="button"
+      className="cc-section__action"
+      aria-expanded={open}
+      aria-controls={listId}
+      onClick={() => setOpen((o) => !o)}
+    >
+      {open ? (
+        'Ver menos'
+      ) : (
+        <>
+          Ver los {total} <span aria-hidden="true">→</span>
+        </>
+      )}
+    </button>
+  ) : null
+  return { listId, corta, action }
+}
 
 const dias = (n) => `${n} ${n === 1 ? 'día' : 'días'}`
 const vence = (fecha) => `Vence ${weekdayDdmm(fecha).toLowerCase()}`
@@ -204,7 +232,7 @@ function Figure({ label, value, tone, loading }) {
 }
 
 /** Tarjeta blanca con título dentro (como "Activity" de Monzo). El título recibe el foco al elegir el segmento. */
-function ListCard({ title, headingRef, children }) {
+function ListCard({ title, headingRef, action, children }) {
   const id = useId()
   return (
     <Card flush className="cuentas-card" aria-labelledby={id}>
@@ -212,6 +240,7 @@ function ListCard({ title, headingRef, children }) {
         <h2 id={id} ref={headingRef} tabIndex={-1} className="cc-card__title cuentas-card__title">
           {title}
         </h2>
+        {action}
       </div>
       {children}
     </Card>
@@ -233,6 +262,7 @@ function Empty({ cta, children }) {
 function FiadosBlock({ state, onRecordar, headingRef }) {
   const { data, error, loading, reload } = state
   const items = data?.items || []
+  const ver = useVerTodos(loading || error ? 0 : items.length)
 
   let body
   if (loading) body = <div className="cuentas-card__pad"><LoadingBlock heights={[64, 64, 64]} /></div>
@@ -245,8 +275,8 @@ function FiadosBlock({ state, onRecordar, headingRef }) {
     )
   } else {
     body = (
-      <List aria-label="Fiados pendientes">
-        {items.map((f) => {
+      <List id={ver.listId} aria-label="Fiados pendientes">
+        {ver.corta(items).map((f) => {
           const s = fiadoStatus(f)
           return (
             <ListRow
@@ -284,19 +314,9 @@ function FiadosBlock({ state, onRecordar, headingRef }) {
   }
 
   return (
-    <div className="cuentas-stack">
-      <ListCard title="Te deben" headingRef={headingRef}>
-        {body}
-      </ListCard>
-
-      {data && items.length > 0 && (
-        <TraceInfo
-          fundamento={data.fundamento || 'Cada riesgo sale de cuánto se demoró esa persona antes y de cuántos días lleva este fiado.'}
-          limites={data.limites || 'Es una estimación; no sabe si la persona tuvo un imprevisto.'}
-          meta={data.meta}
-        />
-      )}
-    </div>
+    <ListCard title="Te deben" headingRef={headingRef} action={ver.action}>
+      {body}
+    </ListCard>
   )
 }
 
@@ -311,6 +331,7 @@ function DebesBlock({ state, headingRef }) {
   const { data, error, loading, reload } = state
   const items = data?.items || []
   const imp = data?.impuestos
+  const ver = useVerTodos(loading || error ? 0 : items.length)
 
   let body
   if (loading) body = <div className="cuentas-card__pad"><LoadingBlock heights={[64, 64]} /></div>
@@ -319,8 +340,8 @@ function DebesBlock({ state, headingRef }) {
     body = (
       <>
         {(items.length > 0 || imp) && (
-          <List aria-label="Pagos pendientes">
-            {items.map((p) => {
+          <List id={ver.listId} aria-label="Pagos pendientes">
+            {ver.corta(items).map((p) => {
               const s = pedidoStatus(p)
               return (
                 <ListRow
@@ -373,7 +394,7 @@ function DebesBlock({ state, headingRef }) {
   }
 
   return (
-    <ListCard title="Debes" headingRef={headingRef}>
+    <ListCard title="Debes" headingRef={headingRef} action={ver.action}>
       {body}
     </ListCard>
   )

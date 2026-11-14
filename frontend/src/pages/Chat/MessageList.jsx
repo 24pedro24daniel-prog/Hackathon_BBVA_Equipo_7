@@ -6,6 +6,7 @@ import { AssistantCard } from './AssistantCard.jsx'
 import { InBubble, OutBubble, RichText, TypingBubble, Waveform } from './ChatParts.jsx'
 import { CuadernoCard } from './CuadernoCard.jsx'
 import { OptionsCard, WarningCard } from './PedidoCards.jsx'
+import { PlanCard } from './PlanCard.jsx'
 import { ClarifyCard, ConfirmCard } from './RegistroCards.jsx'
 
 function AudioBubble({ msg }) {
@@ -55,6 +56,8 @@ function Message({ msg, a }) {
       return <AlertCard msg={msg} onAccion={() => a.abrirAlerta(msg.id)} />
     case 'assistant':
       return <AssistantCard msg={msg} onAccion={a.accionAsistente} />
+    case 'plan':
+      return <PlanCard msg={msg} onAccion={(acc) => a.accionPlan(msg.id, acc)} />
     case 'cuaderno':
       return (
         <CuadernoCard msg={msg} onGuardar={() => a.guardarCuaderno(msg.id)} onCorregir={() => a.corregirCuaderno(msg.id)} />

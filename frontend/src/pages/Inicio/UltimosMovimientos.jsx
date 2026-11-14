@@ -25,7 +25,6 @@ export default function UltimosMovimientos({ escenario }) {
         onClick={() => setAbierto((a) => !a)}
       >
         <span className="inicio__movs-title">Últimos movimientos</span>
-        {items.length > 0 && <span className="inicio__movs-count">{items.length}</span>}
         <Icon name="chevronDown" size={20} className="inicio__movs-chev" />
       </button>
 
