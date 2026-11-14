@@ -26,17 +26,19 @@ Por qué así no se chocan:
 
 | Tema | Decisión |
 |---|---|
-| BD | PostgreSQL 16 local (`docker run -p 5432:5432 -e POSTGRES_PASSWORD=... postgres:16` o instalador). Respeta `decimal`, `timestamptz`, `json` e índices parciales del DBML. Cada dev usa **su propia BD local**. |
+| BD | PostgreSQL 16 en Docker (`backend/docker-compose.yml`, servicio `db`, `postgres:16.14`, publicado en el host como `localhost:5433` porque el 5432 puede estar ocupado por un PostgreSQL nativo). Crea también la BD de pruebas `cajaclara_test`. Respeta `decimal`, `timestamptz`, `json` e índices parciales del DBML. Cada dev usa **su propia BD local**. |
 | ORM | SQLAlchemy 2.0 (estilo `Mapped[]`) + `psycopg` 3. Dinero siempre `Numeric(12,2)` → `Decimal`, nunca `float`. |
 | Migraciones | Sin Alembic en el hackathon: `python -m app.db.reset` borra, crea (`create_all`) y siembra. Evita conflictos de migraciones entre los dos. |
 | Vistas derivadas | Funciones Python con `fecha_corte` (no vistas SQL), en `services/finanzas/consultas.py`. Más fácil de testear y de reutilizar en el forecast. |
-| Config | `pydantic-settings`, leído de `backend/.env` (`DATABASE_URL`, `API_KEY`, `OLLAMA_URL`, `WHISPER_MODEL`, `TZ=America/Lima`). Se sube solo `.env.example`. |
+| Config | `pydantic-settings` (`core/config.py`) lee 3 archivos de `backend/`: **`parametros.env`** (no secretos, versionado: host/puerto/BD, `FECHA_DEMO`, `TZ=America/Lima`, `LLM_*`, `WHISPER_*`, `UMBRAL_CONFIANZA`), **`.env`** (solo credenciales, NO versionado: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `API_KEY`, `OPENROUTER_API_KEY`) y **`example.env`** (plantilla versionada de `.env`). Las variables de entorno reales tienen prioridad. `DATABASE_URL` se compone de las partes (override opcional con `DATABASE_URL`). |
+| LLM y voz | LLM por **OpenRouter** (API compatible con OpenAI, `/chat/completions` con `tools`), cliente `httpx` en `services/ingesta/llm_client.py`. Whisper con **faster-whisper local** (`small`, CPU, `int8`), carga perezosa. |
+| Docker | `backend/Dockerfile` (`python:3.12.15-slim`, usuario no root) + `docker-compose.yml` (`db` + `backend`, `env_file: [parametros.env, .env]`, volumen de caché de Whisper). |
 | Puerto | `uvicorn app.main:app --port 8000` (el front ya proxea `/api` a `localhost:8000`). Prefijo `/api/v1`. |
 | Fecha "hoy" | Variable `FECHA_DEMO=2026-11-14` en `.env`: todos los cálculos usan `core/reloj.py::hoy()`, no `date.today()`. Así la demo de Pedro es reproducible. |
 | Ramas | `back/base` (Fase 0) → luego `back/ingesta` (A) y `back/motores` (B). Merge a `main` en cada checkpoint (§6). |
 | Tests | `pytest` + BD de prueba. Archivos `tests/test_a_*.py` (A) y `tests/test_b_*.py` (B). |
 
-Dependencias (`requirements.txt`): `fastapi`, `uvicorn[standard]`, `sqlalchemy>=2`, `psycopg[binary]`, `pydantic>=2`, `pydantic-settings`, `httpx` (Ollama), `faster-whisper`, `pytest`. Opcional para B: `lightgbm`, `pandas`, `joblib`.
+Dependencias (`requirements.txt`, todas con versión exacta `==`): `fastapi`, `uvicorn[standard]`, `python-multipart`, `sqlalchemy` 2.x, `psycopg[binary]` 3.x, `pydantic` 2.x, `pydantic-settings`, `tzdata`, `httpx` (OpenRouter), `faster-whisper`, `pytest`. Opcional para B: `lightgbm`, `pandas`, `joblib`.
 
 ---
 
@@ -44,7 +46,10 @@ Dependencias (`requirements.txt`): `fastapi`, `uvicorn[standard]`, `sqlalchemy>=
 
 ```text
 backend/
-├── .env.example                      F0 (B)
+├── parametros.env                    F0 (B) — parámetros no secretos (versionado)
+├── example.env                       F0 (B) — plantilla de credenciales (versionado)
+├── .env                              local — solo credenciales, NO se versiona
+├── Dockerfile, docker-compose.yml    F0 — db (postgres:16.14) + backend; docker/initdb crea cajaclara_test
 ├── requirements.txt                  F0 (B)
 ├── app/
 │   ├── main.py                       F0 (B) — registra TODOS los routers desde el inicio
@@ -91,7 +96,8 @@ backend/
 │   └── services/
 │       ├── ingesta/                  A
 │       │   ├── transcriptor.py       faster-whisper local (audio → texto)
-│       │   ├── extractor.py          LLM (Ollama) con function calling → MovimientoPropuesto; fallback por reglas/regex
+│       │   ├── llm_client.py         cliente mínimo de OpenRouter (httpx, timeouts, LLMNoDisponible)
+│       │   ├── extractor.py          LLM (OpenRouter) con function calling → MovimientoPropuesto; fallback por reglas/regex
 │       │   ├── catalogo.py           monto por catálogo + match de alias (productos, clientes, proveedores)
 │       │   ├── registrador.py        ★ INTERFAZ A: escribe transacciones + tablas satélite
 │       │   ├── cuaderno.py           F1.2 simplificado (OCR/visión o fixture de 2–3 fotos)
@@ -198,7 +204,7 @@ Prioridad: 🔴 debe estar en la demo · 🟡 versión simplificada.
 |---|---|---|---|
 | A1 | `registrador.py`: todos los casos de diccionario §4 (venta, venta fiada → `cuaderno_fiado`, cobro de fiado, compra a crédito → `deudas`, pago a proveedor, préstamo recibido, retiro personal, gasto, pago de impuesto). Valida los CHECK de `transacciones`. | — | 🔴 |
 | A2 | Movimientos: listado con filtros, paginación por cursor y `saldo_post`; registro manual (`canal = manual`, sin borrador) | `GET/POST /empresas/{id}/movimientos` | 🔴 |
-| A3 | Extractor de texto: LLM local (Ollama) con function calling → `MovimientoPropuesto` validado con pydantic. Fallback por reglas (regex de montos, verbos "vendí/saqué/pedí/fié/me pagó"). Monto por catálogo si no se dice. `confianza`, `campos_faltantes`, `pregunta_aclaratoria` si < 0.75. Caso "pagué el colegio" → respuesta de alcance. | `POST /ingesta/interpretar` (texto) | 🔴 |
+| A3 | Extractor de texto: LLM por OpenRouter (`llm_client.py`) con function calling → `MovimientoPropuesto` validado con pydantic. Fallback por reglas (regex de montos, verbos "vendí/saqué/pedí/fié/me pagó"). Monto por catálogo si no se dice. `confianza`, `campos_faltantes`, `pregunta_aclaratoria` si < 0.75. Caso "pagué el colegio" → respuesta de alcance. | `POST /ingesta/interpretar` (texto) | 🔴 |
 | A4 | Transcripción de voz con faster-whisper (modelo `small`, CPU) antes del extractor | `POST /ingesta/interpretar` (voz) | 🔴 |
 | A5 | Confirmar: aplica `correcciones`, marca borrador, llama a `registrador` y luego a B (§4.3). `204` si se descarta, `409` si ya estaba confirmado. Idempotency-Key. | `POST /ingesta/confirmar` | 🔴 |
 | A6 | Pedido a crédito por voz/texto (F1.5): "pedí 2 400 a Andina para el 30" → borrador con proveedor y vencimiento; la respuesta del bot incluye el resultado de `chequeo_pedido` | (dentro de A3/A5) | 🔴 |

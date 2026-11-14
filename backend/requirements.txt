@@ -1,16 +1,17 @@
-fastapi>=0.115
-uvicorn[standard]>=0.30
-sqlalchemy>=2.0
-psycopg[binary]>=3.2
-pydantic>=2.7
-pydantic-settings>=2.3
-httpx>=0.27
-tzdata>=2024.1          # zona America/Lima en Windows
-python-multipart>=0.0.9
-pytest>=8.0
-# Dev A (ingesta / IA de lenguaje)
-faster-whisper>=1.0
-# Dev B (opcional, modelo ML del forecast)
-# lightgbm
-# pandas
-# joblib
+# CajaClara backend — versiones exactas (Python 3.12).
+# API
+fastapi==0.163.0
+uvicorn[standard]==0.54.0
+python-multipart==0.0.33
+pydantic==2.14.3
+pydantic-settings==2.16.3
+# Base de datos
+sqlalchemy==2.1.8
+psycopg[binary]==3.3.9
+# Zonas horarias (zoneinfo sin tzdata del sistema en python:slim / Windows)
+tzdata==2026.6
+# IA: LLM por OpenRouter (HTTP) y Whisper local
+httpx==0.28.1
+faster-whisper==1.2.1
+# Pruebas
+pytest==9.2.0

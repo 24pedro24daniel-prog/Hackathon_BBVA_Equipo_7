@@ -1,0 +1,55 @@
+# CajaClara backend: PostgreSQL + API.
+#   docker compose up -d                                   # BD + backend en http://localhost:8000/api/v1
+#   docker compose run --rm backend python -m app.db.reset  # recrea y siembra la demo de Pedro
+#   docker compose run --rm backend pytest -q               # tests (usan la BD cajaclara_test)
+# Parámetros en parametros.env (versionado); credenciales en .env (ver example.env).
+
+name: cajaclara
+
+services:
+  db:
+    image: postgres:16.14
+    # Solo parámetros + credenciales de Postgres (compose lee .env para interpolar); las API keys no entran aquí.
+    env_file: [parametros.env]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Falta POSTGRES_USER en backend/.env (copia example.env)}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en backend/.env (copia example.env)}
+      TZ: America/Lima
+      PGTZ: America/Lima
+    ports:
+      # Host 5433 → contenedor 5432 (en este equipo ya hay un PostgreSQL nativo en el 5432).
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  backend:
+    build: .
+    image: cajaclara-backend:local
+    env_file: [parametros.env, .env]
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      WHISPER_CACHE_DIR: /models/whisper
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - whisper_models:/models
+      # Código montado para desarrollo: los cambios se ven con `docker compose restart backend`
+      - ./app:/app/app
+      - ./tests:/app/tests
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  whisper_models:

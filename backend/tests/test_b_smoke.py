@@ -8,7 +8,7 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.config import get_settings
+from app.core.config import get_settings, settings
 from app.main import app
 from app.mocks import data as mock
 
@@ -25,8 +25,7 @@ def _estado_limpio():
 
 @pytest.fixture
 def client():
-    headers = {"X-API-Key": get_settings().API_KEY} if get_settings().API_KEY else {}
-    return TestClient(app, headers=headers)
+    return TestClient(app, headers={"X-API-Key": settings.API_KEY.get_secret_value()})
 
 
 # ---------- público / auth / errores ----------
@@ -37,7 +36,6 @@ def test_health_publico():
     assert "componentes" in r.json()
 
 
-@pytest.mark.skipif(not get_settings().API_KEY, reason="API_KEY vacía: auth desactivada")
 def test_sin_api_key_401():
     r = TestClient(app).get(f"{E}/resumen")
     assert r.status_code == 401
@@ -173,8 +171,8 @@ def test_reloj_usa_fecha_demo(monkeypatch):
 
 
 def test_cursor_roundtrip():
-    from app.core.paginacion import armar_pagina, codificar_cursor, decodificar_cursor
+    from app.core.paginacion import codificar_cursor, decodificar_cursor, recortar
     assert decodificar_cursor(codificar_cursor({"id": "MOV-000123", "t": "2026-11-14"})) == {"id": "MOV-000123", "t": "2026-11-14"}
-    items, nxt = armar_pagina([1, 2, 3], 2, lambda x: {"i": x})
+    items, nxt = recortar([1, 2, 3], 2, lambda x: {"i": x})
     assert items == [1, 2] and decodificar_cursor(nxt) == {"i": 2}
-    assert armar_pagina([1, 2], 2, lambda x: {"i": x}) == ([1, 2], None)
+    assert recortar([1, 2], 2, lambda x: {"i": x}) == ([1, 2], None)

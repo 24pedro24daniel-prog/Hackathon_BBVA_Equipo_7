@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, Response
 
 from app.core.deps import get_db
-from app.core.errors import ApiError, Codigo
+from app.core.errors import NoEncontrado, NoInterpretable
 from app.mocks import data as mock
 from app.mocks import stubs_a
 from app.services import alertas as svc_alertas
@@ -21,8 +21,7 @@ router = APIRouter(tags=["F1 Ingesta"])
 def interpretar(body: dict[str, Any] = Body(...)):
     res = stubs_a.interpretar_respuesta(body.get("canal", "texto"), body.get("texto"))
     if res is None:
-        raise ApiError(Codigo.NO_INTERPRETABLE,
-                       'No entendí bien. ¿Me lo dices de otra forma? Por ejemplo: "vendí 2 cervezas".')
+        raise NoInterpretable('No entendí bien. ¿Me lo dices de otra forma? Por ejemplo: "vendí 2 cervezas".')
     return res
 
 
@@ -30,7 +29,7 @@ def interpretar(body: dict[str, Any] = Body(...)):
 def confirmar(body: dict[str, Any] = Body(...), db=Depends(get_db)):
     mov = mock.BORRADORES.get(body.get("borrador_id"))
     if mov is None:
-        raise ApiError(Codigo.NO_ENCONTRADO, "Ese registro ya no existe. Vuelve a enviarlo.")
+        raise NoEncontrado("Ese registro ya no existe. Vuelve a enviarlo.")
     correcciones = body.get("correcciones") or {}
     if body.get("confirmado") is False and not correcciones:
         mock.BORRADORES.pop(body["borrador_id"], None)

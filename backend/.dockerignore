@@ -1,0 +1,30 @@
+# Credenciales: entran por env_file de docker compose, nunca a la imagen
+.env
+.env.*
+*.pem
+*.key
+
+# Caches y entornos locales
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Docker y control de versiones
+docker-compose.yml
+docker/
+.dockerignore
+.git
+.gitignore
+.gitattributes
+
+# Editores y SO
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db
