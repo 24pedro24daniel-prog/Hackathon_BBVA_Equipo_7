@@ -79,6 +79,13 @@ Esto lo empuja a préstamos informales ("gota a gota") con intereses impagables,
 
 Ayudar a bodegas y pymes no bancarizadas a ordenar su flujo de caja, anticipar faltantes y adoptar hábitos financieros saludables, construyendo un historial que les permita acceder a crédito formal de forma más rápida.
 
+### Alcance: solo las finanzas del negocio
+
+- **CajaClara no registra ni analiza los gastos personales o de la casa** (comida del hogar, colegio, salud, servicios de la vivienda, etc.). La aplicación gestiona únicamente la caja del negocio.
+- Lo único que se registra del lado personal es el **retiro personal**: la plata que Pedro saca de la caja del negocio para la casa ("saqué 50 para la casa"). Se trata como una salida de caja del negocio, sin detallar en qué se gasta después.
+- Así, los retiros personales sí alimentan el resumen (F2), la proyección y el "disponible para gastar" (F3), las alertas (F6) y el score (F8), pero no existe un módulo, categoría ni tabla para gastos del hogar.
+- Si Pedro intenta registrar un gasto de la casa pagado con plata de la casa (p. ej. "pagué el colegio de mi hijo"), el bot le explica que la app solo lleva el negocio y le pregunta si esa plata salió de la caja de la tienda; si es así, se anota como retiro personal.
+
 ### Los 3 estadios del usuario
 
 **Estadio 1 — Pyme desorganizada ("no cliente" informal) · punto de partida**
@@ -400,6 +407,9 @@ Principio: Pedro registra donde ya está (WhatsApp). Todo lo demás es automáti
 - F8 (score con 3 subindicadores)
 - F5 (2 gráficos)
 
+**Fuera de alcance (no se incluirá)**
+- Registro y análisis de gastos personales o de la casa (ver sección 3, "Alcance"); solo se registra el retiro personal desde la caja del negocio.
+
 **Roadmap**
 - WhatsApp Business oficial
 - Integración real con billeteras digitales (F1.3)
@@ -421,7 +431,7 @@ Entidad central: la bodega/empresa. Todas las tablas se relacionan con ella.
 | `productos` | Maestra | Catálogo: precio, costo y categoría (para calcular montos y margen) |
 | `clientes` | Maestra | Vecinos/clientes de fiado; `perfil_pago` oculto (no es feature) |
 | `proveedores` | Maestra | Proveedores y plazo de pago acordado |
-| `categorias` | Maestra | Ventas, compras, servicios, impuestos, retiros personales, etc. |
+| `categorias` | Maestra | Ventas, compras, servicios, impuestos, retiros personales, etc. (no hay categorías de gastos del hogar) |
 | `transacciones_venta` (y compras/retiros) | Transaccional | Cada movimiento de caja; campos `canal` (voz/texto/foto/billetera), `confianza_extraccion`, `es_retiro_personal` |
 | `cuaderno_fiado` | Transaccional | Fiados digitalizados: cliente, monto, fecha, fecha de pago real, días de atraso |
 | `prestamos_proveedor` | Transaccional | Pedidos a crédito: proveedor, monto, plazo, monto pendiente, fecha de pago |
