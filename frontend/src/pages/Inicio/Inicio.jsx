@@ -276,16 +276,7 @@ function LoQueViene({ forecast, alertas, corte }) {
   const filas = armarProximos(forecast.data?.proximos_eventos ?? [], alerta, hoy)
 
   return (
-    <Section
-      title="Lo que viene"
-      action={
-        alerta ? (
-          <Link className="cc-section__action" to="/simulador">
-            Ver qué puedo hacer <span aria-hidden="true">→</span>
-          </Link>
-        ) : null
-      }
-    >
+    <Section title="Próximos movimientos">
       <Card flush>
         {filas.length === 0 ? (
           <p className="inicio__viene-vacio">No tienes pagos ni cobros en los próximos 30 días.</p>
@@ -299,14 +290,11 @@ function LoQueViene({ forecast, alertas, corte }) {
                   key={f.key}
                   lead={<Icon name={f.icono} size={20} />}
                   title={f.titulo}
-                  sub={
-                    <span className="inicio__viene-sub">
-                      {fecha && <span>{fecha}</span>}
-                      <EstadoFila fila={f} alerta={alerta} />
-                    </span>
-                  }
+                  sub={fecha}
                   amount={f.monto != null ? <Money value={f.monto} sign tone={f.monto > 0 ? 'pos' : 'neutral'} /> : null}
-                />
+                >
+                  {f.alerta && <Cobertura pago={f.monto} falta={f.alerta.monto} />}
+                </ListRow>
               )
             })}
           </List>
@@ -316,27 +304,36 @@ function LoQueViene({ forecast, alertas, corte }) {
   )
 }
 
-/** Una sola línea de estado por fila: texto de color + ícono. */
-function EstadoFila({ fila, alerta }) {
-  if (fila.alerta) {
-    const falta = fila.alerta.monto
-    return (
-      <Status tone="danger" className="inicio__viene-status">
-        <Icon name="warning" size={16} />
-        {falta ? `Te faltarían ${soles(falta)}` : 'No te alcanzaría'}
-      </Status>
-    )
-  }
-  // Pagos antes del problema (o todos, si no hay alerta): sí alcanza.
-  if (fila.monto != null && fila.monto < 0 && (!alerta || !alerta.fecha_evento || fila.fecha < alerta.fecha_evento)) {
-    return (
-      <Status tone="ok" className="inicio__viene-status">
-        <Icon name="check" size={16} />
-        Te alcanza
-      </Status>
-    )
-  }
-  return null
+/**
+ * Solo para el pago en riesgo: barra de cobertura. La parte azul es lo que tendrás,
+ * la roja lo que falta. Si el pago sí se cubre, la fila no lleva nada extra.
+ */
+function Cobertura({ pago, falta }) {
+  const total = Math.abs(pago ?? 0)
+  const faltante = Math.abs(falta ?? 0)
+  if (!faltante) return null
+  const cubierto = Math.max(0, total - faltante)
+  const pctCubierto = total ? Math.round((cubierto / total) * 100) : 0
+  return (
+    <div className="inicio__cobertura">
+      <div
+        className="inicio__cobertura-bar"
+        role="img"
+        aria-label={`Cubres ${soles(cubierto)} de ${soles(total)}. Faltan ${soles(faltante)}.`}
+      >
+        <span className="inicio__cobertura-ok" style={{ width: `${pctCubierto}%` }} />
+        <span className="inicio__cobertura-falta" />
+      </div>
+      <p className="inicio__cobertura-texto" aria-hidden="true">
+        <span>
+          Cubres <span className="num">{soles(cubierto)}</span>
+        </span>
+        <strong>
+          Faltan <span className="num">{soles(faltante)}</span>
+        </strong>
+      </p>
+    </div>
+  )
 }
 
 /* ---------------- Día 3: recién empieza ---------------- */

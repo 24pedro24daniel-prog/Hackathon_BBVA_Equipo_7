@@ -79,9 +79,6 @@
 .inicio__anotar { width: 100%; }
 
 /* ---------- Lo que viene: filas con una sola línea de estado ---------- */
-.inicio__viene-sub { display: grid; gap: 2px; }
-.inicio__viene-status { display: inline-flex; align-items: center; gap: 4px; }
-.inicio__viene-status svg { flex: none; }
 .inicio__viene-vacio { padding: 20px 16px; font-size: 15px; color: var(--text-muted); }
 
 /* ---------- Desglose corto dentro de TraceInfo ---------- */
@@ -178,3 +175,17 @@
   text-decoration: none;
 }
 .inicio__movs-ver:hover { background: var(--bg); }
+
+/* Pago en riesgo: barra de cobertura (azul = lo que tendrás, rojo = lo que falta) */
+.inicio__cobertura { padding: 0 16px 16px 68px; display: grid; gap: 6px; }
+.inicio__cobertura-bar {
+  display: flex; gap: 2px; height: 8px;
+  border-radius: var(--radius-pill); overflow: hidden;
+}
+.inicio__cobertura-ok { background: var(--brand); flex: none; }
+.inicio__cobertura-falta { background: var(--danger); flex: 1; }
+.inicio__cobertura-texto {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-size: var(--fs-note); color: var(--text-muted);
+}
+.inicio__cobertura-texto strong { color: var(--danger); font-weight: 600; }
