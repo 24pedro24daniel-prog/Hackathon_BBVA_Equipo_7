@@ -6,9 +6,9 @@ import { hhmm, weekdayDdmm } from '../../lib/format.js'
 import { esIngreso, tituloMovimiento } from '../../lib/movimientos.js'
 import { Card, Icon, List, ListRow, Money, Skeleton, ErrorState } from '../../components/ui/index.jsx'
 
-const LIMITE = 10
+const LIMITE = 5
 
-/** Tarjeta desplegable con los últimos 10 movimientos y enlace a su detalle (/movimientos, ruta oculta). */
+/** Tarjeta desplegable con los últimos 5 movimientos y enlace a su detalle (/movimientos, ruta oculta). */
 export default function UltimosMovimientos({ escenario }) {
   const [abierto, setAbierto] = useState(true)
   const id = useId()
