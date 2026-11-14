@@ -1,0 +1,118 @@
+/* Progreso — mockup página 9 */
+
+.progreso-body {
+  padding: 4px var(--gutter) 0;
+  display: grid;
+  gap: 12px;
+}
+.progreso-h2 { font-size: 18px; font-weight: 700; line-height: 1.25; }
+
+/* Salud de caja */
+.progreso-score { display: grid; gap: 8px; }
+.progreso-score__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.progreso-score__value { display: flex; align-items: baseline; line-height: 1; }
+.progreso-score__num { font-size: 40px; line-height: 1; }
+.progreso-score__den { font-size: 15px; color: var(--text-muted); margin-left: 2px; }
+.progreso-score__trend { color: var(--brand); font-weight: 700; font-size: 15px; }
+
+.progreso-chart { margin: 4px 0 0; }
+.progreso-chart__bars {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 10px;
+}
+.progreso-chart__col { display: grid; gap: 6px; justify-items: stretch; }
+.progreso-chart__track {
+  height: 114px; /* 90px de barra máx. + etiqueta */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+}
+.progreso-chart__val { text-align: center; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.progreso-chart__bar { background: var(--brand-band); border-radius: 6px 6px 2px 2px; }
+.progreso-chart__bar--now { background: var(--brand); }
+.progreso-chart__label { text-align: center; font-size: 14px; color: var(--text-muted); }
+.progreso-chart__label--now { color: var(--text); font-weight: 600; }
+
+/* Etapas */
+.progreso-steps-card { padding: 16px 8px; }
+.progreso-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.progreso-step { display: grid; justify-items: center; gap: 6px; text-align: center; font-size: 14px; color: var(--text-muted); }
+.progreso-step__dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 15px;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+.progreso-step--done { color: var(--brand); }
+.progreso-step--done .progreso-step__dot { background: var(--brand-soft); color: var(--brand); }
+.progreso-step--current { color: var(--text); font-weight: 700; }
+.progreso-step--current .progreso-step__dot {
+  background: var(--surface);
+  color: var(--brand-strong);
+  border: 2px solid var(--brand);
+}
+
+/* Qué lo compone */
+.progreso-inds { list-style: none; margin: 4px 0 0; padding: 0; }
+.progreso-ind { display: grid; gap: 6px; padding: 12px 0; border-top: 1px solid var(--border); }
+.progreso-ind__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.progreso-ind__name { font-size: 16px; font-weight: 700; }
+.progreso-ind__val { font-weight: 700; white-space: nowrap; }
+.progreso-ind__track { height: 8px; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--border); overflow: hidden; }
+.progreso-ind__fill { height: 100%; background: var(--brand); border-radius: 999px; }
+.progreso-ind__detail { color: var(--text-muted); }
+.progreso-ind__peso { color: var(--text-subtle); }
+
+.progreso-formula { color: var(--text-muted); padding: 10px 12px; background: var(--surface-sunken); border-radius: var(--radius-sm); margin-bottom: 4px; }
+
+.progreso-more {
+  width: 100%;
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: none;
+  color: var(--brand);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+.progreso-more__chev { transition: transform 0.2s ease; }
+.progreso-more[aria-expanded='true'] .progreso-more__chev { transform: rotate(180deg); }
+
+/* Meta activa */
+.progreso-meta { display: flex; align-items: flex-start; gap: 14px; }
+.progreso-meta__icon {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+.progreso-meta__title { font-size: 17px; font-weight: 700; line-height: 1.25; }
+.progreso-meta__detail { color: var(--text-muted); margin-top: 2px; }
+.progreso-meta-empty { display: grid; gap: 10px; justify-items: start; }
+
+.progreso-privacy { color: var(--text-muted); padding: 4px 2px 0; }

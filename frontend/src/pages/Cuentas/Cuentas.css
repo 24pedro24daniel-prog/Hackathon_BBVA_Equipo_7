@@ -1,0 +1,141 @@
+/* Cuentas — mockup página 8 */
+
+.cuentas-tabs-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 4px var(--gutter) 12px;
+}
+.cuentas-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.cuentas-tab {
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.cuentas-tab:hover { background: var(--surface-sunken); }
+.cuentas-tab[aria-selected='true'] { background: var(--brand); color: var(--on-brand); }
+
+.cuentas-body {
+  padding: 0 var(--gutter);
+  display: grid;
+  gap: 20px;
+}
+.cuentas-section {
+  display: grid;
+  gap: 12px;
+  scroll-margin-top: 84px; /* deja ver la barra de pestañas fija */
+}
+.cuentas-eyebrow { outline-offset: 4px; }
+.cuentas-section h2:focus:not(:focus-visible) { outline: none; }
+
+/* Lista de filas (fiados / pagos) */
+.cuentas-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cuentas-item {
+  display: grid;
+  gap: 10px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+.cuentas-list .cuentas-item:first-child { border-top: 0; padding-top: 2px; }
+.cuentas-list .cuentas-item:last-child { padding-bottom: 2px; }
+.cuentas-item__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cuentas-item__who { min-width: 0; }
+.cuentas-item__name { font-size: 17px; font-weight: 700; line-height: 1.25; }
+.cuentas-item__sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+.cuentas-item__amount { font-size: 20px; line-height: 1.2; white-space: nowrap; }
+.cuentas-item__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 24px;
+}
+.cuentas-item__bottom .cc-btn { min-height: var(--tap); }
+
+/* Vacíos */
+.cuentas-empty { display: grid; gap: 8px; justify-items: start; }
+.cuentas-empty__title { font-weight: 700; }
+.cuentas-empty--inline { border-top: 0; padding-top: 2px; }
+.cuentas-empty--inline + .cuentas-list .cuentas-item:first-child { border-top: 1px solid var(--border); padding-top: 16px; }
+.cuentas-empty .cc-btn { min-height: var(--tap); margin-top: 4px; }
+
+.cuentas-trace-list { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+
+/* Hoja del recordatorio */
+.cuentas-sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90dvh;
+  margin: auto auto 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface);
+  color: var(--text);
+}
+.cuentas-sheet::backdrop { background: rgba(22, 32, 28, 0.45); }
+.cuentas-sheet[open] { animation: cuentas-up 0.2s ease-out; }
+@keyframes cuentas-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.cuentas-sheet__inner {
+  display: grid;
+  gap: 12px;
+  padding: 20px var(--gutter) calc(20px + env(safe-area-inset-bottom));
+}
+.cuentas-sheet__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.cuentas-sheet__title { font-family: var(--font-display); font-size: 20px; font-weight: 700; line-height: 1.2; }
+.cuentas-sheet__close {
+  width: var(--tap);
+  height: var(--tap);
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.cuentas-sheet__msg {
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--brand-soft);
+  border-radius: var(--radius);
+  font-size: 16px;
+  line-height: 1.45;
+  user-select: text;
+}
+.cuentas-sheet__note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  color: var(--text-muted);
+}
+.cuentas-sheet__note svg { flex: none; margin-top: 1px; color: var(--brand); }
+.cuentas-sheet__actions { display: grid; gap: 8px; }
