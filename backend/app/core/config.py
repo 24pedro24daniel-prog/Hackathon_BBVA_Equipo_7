@@ -1,0 +1,110 @@
+"""Configuración del backend.
+
+Se lee de `parametros.env` (no secretos, versionado) y luego de `.env` (solo credenciales).
+Las variables de entorno reales tienen prioridad sobre ambos archivos.
+"""
+
+from datetime import date
+from functools import lru_cache
+from pathlib import Path
+
+from pydantic import Field, SecretStr, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import URL
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=(BACKEND_DIR / "parametros.env", BACKEND_DIR / ".env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=True,
+    )
+
+    # Aplicación
+    APP_ENV: str = "local"
+    TZ: str = "America/Lima"
+    FECHA_DEMO: date | None = None
+    API_PREFIX: str = "/api/v1"
+    API_VERSION: str = "1.0.0"
+    CORS_ORIGINS: str = "http://localhost:5173"
+    LOG_LEVEL: str = "INFO"
+
+    # Base de datos: partes no secretas en parametros.env, usuario y contraseña en .env
+    POSTGRES_HOST: str = "localhost"
+    POSTGRES_PORT: int = 5432
+    POSTGRES_DB: str = "cajaclara"
+    POSTGRES_TEST_DB: str = "cajaclara_test"
+    POSTGRES_USER: str = "cajaclara"
+    POSTGRES_PASSWORD: SecretStr = SecretStr("")
+    # Override completo opcional (p. ej. una BD remota). Si viene, se ignoran las partes.
+    DATABASE_URL: str | None = None
+    TEST_DATABASE_URL: str | None = None
+
+    # Credenciales de la API
+    API_KEY: SecretStr = SecretStr("")
+    OPENROUTER_API_KEY: SecretStr = SecretStr("")
+
+    # LLM (OpenRouter)
+    LLM_BASE_URL: str = "https://openrouter.ai/api/v1"
+    LLM_MODEL: str = "openai/gpt-4o-mini"
+    LLM_TIMEOUT_S: float = 20.0
+    LLM_TEMPERATURE: float = 0.0
+    LLM_MAX_TOKENS: int = 800
+    LLM_APP_URL: str = "http://localhost:5173"
+    LLM_APP_NAME: str = "CajaClara"
+
+    # Whisper (faster-whisper local)
+    WHISPER_MODEL: str = "small"
+    WHISPER_DEVICE: str = "cpu"
+    WHISPER_COMPUTE_TYPE: str = "int8"
+    WHISPER_LANGUAGE: str = "es"
+    WHISPER_CACHE_DIR: str | None = None
+
+    # Ingesta
+    UMBRAL_CONFIANZA: float = Field(default=0.75, ge=0, le=1)
+    # Carpeta (relativa a backend/) de audios y fotos que se pueden leer por media_url.
+    MEDIA_DIR: str = "data"
+    # Asistente: el LLM solo redacta con las cifras de las herramientas; desactivable para responder con plantillas.
+    ASISTENTE_USAR_LLM: bool = True
+
+    @field_validator("FECHA_DEMO", "DATABASE_URL", "TEST_DATABASE_URL", "WHISPER_CACHE_DIR", mode="before")
+    @classmethod
+    def _vacio_es_none(cls, v):
+        return None if isinstance(v, str) and not v.strip() else v
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+
+    def _url(self, base_datos: str) -> str:
+        return URL.create(
+            "postgresql+psycopg",
+            username=self.POSTGRES_USER,
+            password=self.POSTGRES_PASSWORD.get_secret_value() or None,
+            host=self.POSTGRES_HOST,
+            port=self.POSTGRES_PORT,
+            database=base_datos,
+        ).render_as_string(hide_password=False)
+
+    @property
+    def database_url(self) -> str:
+        return self.DATABASE_URL or self._url(self.POSTGRES_DB)
+
+    @property
+    def test_database_url(self) -> str:
+        return self.TEST_DATABASE_URL or self._url(self.POSTGRES_TEST_DB)
+
+    @property
+    def llm_configurado(self) -> bool:
+        return bool(self.OPENROUTER_API_KEY.get_secret_value().strip())
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()
