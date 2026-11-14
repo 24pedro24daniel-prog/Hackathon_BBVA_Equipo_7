@@ -1,23 +1,20 @@
-"""STUB (Dueño: Dev A) — POST /webhooks/whatsapp."""
-from typing import Any
+"""Dueño: A. POST /webhooks/whatsapp (contrato §1.1). Uso interno del bot / chat simulado.
 
-from fastapi import APIRouter, Body
+Enruta por empresa_id o telefono_hash: texto/audio → interpretar, imagen → cuaderno, botón → confirmar/corregir,
+pregunta → asistente. Ver services/ingesta/whatsapp.py.
+"""
 
-from app.mocks import stubs_a
+from fastapi import Depends
+from sqlalchemy.orm import Session
 
-router = APIRouter(tags=["F1 Ingesta"])
+from app.db.session import get_db
+from app.routers._comun import router_protegido
+from app.schemas.ingesta import WebhookRequest, WebhookResponse
+from app.services.ingesta import whatsapp
+
+router = router_protegido("webhooks")
 
 
-@router.post("/webhooks/whatsapp")
-def whatsapp(body: dict[str, Any] = Body(...)):
-    texto = body.get("texto") or ""
-    res = stubs_a.interpretar_respuesta("texto", texto)
-    if res is None:
-        r = stubs_a.asistente(texto, None)
-        return {"respuesta_texto": r["respuesta"], "botones": [], "respuesta_audio_url": None}
-    bid = res["borrador_id"]
-    return {
-        "respuesta_texto": res.get("pregunta_aclaratoria") or f"Anotado: S/ {res['movimiento_propuesto']['monto']:.2f} ✅ ¿Correcto?",
-        "botones": [{"id": f"confirmar:{bid}", "texto": "✅ Correcto"}, {"id": f"corregir:{bid}", "texto": "✏️ Corregir"}],
-        "respuesta_audio_url": None,
-    }
+@router.post("/webhooks/whatsapp", response_model=WebhookResponse)
+def webhook_whatsapp(body: WebhookRequest, db: Session = Depends(get_db)):
+    return whatsapp.procesar(db, body)

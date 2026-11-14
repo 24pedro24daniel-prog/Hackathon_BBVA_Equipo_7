@@ -14,7 +14,7 @@ from app.core.errors import registrar_handlers
 from app.core.meta import iniciar_request
 from app.routers import (
     alertas, analisis, asistente, fiados, forecast, health, ingesta,
-    impuestos, movimientos, pedidos, resumen, salud, simulador, webhooks,
+    impuestos, media, movimientos, pedidos, resumen, salud, simulador, webhooks,
 )
 
 PREFIJO = settings.API_PREFIX
@@ -65,7 +65,7 @@ app.include_router(health.router, prefix=PREFIJO)
 # Protegidos con X-API-Key
 protegidos = [
     # Dev A
-    webhooks.router, ingesta.router, impuestos.router, movimientos.router, asistente.router, salud.router,
+    webhooks.router, ingesta.router, media.router, impuestos.router, movimientos.router, asistente.router, salud.router,
     # Dev B
     resumen.router, forecast.router, fiados.router, pedidos.router, simulador.router,
     analisis.router, alertas.router,

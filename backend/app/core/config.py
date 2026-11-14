@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     # Credenciales de la API
     API_KEY: SecretStr = SecretStr("")
     OPENROUTER_API_KEY: SecretStr = SecretStr("")
+    R2_ACCESS_KEY_ID: SecretStr = SecretStr("")
+    R2_SECRET_ACCESS_KEY: SecretStr = SecretStr("")
 
     # LLM (OpenRouter)
     LLM_BASE_URL: str = "https://openrouter.ai/api/v1"
@@ -55,6 +57,10 @@ class Settings(BaseSettings):
     LLM_MAX_TOKENS: int = 800
     LLM_APP_URL: str = "http://localhost:5173"
     LLM_APP_NAME: str = "CajaClara"
+    # Visión (foto del cuaderno de fiados): mismo OpenRouter y misma OPENROUTER_API_KEY, otro modelo con imágenes.
+    VLM_MODEL: str = "openai/gpt-4o-mini"
+    VLM_TIMEOUT_S: float = Field(default=30.0, gt=0)
+    VLM_MAX_TOKENS: int = Field(default=1500, gt=0)
 
     # Whisper (faster-whisper local)
     WHISPER_MODEL: str = "small"
@@ -67,6 +73,14 @@ class Settings(BaseSettings):
     UMBRAL_CONFIANZA: float = Field(default=0.75, ge=0, le=1)
     # Carpeta (relativa a backend/) de audios y fotos que se pueden leer por media_url.
     MEDIA_DIR: str = "data"
+    # Media en Cloudflare R2 (S3-compatible): subida directa con URL prefirmada. Las claves viven en .env.
+    R2_ACCOUNT_ID: str = ""
+    R2_BUCKET: str = "cajaclara-media"
+    R2_PRESIGN_TTL_S: int = Field(default=600, ge=30, le=3600)
+    MEDIA_MAX_AUDIO_BYTES: int = Field(default=10 * 1024 * 1024, gt=0)
+    MEDIA_MAX_IMAGEN_BYTES: int = Field(default=8 * 1024 * 1024, gt=0)
+    MEDIA_TIPOS_AUDIO: str = "audio/ogg,audio/webm,audio/mpeg,audio/mp4,audio/wav"
+    MEDIA_TIPOS_IMAGEN: str = "image/jpeg,image/png,image/webp"
     # Asistente: el LLM solo redacta con las cifras de las herramientas; desactivable para responder con plantillas.
     ASISTENTE_USAR_LLM: bool = True
 
@@ -96,6 +110,21 @@ class Settings(BaseSettings):
     @property
     def test_database_url(self) -> str:
         return self.TEST_DATABASE_URL or self._url(self.POSTGRES_TEST_DB)
+
+    @property
+    def r2_configurado(self) -> bool:
+        return all([
+            self.R2_ACCOUNT_ID.strip(), self.R2_BUCKET.strip(),
+            self.R2_ACCESS_KEY_ID.get_secret_value().strip(), self.R2_SECRET_ACCESS_KEY.get_secret_value().strip(),
+        ])  # fmt: skip
+
+    @property
+    def media_tipos_audio(self) -> list[str]:
+        return [t.strip().lower() for t in self.MEDIA_TIPOS_AUDIO.split(",") if t.strip()]
+
+    @property
+    def media_tipos_imagen(self) -> list[str]:
+        return [t.strip().lower() for t in self.MEDIA_TIPOS_IMAGEN.split(",") if t.strip()]
 
     @property
     def llm_configurado(self) -> bool:

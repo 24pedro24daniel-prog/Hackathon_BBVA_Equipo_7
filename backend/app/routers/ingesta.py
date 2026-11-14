@@ -1,53 +1,43 @@
-"""STUB (Dueño: Dev A) — /ingesta/interpretar · /confirmar · /cuaderno.
+"""Dueño: A. POST /ingesta/interpretar · /ingesta/confirmar · /ingesta/cuaderno (contrato §1.2–1.4)."""
 
-El flujo de confirmar ya muestra el cruce real A→B (PLAN §4.3): registrar -> alertas.evaluar -> saldo_caja.
-"""
-from typing import Any
+from fastapi import Depends, Header, Response, status
+from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
-from fastapi import APIRouter, Body, Depends, Response
+from app.db.session import get_db
+from app.routers._comun import router_protegido
+from app.schemas.ingesta import (
+    ConfirmarRequest,
+    ConfirmarResponse,
+    CuadernoRequest,
+    CuadernoResponse,
+    InterpretarRequest,
+    InterpretarResponse,
+)
+from app.services.ingesta import servicio
 
-from app.core.deps import get_db
-from app.core.errors import NoEncontrado, NoInterpretable
-from app.mocks import data as mock
-from app.mocks import stubs_a
-from app.services import alertas as svc_alertas
-from app.services.alertas.motor import DISPARADOR_COMPRA_CREDITO
-from app.services import finanzas
-
-router = APIRouter(tags=["F1 Ingesta"])
-
-
-@router.post("/ingesta/interpretar")
-def interpretar(body: dict[str, Any] = Body(...)):
-    res = stubs_a.interpretar_respuesta(body.get("canal", "texto"), body.get("texto"))
-    if res is None:
-        raise NoInterpretable('No entendí bien. ¿Me lo dices de otra forma? Por ejemplo: "vendí 2 cervezas".')
-    return res
+router = router_protegido("ingesta")
 
 
-@router.post("/ingesta/confirmar", status_code=201)
-def confirmar(body: dict[str, Any] = Body(...), db=Depends(get_db)):
-    mov = mock.BORRADORES.get(body.get("borrador_id"))
-    if mov is None:
-        raise NoEncontrado("Ese registro ya no existe. Vuelve a enviarlo.")
-    correcciones = body.get("correcciones") or {}
-    if body.get("confirmado") is False and not correcciones:
-        mock.BORRADORES.pop(body["borrador_id"], None)
-        return Response(status_code=204)
-    final = {**mov, **correcciones}
-    mock.BORRADORES.pop(body["borrador_id"], None)
-    stubs_a.aplicar_al_saldo(final)                                   # A: registrador.registrar_movimiento(...)
-    disparador = DISPARADOR_COMPRA_CREDITO if final.get("tipo") == "compra" else None
-    nuevas = svc_alertas.evaluar_alertas(db, "EMP-0001", disparador)  # B
-    mov_id = mock.siguiente_movimiento()
-    return {
-        "movimiento_id": mov_id,
-        "registros_creados": [{"tabla": "deudas" if final.get("tipo") == "compra" else "transacciones", "id": mov_id}],
-        "alertas_disparadas": [a.model_dump(mode="json") for a in nuevas],
-        "saldo_caja_negocio": float(finanzas.saldo_caja(db, "EMP-0001")),  # B
-    }
+@router.post("/ingesta/interpretar", response_model=InterpretarResponse,
+             responses={422: {"description": "NO_INTERPRETABLE"}, 503: {"description": "SERVICIO_NO_DISPONIBLE"}})  # fmt: skip
+def interpretar(body: InterpretarRequest, db: Session = Depends(get_db)):
+    return servicio.interpretar(db, body)
 
 
-@router.post("/ingesta/cuaderno")
-def cuaderno(body: dict[str, Any] = Body(default={})):
-    return stubs_a.cuaderno()
+@router.post("/ingesta/confirmar", status_code=status.HTTP_201_CREATED, response_model=ConfirmarResponse,
+             responses={204: {"description": "Borrador descartado"}, 409: {"description": "CONFLICTO"}})  # fmt: skip
+def confirmar(
+    body: ConfirmarRequest,
+    db: Session = Depends(get_db),
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+):
+    codigo, cuerpo = servicio.confirmar(db, body, idempotency_key)
+    if codigo == status.HTTP_204_NO_CONTENT:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return JSONResponse(status_code=codigo, content=ConfirmarResponse.model_validate(cuerpo).model_dump(mode="json"))
+
+
+@router.post("/ingesta/cuaderno", response_model=CuadernoResponse)
+def cuaderno(body: CuadernoRequest, db: Session = Depends(get_db)):
+    return servicio.leer_cuaderno(db, body.empresa_id, body.media_url)

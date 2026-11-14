@@ -1,19 +1,26 @@
-"""STUB (Dueño: Dev A) — GET /empresas/{id}/salud · POST /empresas/{id}/metas."""
-from typing import Any
+"""Dueño: A. GET /empresas/{id}/salud · POST /empresas/{id}/metas (contrato §8)."""
 
-from fastapi import APIRouter, Body
+from fastapi import Depends, status
+from sqlalchemy.orm import Session
 
-from app.core.meta import construir_meta
-from app.mocks import data as mock
+from app.db.session import get_db
+from app.routers._comun import EmpresaId, router_protegido
+from app.schemas.salud import MetaRequest, MetaResponse, SaludResponse
+from app.services.ingesta.servicio import empresa_o_404
+from app.services.salud import metas, score
 
-router = APIRouter(tags=["F8 Salud"])
-
-
-@router.get("/empresas/{empresa_id}/salud")
-def obtener_salud(empresa_id: str):
-    return {**mock.salud_pedro(), "meta": construir_meta("score-reglas", "0.1.0").model_dump(mode="json")}
+router = router_protegido("salud")
 
 
-@router.post("/empresas/{empresa_id}/metas", status_code=201)
-def crear_meta(empresa_id: str, body: dict[str, Any] = Body(...)):
-    return {"meta_id": "MET-0005", "estado": "activa"}
+@router.get("/empresas/{empresa_id}/salud", response_model=SaludResponse)
+def obtener_salud(empresa_id: EmpresaId, db: Session = Depends(get_db)):
+    empresa_o_404(db, empresa_id)
+    return score.calcular_score(db, empresa_id)
+
+
+@router.post("/empresas/{empresa_id}/metas", status_code=status.HTTP_201_CREATED, response_model=MetaResponse)
+def crear_meta(empresa_id: EmpresaId, body: MetaRequest, db: Session = Depends(get_db)):
+    empresa_o_404(db, empresa_id)
+    regla = body.regla.model_dump() if body.regla else None
+    recordatorio = body.recordatorio.model_dump() if body.recordatorio else None
+    return metas.crear_meta(db, empresa_id, body.plantilla, regla, recordatorio)

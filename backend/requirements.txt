@@ -13,5 +13,7 @@ tzdata==2026.6
 # IA: LLM por OpenRouter (HTTP) y Whisper local
 httpx==0.28.1
 faster-whisper==1.2.1
+# Media en Cloudflare R2 (S3-compatible)
+boto3==1.43.127
 # Pruebas
 pytest==9.2.0

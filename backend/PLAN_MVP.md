@@ -31,6 +31,7 @@ Por qué así no se chocan:
 | Migraciones | Sin Alembic en el hackathon: `python -m app.db.reset` borra, crea (`create_all`) y siembra. Evita conflictos de migraciones entre los dos. |
 | Vistas derivadas | Funciones Python con `fecha_corte` (no vistas SQL), en `services/finanzas/consultas.py`. Más fácil de testear y de reutilizar en el forecast. |
 | Config | `pydantic-settings` (`core/config.py`) lee 3 archivos de `backend/`: **`parametros.env`** (no secretos, versionado: host/puerto/BD, `FECHA_DEMO`, `TZ=America/Lima`, `LLM_*`, `WHISPER_*`, `UMBRAL_CONFIANZA`), **`.env`** (solo credenciales, NO versionado: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `API_KEY`, `OPENROUTER_API_KEY`) y **`example.env`** (plantilla versionada de `.env`). Las variables de entorno reales tienen prioridad. `DATABASE_URL` se compone de las partes (override opcional con `DATABASE_URL`). |
+| Media (audio/foto) | Subida directa del front a **Cloudflare R2** con URL PUT prefirmada (`POST /media/subidas`); `media_url = "r2://<clave>"`, clave `empresas/{empresa_id}/{audios o fotos}/AAAA/MM/uuid.ext`. Lectura con `boto3` solo de claves de la empresa (anti-SSRF), tipo/tamaño verificados con HEAD y temporal borrado. Config: `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_PRESIGN_TTL_S`, `MEDIA_MAX_*_BYTES`, `MEDIA_TIPOS_*` en `parametros.env`; `R2_ACCESS_KEY_ID` y `R2_SECRET_ACCESS_KEY` en `.env`. `file://`/`demo://` se mantienen para demo y tests. |
 | LLM y voz | LLM por **OpenRouter** (API compatible con OpenAI, `/chat/completions` con `tools`), cliente `httpx` en `services/ingesta/llm_client.py`. Whisper con **faster-whisper local** (`small`, CPU, `int8`), carga perezosa. |
 | Docker | `backend/Dockerfile` (`python:3.12.15-slim`, usuario no root) + `docker-compose.yml` (`db` + `backend`, `env_file: [parametros.env, .env]`, volumen de caché de Whisper). |
 | Puerto | `uvicorn app.main:app --port 8000` (el front ya proxea `/api` a `localhost:8000`). Prefijo `/api/v1`. |
@@ -38,7 +39,7 @@ Por qué así no se chocan:
 | Ramas | `back/base` (Fase 0) → luego `back/ingesta` (A) y `back/motores` (B). Merge a `main` en cada checkpoint (§6). |
 | Tests | `pytest` + BD de prueba. Archivos `tests/test_a_*.py` (A) y `tests/test_b_*.py` (B). |
 
-Dependencias (`requirements.txt`, todas con versión exacta `==`): `fastapi`, `uvicorn[standard]`, `python-multipart`, `sqlalchemy` 2.x, `psycopg[binary]` 3.x, `pydantic` 2.x, `pydantic-settings`, `tzdata`, `httpx` (OpenRouter), `faster-whisper`, `pytest`. Opcional para B: `lightgbm`, `pandas`, `joblib`.
+Dependencias (`requirements.txt`, todas con versión exacta `==`): `fastapi`, `uvicorn[standard]`, `python-multipart`, `sqlalchemy` 2.x, `psycopg[binary]` 3.x, `pydantic` 2.x, `pydantic-settings`, `tzdata`, `httpx` (OpenRouter), `faster-whisper`, `boto3` (R2), `pytest`. Opcional para B: `lightgbm`, `pandas`, `joblib`.
 
 ---
 
@@ -81,6 +82,7 @@ backend/
 │   ├── routers/                      F0 (B) crea todos como stub con el JSON del mock; luego cada dueño los llena
 │   │   ├── webhooks.py               A   POST /webhooks/whatsapp
 │   │   ├── ingesta.py                A   POST /ingesta/interpretar · /confirmar · /cuaderno
+│   │   ├── media.py                  A   POST /media/subidas (URL prefirmada PUT a Cloudflare R2)
 │   │   ├── impuestos.py              A   POST /empresas/{id}/impuestos
 │   │   ├── movimientos.py            A   GET/POST /empresas/{id}/movimientos
 │   │   ├── asistente.py              A   POST /empresas/{id}/asistente/mensajes
@@ -95,7 +97,8 @@ backend/
 │   │   └── health.py                 B   GET /health
 │   └── services/
 │       ├── ingesta/                  A
-│       │   ├── transcriptor.py       faster-whisper local (audio → texto)
+│       │   ├── transcriptor.py       faster-whisper local (audio → texto); acepta file://, demo:// y r2://
+│       │   ├── almacenamiento.py     Cloudflare R2 (boto3, S3-compatible): presignar_subida, descargar/archivo_temporal (solo r2://empresas/{empresa_id}/…, tipo y tamaño verificados con HEAD)
 │       │   ├── llm_client.py         cliente mínimo de OpenRouter (httpx, timeouts, LLMNoDisponible)
 │       │   ├── extractor.py          LLM (OpenRouter) con function calling → MovimientoPropuesto; fallback por reglas/regex
 │       │   ├── catalogo.py           monto por catálogo + match de alias (productos, clientes, proveedores)
@@ -212,7 +215,7 @@ Prioridad: 🔴 debe estar en la demo · 🟡 versión simplificada.
 | A8 | Consulta del estado F1.6 ("¿cómo va mi caja?") como primera intención del asistente | `POST /asistente/mensajes` | 🔴 |
 | A9 | Impuestos por menú de botones | `POST /empresas/{id}/impuestos` | 🟡 |
 | A10 | Asistente F7: intenciones `estado_caja`, `explicar_alerta`, `simular`, `prestamo` + `fuera_de_alcance`. Herramientas = funciones de B. Verificador de cifras → si falla, plantilla. Guarda en `conversaciones`. | `POST /asistente/mensajes` | 🟡 |
-| A11 | Cuaderno de fiados: OCR/visión sobre 2–3 fotos de prueba (o fixture precalculado con `fallback_usado = true` si no hay modelo de visión) | `POST /ingesta/cuaderno` | 🟡 |
+| A11 | Cuaderno de fiados: modelo de visión vía OpenRouter (`VLM_MODEL`, `vision.py`, tool call + validación pydantic); fallback a fixture `cuaderno_01..03` o lista vacía con `fallback_usado = true` | `POST /ingesta/cuaderno` | 🟡 |
 | A12 | Salud F8 con 3 subindicadores: constancia de registro, separación personal/negocio (retiros vs sueldo), impuestos al día. Historial mensual en `score_salud`. Metas plantilla. | `GET /salud` · `POST /metas` | 🟡 |
 | A13 | Set de evaluación del extractor: 100–150 frases con su JSON esperado → script que mide exactitud por campo y % que requiere corrección | `tests/eval_extractor.py` | 🟡 |
 

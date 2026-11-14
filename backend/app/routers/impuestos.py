@@ -1,11 +1,16 @@
-"""STUB (Dueño: Dev A) — POST /empresas/{id}/impuestos."""
-from typing import Any
+"""Dueño: A. POST /empresas/{empresa_id}/impuestos (contrato §1.5): registro por menú de botones."""
 
-from fastapi import APIRouter, Body
+from fastapi import Depends, status
+from sqlalchemy.orm import Session
 
-router = APIRouter(tags=["F1 Ingesta"])
+from app.db.session import get_db
+from app.routers._comun import EmpresaId, router_protegido
+from app.schemas.ingesta import ImpuestoRequest, ImpuestoResponse
+from app.services.ingesta import impuestos
+
+router = router_protegido("impuestos")
 
 
-@router.post("/empresas/{empresa_id}/impuestos", status_code=201)
-def registrar_impuesto(empresa_id: str, body: dict[str, Any] = Body(...)):
-    return {"impuesto_id": "IMP-0009", "estado": "al_dia", "proximo_vencimiento": "2026-12-15"}
+@router.post("/empresas/{empresa_id}/impuestos", status_code=status.HTTP_201_CREATED, response_model=ImpuestoResponse)
+def registrar_impuesto(empresa_id: EmpresaId, body: ImpuestoRequest, db: Session = Depends(get_db)):
+    return impuestos.registrar(db, empresa_id, body)
