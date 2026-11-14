@@ -4,7 +4,7 @@ import './AppLayout.css'
 
 const tabs = [
   { to: '/', label: 'Inicio', icon: 'home', end: true },
-  { to: '/30-dias', label: '30 días', icon: 'chart' },
+  { to: '/30-dias', label: 'Pronóstico', icon: 'chart' },
   { to: '/cuentas', label: 'Cuentas', icon: 'list' },
   { to: '/progreso', label: 'Progreso', icon: 'arrowUp' },
   { to: '/chat', label: 'Chat', icon: 'chat' },
