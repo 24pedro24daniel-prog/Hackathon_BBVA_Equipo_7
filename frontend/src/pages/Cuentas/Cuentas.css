@@ -1,26 +1,31 @@
-/* Cuentas — mockup página 8 */
+/* Cuentas — lista de cobros y pagos al estilo de una app bancaria */
 
-.cuentas-tabs-wrap {
+/* Control segmentado neutro: riel gris claro, segmento elegido en blanco */
+.cuentas-seg-wrap {
   position: sticky;
   top: 0;
   z-index: 5;
   background: var(--bg);
-  padding: 4px var(--gutter) 12px;
+  padding: 0 var(--gutter) 12px;
 }
-.cuentas-tabs {
+.cuentas-seg {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
+  gap: 2px;
+  padding: 3px;
+  background: var(--hairline);
+  border-radius: var(--radius);
 }
-.cuentas-tab {
-  min-height: 48px;
+.cuentas-seg__btn {
+  min-height: var(--tap);
   padding: 8px 10px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  border: 0;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
   font-weight: 600;
@@ -30,23 +35,20 @@
   -webkit-tap-highlight-color: transparent;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
-.cuentas-tab:hover { opacity: 0.85; }
-.cuentas-tab[aria-selected='true'] { background: var(--brand-soft); border-color: var(--brand); color: var(--title); }
+.cuentas-seg__btn:hover { color: var(--title); }
+.cuentas-seg__btn[aria-selected='true'] { background: var(--surface); color: var(--title); }
+.cuentas-seg__amount { font-weight: 600; }
 
 .cuentas-body {
   padding: 0 var(--gutter);
   display: grid;
-  gap: 20px;
+  gap: 28px;
 }
-.cuentas-section {
-  display: grid;
-  gap: 12px;
-  scroll-margin-top: 84px; /* deja ver la barra de pestañas fija */
-}
-.cuentas-eyebrow { outline-offset: 4px; }
-.cuentas-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-/* En móvil la pestaña ya nombra "Te deben": el título queda solo para lectores de pantalla */
-.cuentas-sec-head--deben {
+.cuentas-panel { scroll-margin-top: 76px; /* deja ver el control segmentado fijo */ }
+.cuentas-stack { display: grid; gap: 12px; }
+
+/* En móvil el segmento ya nombra "Te deben" y los totales: el encabezado queda solo para lectores */
+.cuentas-panel--deben .cc-section__head {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -54,51 +56,24 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
-.cuentas-sec-total { display: none; color: var(--title); font-size: 22px; line-height: 1.2; }
-.cuentas-section h2:focus:not(:focus-visible) { outline: none; }
+.cuentas-sec-total { display: none; font-size: var(--fs-section); font-weight: 600; color: var(--title); }
 
-/* Lista de filas (fiados / pagos) */
-.cuentas-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.cuentas-item {
-  display: grid;
-  gap: 10px;
-  padding: 16px 0;
-  border-top: 1px solid var(--border);
-}
-.cuentas-list .cuentas-item:first-child { border-top: 0; padding-top: 2px; }
-.cuentas-list .cuentas-item:last-child { padding-bottom: 2px; }
-.cuentas-item__top {
+/* Sub línea de la fila: fecha arriba, estado (texto de color) debajo */
+.cuentas-sub { display: grid; gap: 2px; }
+
+/* Acción de la fila, alineada con el texto (16 de relleno + 40 del círculo + 12 de espacio) */
+.cuentas-row-actions {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  padding: 0 16px 10px 68px;
+  margin-top: -6px;
 }
-.cuentas-item__who { min-width: 0; }
-.cuentas-item__name { font-size: 17px; font-weight: 600; color: var(--title); line-height: 1.25; }
-.cuentas-item__sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
-.cuentas-item__amount { color: var(--title); font-size: 20px; line-height: 1.2; white-space: nowrap; }
-.cuentas-item__bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  min-height: 24px;
-}
-.cuentas-item__bottom .cc-btn { min-height: var(--tap); }
+.cuentas-row-btn.cc-btn { min-height: var(--tap); }
+.cuentas-row-btn.cc-btn--ghost { margin-left: -8px; }
 
 /* Vacíos */
 .cuentas-empty { display: grid; gap: 8px; justify-items: start; }
 .cuentas-empty__title { font-weight: 600; color: var(--title); }
-.cuentas-empty--inline { border-top: 0; padding-top: 2px; }
-.cuentas-empty--inline + .cuentas-list .cuentas-item:first-child { border-top: 1px solid var(--border); padding-top: 16px; }
 .cuentas-empty .cc-btn { min-height: var(--tap); margin-top: 4px; }
-
-.cuentas-trace-list { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
 
 /* Hoja del recordatorio: hoja inferior en móvil, diálogo centrado desde 768px */
 .cuentas-sheet {
@@ -115,7 +90,7 @@
   box-shadow: none;
 }
 .cuentas-sheet::backdrop { background: var(--scrim); }
-.cuentas-sheet[open] { animation: cuentas-up 0.2s ease-out; }
+.cuentas-sheet[open] { animation: cuentas-up 0.24s var(--ease-out); }
 @keyframes cuentas-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes cuentas-fade { from { transform: scale(0.98); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
@@ -123,44 +98,59 @@
 }
 .cuentas-sheet__inner {
   display: grid;
-  gap: 12px;
-  padding: 20px var(--gutter) calc(20px + env(safe-area-inset-bottom));
+  gap: 16px;
+  padding: 8px var(--gutter) calc(20px + env(safe-area-inset-bottom));
+}
+/* Asa de la hoja inferior (solo móvil) */
+.cuentas-sheet__grip {
+  width: 36px;
+  height: 4px;
+  margin: 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--border);
 }
 .cuentas-sheet__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.cuentas-sheet__title { font-family: var(--font-display); font-size: 20px; font-weight: var(--display-weight); color: var(--title); line-height: 1.2; }
+.cuentas-sheet__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: var(--display-weight);
+  letter-spacing: -0.02em;
+  color: var(--title);
+  line-height: 1.2;
+}
+.cuentas-sheet__sub { margin-top: 4px; font-size: 15px; color: var(--text-muted); }
 .cuentas-sheet__close {
   width: var(--tap);
   height: var(--tap);
   flex: none;
+  margin: -6px -10px 0 0;
   display: grid;
   place-items: center;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  background: var(--surface);
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
   color: var(--title);
   cursor: pointer;
 }
-.cuentas-sheet__close:hover { opacity: 0.85; }
+.cuentas-sheet__close:hover { background: var(--hairline); }
+.cuentas-sheet__group { display: grid; gap: 8px; }
+.cuentas-sheet__label { font-size: 15px; font-weight: 600; color: var(--title); }
 .cuentas-sheet__msg {
   margin: 0;
   padding: 14px 16px;
-  background: var(--brand-soft);
-  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
   font-size: 16px;
-  line-height: 1.45;
+  line-height: 1.5;
+  color: var(--text);
   user-select: text;
 }
-.cuentas-sheet__note {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  color: var(--text-muted);
-}
-.cuentas-sheet__note svg { flex: none; margin-top: 1px; color: var(--brand); }
+.cuentas-sheet__note { color: var(--text-muted); }
 .cuentas-sheet__actions { display: grid; gap: 8px; }
 
 @media (min-width: 768px) {
-  .cuentas-body { gap: 24px; }
+  .cuentas-body { gap: 32px; }
 
   .cuentas-sheet {
     margin: auto;
@@ -168,19 +158,20 @@
     border-radius: var(--radius-lg);
   }
   .cuentas-sheet[open] { animation-name: cuentas-fade; }
-  .cuentas-sheet__inner { padding: 24px; gap: 16px; }
+  .cuentas-sheet__grip { display: none; }
+  .cuentas-sheet__inner { padding: 24px; }
 }
 
-/* Escritorio: "Te deben" y "Debes" lado a lado; las pestañas sobran porque se ven las dos */
+/* Escritorio: "Te deben" y "Debes" lado a lado; el control segmentado sobra porque se ven las dos */
 @media (min-width: 1100px) {
-  .cuentas-tabs-wrap { display: none; }
+  .cuentas-seg-wrap { display: none; }
   .cuentas-body {
     grid-template-columns: 1fr 1fr;
     align-items: start;
     gap: 24px 32px;
   }
   .cuentas-body > .cc-footnote { grid-column: 1 / -1; }
-  .cuentas-sec-head--deben {
+  .cuentas-panel--deben .cc-section__head {
     position: static;
     width: auto;
     height: auto;

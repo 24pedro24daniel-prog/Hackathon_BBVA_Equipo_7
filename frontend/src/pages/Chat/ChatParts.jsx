@@ -53,17 +53,27 @@ export function InBubble({ time, wide, tone, className, footer, children }) {
   )
 }
 
-/** Tabla clave/valor sobre fondo hundido */
+/** Filas clave/valor tipo comprobante: etiqueta a la izquierda, valor a la derecha, divisores finos. Fila: [k, v, tone?] */
 export function KVTable({ rows, label }) {
   return (
     <dl className="chat-kv" aria-label={label}>
-      {rows.map(([k, v]) => (
+      {rows.map(([k, v, tone]) => (
         <div key={k} className="chat-kv__row">
           <dt>{k}</dt>
-          <dd className="num">{v}</dd>
+          <dd className={cx('num', tone && `chat-kv__v--${tone}`)}>{v}</dd>
         </div>
       ))}
     </dl>
+  )
+}
+
+/** Confirmación de que algo quedó guardado (texto de color, sin etiqueta) */
+export function SavedLine({ children = 'Guardado' }) {
+  return (
+    <p className="chat-status">
+      <Icon name="check" size={16} />
+      {children}
+    </p>
   )
 }
 

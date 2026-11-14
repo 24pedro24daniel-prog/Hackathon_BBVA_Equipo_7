@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ddmm, soles, solesRange, weekdayDdmm } from '../../lib/format.js'
 
 // Gráfico de 30 días dibujado a mano (SVG, sin librería). El viewBox sigue el ancho real del contenedor
@@ -28,6 +28,7 @@ function useWidth(ref, fallback) {
 
 export default function ForecastChart({ points, minimo, worstFecha }) {
   const [sel, setSel] = useState(null)
+  const clipId = 'fc-clip-' + useId().replace(/[^a-zA-Z0-9_-]/g, '')
   const svgRef = useRef(null)
   const boxRef = useRef(null)
   const W = Math.max(MIN_W, useWidth(boxRef, 320))
@@ -120,29 +121,41 @@ export default function ForecastChart({ points, minimo, worstFecha }) {
           onPointerMove={pickFromPointer}
           onPointerLeave={(e) => e.pointerType === 'mouse' && setSel(null)}
         >
-          {/* Días en riesgo */}
-          {risk.map((i) => {
-            const x0 = Math.max(xmin, x(i) - step / 2)
-            const x1 = Math.min(xmax, x(i) + step / 2)
-            return <rect key={i} className="fc-risk" x={x0 + 0.5} y={PAD.top} width={Math.max(0, x1 - x0 - 1)} height={PLOT_H} />
-          })}
           {/* Rango mejor–peor (p10–p90) */}
           <path className="fc-band" d={geo.band} />
           {/* Cero */}
           <line className="fc-zero" x1={xmin} x2={xmax} y1={y(0)} y2={y(0)} />
-          {/* Mínimo operativo */}
-          {minimo != null && <line className="fc-min" x1={xmin} x2={xmax} y1={y(minimo)} y2={y(minimo)} />}
+          {/* Mínimo operativo: línea punteada sutil con su etiqueta */}
+          {minimo != null && (
+            <g>
+              <line className="fc-min" x1={xmin} x2={xmax} y1={y(minimo)} y2={y(minimo)} />
+              <text className="fc-min-label" x={xmax} y={y(minimo) - 6} textAnchor="end">
+                Mínimo {soles(minimo)}
+              </text>
+            </g>
+          )}
           {/* Lo esperado (p50) */}
           <path className="fc-line" d={geo.p50} />
+          {/* Tramo bajo el mínimo: la misma línea en color de alerta, recortada debajo del mínimo */}
+          {minimo != null && risk.length > 0 && (
+            <>
+              <clipPath id={clipId}>
+                <rect x={0} y={y(minimo)} width={W} height={Math.max(0, H - y(minimo))} />
+              </clipPath>
+              <path className="fc-line fc-line--risk" d={geo.p50} clipPath={`url(#${clipId})`} />
+            </>
+          )}
           {/* Selección */}
           {p && (
             <g>
               <line className="fc-cross" x1={x(sel)} x2={x(sel)} y1={PAD.top} y2={PAD.top + PLOT_H} />
-              <circle className="fc-dot fc-dot--sel" cx={x(sel)} cy={y(p.p50)} r={4.5} />
+              <circle className="fc-dot fc-dot--sel" cx={x(sel)} cy={y(p.p50)} r={4} />
             </g>
           )}
-          {/* Peor día */}
-          <circle className="fc-dot fc-dot--worst" cx={x(worst)} cy={y(points[worst].p50)} r={5} />
+          {/* Peor día: marcador de alerta solo si cae bajo el mínimo */}
+          {risk.includes(worst) && (
+            <circle className="fc-dot fc-dot--worst" cx={x(worst)} cy={y(points[worst].p50)} r={4.5} />
+          )}
           {/* Eje x */}
           {ticks.map((i) => (
             <text

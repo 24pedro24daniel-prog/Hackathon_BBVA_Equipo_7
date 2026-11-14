@@ -9,6 +9,9 @@ import {
   Button,
   Icon,
   PageHeader,
+  Section,
+  List,
+  ListRow,
   TraceInfo,
   LoadingBlock,
   Skeleton,
@@ -29,6 +32,13 @@ function periodoActual() {
 
 const diasTxt = (n) => `${n} ${n === 1 ? 'día' : 'días'}`
 
+// Acciones rápidas del inicio (solo rutas reales), como la fila "Enviar / Cobrar" de una app bancaria.
+const ACCIONES = [
+  { to: '/chat', icon: 'mic', label: 'Anotar venta' },
+  { to: '/30-dias', icon: 'chart', label: 'Ver 30 días' },
+  { to: '/cuentas', icon: 'list', label: 'Cuentas' },
+]
+
 export default function Inicio() {
   const [demo] = useDemo()
   const deps = [demo.escenario]
@@ -46,20 +56,16 @@ export default function Inicio() {
       : forecast.data?.disponible === false || (!r && demo.escenario === 'nuevo')
 
   const corte = r?.corte ?? forecast.data?.fecha_corte
-  const kicker = esNuevo
+  const sub = esNuevo
     ? `${NOMBRE_NEGOCIO}${typeof diasConDatos === 'number' ? ` · día ${diasConDatos}` : ''}`
     : `${NOMBRE_NEGOCIO}${corte ? ` · ${weekdayDdmm(corte).toLowerCase()}` : ''}`
 
   return (
     <div className="inicio">
-      <PageHeader
-        kicker={kicker}
-        title={esNuevo ? 'Estás empezando bien' : '¿Cómo va mi caja?'}
-        right={<DemoMenu />}
-      />
+      <PageHeader sub={sub} title={esNuevo ? 'Estás empezando bien' : '¿Cómo va mi caja?'} right={<DemoMenu />} />
       <div className="inicio__body">
         {resumen.loading && !r ? (
-          <LoadingBlock heights={[170, 120, 110, 110]} />
+          <LoadingBlock heights={[120, 180, 120, 140]} />
         ) : resumen.error ? (
           <ErrorState error={resumen.error} onRetry={resumen.reload} />
         ) : esNuevo ? (
@@ -82,56 +88,71 @@ function InicioPedro({ resumen, forecast, alertas }) {
   const ganancia = ind.ganancia_neta
 
   return (
-    <div className="inicio__dash">
-      <div className="inicio__a-alerta">
+    <div className="inicio__grid">
+      <div className="inicio__main">
+        <CajaNegocio valor={ind.saldo_caja_negocio.valor} nota="Lo que tienes hoy" acciones />
         <AlertaPrincipal alertas={alertas} corte={resumen.corte} />
+        <Disponible forecast={forecast} />
       </div>
 
-      <CajaNegocio className="inicio__a-caja" valor={ind.saldo_caja_negocio.valor} nota="lo que tienes hoy" />
+      <div className="inicio__side">
+        <Section title="Cuentas">
+          <List>
+            <ListRow
+              to="/cuentas"
+              title="Te deben"
+              sub={`${cobro.n_fiados} ${cobro.n_fiados === 1 ? 'fiado' : 'fiados'}`}
+              amount={soles(cobro.valor)}
+            />
+            <ListRow
+              to="/cuentas"
+              title="Debes"
+              sub={pagos.detalle || `${pagos.n_obligaciones} ${pagos.n_obligaciones === 1 ? 'pago' : 'pagos'}`}
+              amount={soles(pagos.valor)}
+            />
+          </List>
+        </Section>
 
-      <Link to="/cuentas" className="inicio__link-card inicio__a-deben">
-        <Card as="div" className="inicio__mini">
-          <p className="inicio__mini-label">Te deben</p>
-          <p className="inicio__mini-value display num">{soles(cobro.valor)}</p>
-          <p className="cc-small cc-muted">{cobro.n_fiados} {cobro.n_fiados === 1 ? 'fiado' : 'fiados'}</p>
-        </Card>
-      </Link>
-      <Link to="/cuentas" className="inicio__link-card inicio__a-debes">
-        <Card as="div" className="inicio__mini">
-          <p className="inicio__mini-label">Debes</p>
-          <p className="inicio__mini-value display num">{soles(pagos.valor)}</p>
-          <p className="cc-small cc-muted">
-            {pagos.detalle || `${pagos.n_obligaciones} ${pagos.n_obligaciones === 1 ? 'pago' : 'pagos'}`}
-          </p>
-        </Card>
-      </Link>
-
-      <Disponible forecast={forecast} />
-
-      <Card className="inicio__a-resumen" aria-label="Resumen del mes">
-        <p className="cc-eyebrow inicio__resumen-title">Este mes</p>
-        <dl className="inicio__rows">
-          <Fila
-            label="Vendiste este mes"
-            valor={ind.ingresos_mes.valor}
-            variacion={ind.ingresos_mes.variacion_pct}
-            malaSiBaja
-          />
-          <Fila label="Gastaste en el negocio" valor={ind.egresos_mes.valor} variacion={ind.egresos_mes.variacion_pct} />
-          <Fila
-            label="Ganancia aproximada"
-            texto={ganancia.rango ? solesRange(ganancia.rango) : soles(ganancia.valor)}
-          />
-        </dl>
-        {resumen.variacion_vs && <p className="cc-xs cc-muted inicio__vs">Comparado con el mes pasado al mismo día.</p>}
-      </Card>
+        <Section title="Este mes">
+          <List>
+            <ListRow
+              title="Vendiste"
+              sub={comparacion(ind.ingresos_mes.valor, ind.ingresos_mes.variacion_pct, true)}
+              amount={soles(ind.ingresos_mes.valor)}
+            />
+            <ListRow
+              title="Gastaste en el negocio"
+              sub={comparacion(ind.egresos_mes.valor, ind.egresos_mes.variacion_pct)}
+              amount={soles(ind.egresos_mes.valor)}
+            />
+            <ListRow
+              title="Ganancia aproximada"
+              amount={ganancia.rango ? solesRange(ganancia.rango) : soles(ganancia.valor)}
+            />
+          </List>
+          {resumen.variacion_vs && <p className="inicio__nota-pie">Comparado con el mes pasado al mismo día.</p>}
+        </Section>
+      </div>
     </div>
+  )
+}
+
+/** Diferencia en soles frente al mes pasado, en palabras (sin porcentajes ni flechas). */
+function comparacion(valor, variacion, malaSiBaja) {
+  const dif = valor != null ? diferenciaSoles(valor, variacion) : null
+  if (dif == null || dif === 0) return null
+  const baja = dif < 0
+  const mala = malaSiBaja && baja
+  return (
+    <span className={mala ? 'inicio__mala' : undefined}>
+      {soles(Math.abs(dif))} {baja ? 'menos' : 'más'} que el mes pasado
+    </span>
   )
 }
 
 function AlertaPrincipal({ alertas, corte }) {
   const navigate = useNavigate()
-  if (alertas.loading && !alertas.data) return <Skeleton height={190} />
+  if (alertas.loading && !alertas.data) return <Skeleton height={180} />
   if (alertas.error) return <ErrorState error={alertas.error} onRetry={alertas.reload} />
 
   const items = [...(alertas.data?.items ?? [])].sort((a, b) => (a.prioridad ?? 99) - (b.prioridad ?? 99))
@@ -147,35 +168,42 @@ function AlertaPrincipal({ alertas, corte }) {
 
   const dias = a.dias_para_evento ?? (corte && a.fecha_evento ? daysBetween(corte, a.fecha_evento) : null)
   const porque = a.resumen_causas || a.causas?.map((c) => c.descripcion.toLowerCase()).join(', ')
-  const kicker = dias != null ? `En ${diasTxt(dias)}` : null
 
   return (
-    <Card variant="danger" className="inicio__alerta" role="region" aria-label="Alerta de caja">
-      {kicker && (
-        <p className="inicio__alerta-kicker">
-          <Icon name="warning" size={20} />
-          {kicker}
-        </p>
-      )}
-      <h2 className="inicio__alerta-title display">{a.titulo}</h2>
+    <Card className="inicio__alerta" role="region" aria-label="Alerta de caja">
+      <h2 className="inicio__alerta-title">
+        <Icon name="warning" size={22} />
+        <span>{a.titulo?.replace(/S\/ /g, 'S/ ')}</span>
+      </h2>
+      {dias != null && <p className="inicio__alerta-when">En {diasTxt(dias)}</p>}
       {porque && <p className="inicio__alerta-why">Por qué: {porque}</p>}
-      <Button size="lg" onClick={() => navigate('/simulador')}>
-        {a.accion?.texto_boton || 'Ver qué puedo hacer'}
-      </Button>
+      <Button onClick={() => navigate('/simulador')}>{a.accion?.texto_boton || 'Ver qué puedo hacer'}</Button>
     </Card>
   )
 }
 
-function CajaNegocio({ valor, nota, className }) {
+/** Cifra protagonista: saldo de la caja del negocio, sin caja de color alrededor. */
+function CajaNegocio({ valor, nota, acciones }) {
   return (
-    <Card className={`inicio__caja ${className ?? ''}`} aria-labelledby="inicio-caja-label">
-      <p id="inicio-caja-label" className="inicio__caja-label">
-        <Icon name="store" size={18} />
+    <div className="inicio__hero" role="group" aria-labelledby="inicio-caja-label">
+      <p id="inicio-caja-label" className="inicio__hero-label">
         Caja del negocio
       </p>
-      <p className="inicio__caja-value display num">{soles(valor)}</p>
-      <p className="cc-small cc-muted">{nota}</p>
-    </Card>
+      <p className="inicio__hero-value display num">{soles(valor)}</p>
+      <p className="inicio__hero-note">{nota}</p>
+      {acciones && (
+        <nav className="inicio__acciones" aria-label="Acciones rápidas">
+          {ACCIONES.map((ac) => (
+            <Link key={ac.to} to={ac.to} className="inicio__accion">
+              <span className="inicio__accion-icon" aria-hidden="true">
+                <Icon name={ac.icon} size={22} />
+              </span>
+              <span className="inicio__accion-label">{ac.label}</span>
+            </Link>
+          ))}
+        </nav>
+      )}
+    </div>
   )
 }
 
@@ -188,20 +216,9 @@ const LABELS_COMPONENTES = {
 }
 
 function Disponible({ forecast }) {
-  if (forecast.loading && !forecast.data) {
-    return (
-      <div className="inicio__a-disp">
-        <Skeleton height={120} />
-      </div>
-    )
-  }
-  if (forecast.error) {
-    return (
-      <div className="inicio__a-disp">
-        <ErrorState error={forecast.error} onRetry={forecast.reload} />
-      </div>
-    )
-  }
+  if (forecast.loading && !forecast.data) return <Skeleton height={140} />
+  if (forecast.error) return <ErrorState error={forecast.error} onRetry={forecast.reload} />
+
   const f = forecast.data
   const d = f?.disponible_para_gastar
   if (!d) return null
@@ -232,46 +249,23 @@ function Disponible({ forecast }) {
   )
 
   return (
-    <>
-      <Card className="inicio__disponible inicio__a-disp" aria-labelledby="inicio-disp-label">
-        <p id="inicio-disp-label" className="inicio__disp-label">Disponible para gastar</p>
-        <p className="inicio__disp-value display num">{soles(d.valor)}</p>
+    <div className="inicio__disp">
+      <Card className="inicio__disp-card" aria-labelledby="inicio-disp-label">
+        <div className="inicio__disp-top">
+          <p id="inicio-disp-label" className="inicio__disp-label">
+            Disponible para gastar
+          </p>
+          <p className="inicio__disp-value display num">{soles(d.valor)}</p>
+        </div>
         {d.mensaje && <p className="inicio__disp-msg">{d.mensaje}</p>}
       </Card>
-      <div className="inicio__a-trace">
-        <TraceInfo
-          fundamento={f.fundamento}
-          limites={f.limites}
-          confianza={f.confianza}
-          meta={f.meta}
-          extra={desglose ? [['Cómo se calcula', desglose]] : []}
-        />
-      </div>
-    </>
-  )
-}
-
-/** Fila del resumen: monto + diferencia en soles frente al mes pasado (sin porcentajes). */
-function Fila({ label, valor, texto, variacion, malaSiBaja }) {
-  const dif = valor != null ? diferenciaSoles(valor, variacion) : null
-  let delta = null
-  if (dif != null && dif !== 0) {
-    const baja = dif < 0
-    const mala = malaSiBaja && baja
-    delta = (
-      <dd className={`inicio__delta${mala ? ' inicio__delta--mala' : ''}`}>
-        <span aria-hidden="true">{baja ? '▼' : '▲'}</span> {soles(Math.abs(dif))} {baja ? 'menos' : 'más'} que el mes
-        pasado
-      </dd>
-    )
-  }
-  return (
-    <div className="inicio__row">
-      <dt>{label}</dt>
-      <dd className="num">
-        <strong>{texto ?? soles(valor)}</strong>
-      </dd>
-      {delta}
+      <TraceInfo
+        fundamento={f.fundamento}
+        limites={f.limites}
+        confianza={f.confianza}
+        meta={f.meta}
+        extra={desglose ? [['Cómo se calcula', desglose]] : []}
+      />
     </div>
   )
 }
@@ -285,73 +279,64 @@ function InicioNuevo({ resumen, diasConDatos, diasRequeridos }) {
   const ganancia = ind?.ganancia_neta
 
   return (
-    <div className="inicio__nuevo">
-      <Card className="inicio__progreso inicio__n-progreso">
-        <h2 className="inicio__progreso-title">
-          Necesito {diasRequeridos} días de tus ventas para avisarte antes de que te falte plata
-        </h2>
-        <div
-          className="inicio__segs"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={diasRequeridos}
-          aria-valuenow={Math.min(diasConDatos, diasRequeridos)}
-          aria-label="Días con ventas anotadas"
-        >
-          {Array.from({ length: diasRequeridos }, (_, i) => (
-            <span key={i} className={i < diasConDatos ? 'is-on' : undefined} />
-          ))}
-        </div>
-        <p className="cc-small cc-muted">
-          {diasConDatos} de {diasRequeridos} días · sigue mandando tus ventas por el chat.
-        </p>
-        <Button size="lg" icon="mic" onClick={() => navigate('/chat')}>
-          Anotar una venta
-        </Button>
-      </Card>
+    <div className="inicio__grid">
+      <div className="inicio__main">
+        {ind && <CajaNegocio valor={ind.saldo_caja_negocio.valor} nota="Según lo que anotaste" />}
 
-      {ind && (
-        <>
-          <CajaNegocio className="inicio__n-caja" valor={ind.saldo_caja_negocio.valor} nota="según lo que anotaste" />
+        <Card className="inicio__progreso">
+          <h2 className="inicio__progreso-title">
+            Necesito {diasRequeridos} días de tus ventas para avisarte antes de que te falte plata
+          </h2>
+          <div
+            className="inicio__segs"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={diasRequeridos}
+            aria-valuenow={Math.min(diasConDatos, diasRequeridos)}
+            aria-label="Días con ventas anotadas"
+          >
+            {Array.from({ length: diasRequeridos }, (_, i) => (
+              <span key={i} className={i < diasConDatos ? 'is-on' : undefined} />
+            ))}
+          </div>
+          <p className="inicio__progreso-txt">
+            {diasConDatos} de {diasRequeridos} días · sigue mandando tus ventas por el chat.
+          </p>
+          <Button size="lg" icon="mic" onClick={() => navigate('/chat')}>
+            Anotar una venta
+          </Button>
+        </Card>
+      </div>
 
-          <Card className="inicio__n-resumen">
-            <dl className="inicio__rows">
-              <div className="inicio__row">
-                <dt>Vendiste en {diasTxt(diasConDatos)}</dt>
-                <dd className="num">
-                  <strong>{soles(ind.ingresos_mes.valor)}</strong>
-                </dd>
-              </div>
-              <div className="inicio__row">
-                <dt>Ganancia aproximada</dt>
-                <dd className="num">
-                  <strong>
-                    {ganancia.rango
-                      ? `entre ${soles(ganancia.rango[0])} y ${soles(ganancia.rango[1])}`
-                      : soles(ganancia.valor)}
-                  </strong>
-                </dd>
-              </div>
-            </dl>
-            {ganancia.es_aproximada && (
-              <p className="cc-small cc-muted inicio__vs">
-                Es un rango porque aún no conozco el costo de todos tus productos.
-              </p>
-            )}
-          </Card>
-        </>
-      )}
+      <div className="inicio__side">
+        {ind && (
+          <Section title="Hasta ahora">
+            <List>
+              <ListRow title={`Vendiste en ${diasTxt(diasConDatos)}`} amount={soles(ind.ingresos_mes.valor)} />
+              <ListRow
+                title="Ganancia aproximada"
+                sub={ganancia.es_aproximada ? 'Es un rango porque aún no conozco el costo de todos tus productos.' : null}
+                amount={
+                  ganancia.rango
+                    ? `entre ${soles(ganancia.rango[0])} y ${soles(ganancia.rango[1])}`
+                    : soles(ganancia.valor)
+                }
+              />
+            </List>
+          </Section>
+        )}
 
-      <Card variant="dashed" className="inicio__proximos inicio__n-proximos">
-        <h2 className="inicio__proximos-title">
+        <div className="inicio__proximos">
           <Icon name="clock" size={20} />
-          Tus próximos 30 días
-        </h2>
-        <p className="cc-muted">
-          Aparecerán aquí en {diasTxt(faltan)}. Mientras, cuéntame tus pagos con fecha (“le debo 800 a Andina para el
-          30”) y te aviso antes de que venzan.
-        </p>
-      </Card>
+          <div>
+            <h2 className="inicio__proximos-title">Tus próximos 30 días</h2>
+            <p className="inicio__proximos-txt">
+              Aparecerán aquí en {diasTxt(faltan)}. Mientras, cuéntame tus pagos con fecha (“le debo 800 a Andina para
+              el 30”) y te aviso antes de que venzan.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

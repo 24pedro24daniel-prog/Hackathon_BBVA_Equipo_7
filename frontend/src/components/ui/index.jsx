@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Icon from './Icon.jsx'
 import { confianzaLabel } from '../../lib/format.js'
 import { useDemo } from '../../lib/useDemo.js'
@@ -33,27 +33,124 @@ export function Button({ variant = 'primary', size, block, className, icon, chil
   )
 }
 
-/** tone: danger | warning | ok | neutral */
-export function Badge({ tone = 'neutral', children, className }) {
-  return <span className={cx('cc-badge', `cc-badge--${tone}`, className)}>{children}</span>
+/**
+ * Estado como texto de color (sin fondo, sin píldora), como en las apps bancarias:
+ * "Vencido hace 18 días" en naranja, "Al día" en aqua.  tone: danger | warning | ok | neutral
+ */
+export function Status({ tone = 'neutral', children, className }) {
+  return <span className={cx('cc-status', `cc-status--${tone}`, className)}>{children}</span>
 }
+/** @deprecated usa <Status>. Se mantiene para no romper importaciones. */
+export const Badge = Status
 
-/** Encabezado de página: kicker pequeño + título grande. back=true muestra botón volver. */
-export function PageHeader({ kicker, title, back, right }) {
+/**
+ * Encabezado de página: título grande y, debajo, una línea de contexto (sub).
+ * `kicker` se acepta por compatibilidad y se pinta debajo del título, nunca encima.
+ */
+export function PageHeader({ sub, kicker, title, back, right }) {
   const navigate = useNavigate()
+  const subtitle = sub ?? kicker
   return (
     <header className="cc-header">
       {back && (
         <button className="cc-header__back" onClick={() => navigate(-1)} aria-label="Volver">
-          <Icon name="back" size={22} />
+          <Icon name="back" size={24} />
         </button>
       )}
       <div className="cc-header__text">
-        {kicker && <p className="cc-header__kicker">{kicker}</p>}
         <h1 className="cc-header__title">{title}</h1>
+        {subtitle && <p className="cc-header__sub">{subtitle}</p>}
       </div>
       {right}
     </header>
+  )
+}
+
+/**
+ * Sección con título en frase fuera del contenedor (no etiquetas en mayúsculas).
+ * <Section title="Este mes" action={<Link className="cc-section__action" to="/x">Ver todo</Link>}>…</Section>
+ */
+export function Section({ title, action, id, headingRef, className, children, ...rest }) {
+  const hid = useId()
+  return (
+    <section className={cx('cc-section', className)} aria-labelledby={id ?? hid} {...rest}>
+      {(title || action) && (
+        <div className="cc-section__head">
+          {title && (
+            <h2 className="cc-section__title" id={id ?? hid} ref={headingRef} tabIndex={headingRef ? -1 : undefined}>
+              {title}
+            </h2>
+          )}
+          {action}
+        </div>
+      )}
+      {children}
+    </section>
+  )
+}
+
+/** Lista agrupada: un contenedor, filas separadas por divisores finos. Hijos: <ListRow>. */
+export function List({ className, children, ...rest }) {
+  return (
+    <ul className={cx('cc-list', className)} {...rest}>
+      {children}
+    </ul>
+  )
+}
+
+/**
+ * Fila de lista estilo movimientos bancarios.
+ *  lead: ícono o iniciales a la izquierda (opcional)
+ *  title / sub: texto principal y secundario
+ *  amount: monto a la derecha (ya formateado); amountTone: pos | neg
+ *  end: contenido bajo el monto (p. ej. <Status>) o en lugar del monto
+ *  to / onClick: vuelve la fila navegable y muestra chevron
+ *  children: contenido extra bajo la fila (p. ej. un botón)
+ */
+export function ListRow({ lead, title, sub, amount, amountTone, end, to, onClick, chevron, className, children, ...rest }) {
+  const inner = (
+    <>
+      {lead != null && <span className="cc-row__lead" aria-hidden="true">{lead}</span>}
+      <span className="cc-row__main">
+        <span className="cc-row__title">{title}</span>
+        {sub && <span className="cc-row__sub">{sub}</span>}
+      </span>
+      {(amount != null || end) && (
+        <span className="cc-row__end">
+          {amount != null && (
+            <span className={cx('cc-row__amount', amountTone && `cc-row__amount--${amountTone}`)}>{amount}</span>
+          )}
+          {end}
+        </span>
+      )}
+      {(to || onClick) && chevron !== false && <Icon name="chevronRight" size={20} className="cc-row__chev" />}
+    </>
+  )
+  let row
+  if (to) {
+    row = (
+      <Link to={to} className={cx('cc-row', className)} {...rest}>
+        {inner}
+      </Link>
+    )
+  } else if (onClick) {
+    row = (
+      <button type="button" onClick={onClick} className={cx('cc-row', className)} {...rest}>
+        {inner}
+      </button>
+    )
+  } else {
+    row = (
+      <div className={cx('cc-row', className)} {...rest}>
+        {inner}
+      </div>
+    )
+  }
+  return (
+    <li>
+      {row}
+      {children}
+    </li>
   )
 }
 
@@ -139,7 +236,7 @@ export function LoadingBlock({ heights = [140, 96, 96] }) {
 export function ErrorState({ error, onRetry }) {
   return (
     <Card className="cc-error" role="alert">
-      <p style={{ fontWeight: 700 }}>No pude traer tus números</p>
+      <p style={{ fontWeight: 600, color: 'var(--title)' }}>No pude traer tus números</p>
       <p className="cc-muted cc-small">{error?.mensaje || error?.message || 'Intenta otra vez en un momento.'}</p>
       {onRetry && (
         <Button variant="secondary" onClick={onRetry}>

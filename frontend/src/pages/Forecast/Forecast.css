@@ -1,81 +1,80 @@
 .fc-body {
   padding: 0 var(--gutter);
   display: grid;
-  gap: 12px;
+  gap: 24px;
 }
 .fc-card-title {
   font-family: var(--font-display);
   font-weight: var(--display-weight);
   color: var(--title);
   font-size: 18px;
-  margin-bottom: 10px;
 }
 
 /* Layout: 1 columna en móvil; gráfico ancho + columna lateral en escritorio */
 .fc-layout,
+.fc-main,
 .fc-side {
   display: grid;
-  gap: 12px;
+  gap: 24px;
   min-width: 0;
+  align-content: start;
+}
+.fc-main {
+  gap: 16px;
 }
 .fc-layout > * {
   min-width: 0;
-}
-@media (min-width: 768px) {
-  .fc-body,
-  .fc-layout,
-  .fc-side {
-    gap: 16px;
-  }
 }
 @media (min-width: 1100px) {
   .fc-layout {
     grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     align-items: start;
-    gap: 24px;
+    gap: 32px;
   }
   .fc-side {
     position: sticky;
     top: 24px;
+    padding-top: 4px;
   }
 }
 
-/* KPIs del gráfico */
-.fc-kpis {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 8px;
+/* Lo más importante primero: el día más bajo, en grande, sin caja alrededor */
+.fc-hero {
+  display: grid;
+  gap: 4px;
+  padding: 0 4px;
 }
-.fc-kpi--danger {
-  text-align: right;
+.fc-hero__lead {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text);
+}
+.fc-hero__num {
+  font-size: var(--fs-hero);
+  line-height: 1.05;
+  margin: 2px 0 4px;
+}
+.fc-hero__num--danger {
   color: var(--danger);
 }
-.fc-kpi__label {
-  font-size: 14px;
-  color: var(--text-muted);
+.fc-hero__num--warning {
+  color: var(--warning);
 }
-.fc-kpi--danger .fc-kpi__label {
-  color: var(--danger);
-  font-weight: 600;
-}
-.fc-kpi__value {
-  font-size: 24px;
-  line-height: 1.15;
-  font-weight: var(--display-weight);
+.fc-hero__num--ok {
   color: var(--title);
 }
-.fc-kpi--danger .fc-kpi__value {
-  color: var(--danger);
+.fc-hero__ctx {
+  font-size: 15px;
+  color: var(--text-muted);
 }
-@media (min-width: 768px) {
-  .fc-kpi__value {
-    font-size: 28px;
-  }
+.fc-hero__risk {
+  font-size: 15px;
 }
 
 /* Gráfico */
+.fc-chart-card {
+  padding: 16px 16px 12px;
+}
 .fc-chart {
   margin: 0;
 }
@@ -88,30 +87,37 @@
   display: block;
   overflow: visible;
 }
-.fc-risk {
-  fill: var(--danger-bg);
-}
 .fc-band {
   fill: var(--brand-band);
+  opacity: 0.6;
 }
 .fc-zero {
-  stroke: var(--border-strong);
+  stroke: var(--hairline);
   stroke-width: 1;
 }
 .fc-min {
-  stroke: var(--danger);
-  stroke-width: 1.5;
-  stroke-dasharray: 5 4;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.7;
+}
+.fc-min-label {
+  fill: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font-body);
 }
 .fc-line {
   fill: none;
   stroke: var(--brand);
-  stroke-width: 2.5;
+  stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
+.fc-line--risk {
+  stroke: var(--danger);
+}
 .fc-cross {
-  stroke: var(--text-subtle);
+  stroke: var(--border-strong);
   stroke-width: 1;
 }
 .fc-dot {
@@ -132,86 +138,27 @@
 
 .fc-readout {
   min-height: 24px;
-  margin-top: 6px;
-  font-size: 14px;
+  margin-top: 8px;
+  font-size: 15px;
 }
 .fc-readout__range {
   color: var(--text-muted);
 }
 
-/* Leyenda */
+/* Leyenda en texto, sin chips */
 .fc-legend {
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  font-size: 14px;
+  margin-top: 4px;
+  font-size: 13px;
   color: var(--text-muted);
-}
-.fc-legend li {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.fc-sw {
-  display: inline-block;
-  width: 16px;
-  flex: none;
-}
-.fc-sw--line {
-  height: 3px;
-  border-radius: var(--radius-pill);
-  background: var(--brand);
-}
-.fc-sw--band {
-  height: 12px;
-  border-radius: 4px;
-  background: var(--brand-band);
-}
-.fc-sw--min {
-  height: 0;
-  border-top: 2px dashed var(--danger);
-}
-.fc-sw--risk {
-  height: 12px;
-  border-radius: 4px;
-  background: var(--danger-bg);
-  border: 1px solid var(--danger-border);
+  line-height: 1.4;
 }
 
 /* Lo que viene */
-.fc-next {
-  display: grid;
-  gap: 10px;
+.fc-none {
+  padding: 0 4px;
 }
-.fc-next .fc-card-title {
-  margin-bottom: 0;
-}
-.fc-events {
-  list-style: none;
-  margin: 0;
-  padding: 4px 12px;
-  background: var(--surface-sunken);
-  border-radius: var(--radius-sm);
-}
-.fc-events li {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  padding: 8px 0;
-  font-size: 15px;
-}
-.fc-events li + li {
-  border-top: 1px solid var(--border);
-}
-.fc-events strong {
-  white-space: nowrap;
-}
-.fc-pos {
-  color: var(--ok);
+.fc-note {
+  padding: 0 4px;
 }
 
 /* Sin datos suficientes */
@@ -219,14 +166,10 @@
   display: grid;
   gap: 12px;
 }
-.fc-empty .fc-card-title {
-  margin-bottom: 0;
-}
 .fc-progress {
-  height: 10px;
+  height: 6px;
   border-radius: var(--radius-pill);
-  background: var(--surface-sunken);
-  border: 1px solid var(--border);
+  background: var(--hairline);
   overflow: hidden;
 }
 .fc-progress span {

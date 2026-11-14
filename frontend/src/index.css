@@ -7,6 +7,9 @@
   --surface-sunken: #f4f6f9;
   --border: #d5dce5;
   --border-strong: #b9c4d2;
+  --hairline: #e4e9ef;       /* Divisores entre filas de una lista */
+  --row-hover: #f6f8fb;
+  --control-off: #7b8899;    /* Borde de radio/switch apagado: ≥ 3:1 sobre blanco */
 
   /* Texto */
   --title: #0b2447;          /* Azul noche: títulos y cifras clave */
@@ -42,9 +45,10 @@
   --display-weight: 600;     /* títulos firmes pero no pesados (la guía evita 700) */
 
   /* Forma: plana, sin sombras. Base de espaciado 8px */
-  --radius-sm: 12px;
-  --radius: 16px;
-  --radius-lg: 20px;
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius: 12px;
+  --radius-lg: 16px;
   --radius-pill: 9999px;
   --gutter: 16px;
   --nav-h: 64px;
@@ -53,12 +57,23 @@
   --tap: 44px;
   --shadow: none;
   --scrim: rgba(11, 36, 71, 0.45);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Escala tipográfica: monto principal > título > monto de fila > cuerpo > nota */
+  --fs-hero: 44px;
+  --fs-title: 26px;
+  --fs-amount: 20px;
+  --fs-section: 18px;
+  --fs-body: 16px;
+  --fs-note: 14px;
 
   color: var(--text);
   background: var(--bg);
   font-family: var(--font-body);
   font-size: 16px;
-  line-height: 1.4;
+  line-height: 1.45;
+  caret-color: var(--brand);
+  accent-color: var(--brand);
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
 }
@@ -67,6 +82,16 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+::selection {
+  background: var(--brand-band);
+  color: var(--title);
+}
+
+html {
+  scrollbar-color: var(--border-strong) transparent;
+  scrollbar-width: thin;
 }
 
 html,
@@ -95,6 +120,7 @@ button {
 
 a {
   color: inherit;
+  text-underline-offset: 3px;
 }
 
 :focus-visible {
@@ -111,8 +137,9 @@ a {
 .display {
   font-family: var(--font-display);
   font-weight: var(--display-weight);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   color: var(--title);
+  font-variant-numeric: tabular-nums;
 }
 
 .sr-only {
@@ -129,7 +156,7 @@ a {
 
 /* Responsive: gutter más amplio en pantallas grandes */
 @media (min-width: 768px) {
-  :root { --gutter: 24px; }
+  :root { --gutter: 24px; --fs-hero: 52px; --fs-title: 30px; }
 }
 @media (min-width: 1100px) {
   :root { --gutter: 32px; }

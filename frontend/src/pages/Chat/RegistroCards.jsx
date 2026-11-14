@@ -1,7 +1,7 @@
 // F1: "Anoté esto, ¿está bien?" y la pregunta aclaratoria.
-import { Badge, Button } from '../../components/ui/index.jsx'
+import { Button, Icon, Status } from '../../components/ui/index.jsx'
 import { soles } from '../../lib/format.js'
-import { InBubble, KVTable, RichText } from './ChatParts.jsx'
+import { InBubble, KVTable, RichText, SavedLine } from './ChatParts.jsx'
 import { filasMovimiento, notaDuda, resumenEntendido } from './chatText.js'
 
 export function ConfirmCard({ msg, onCorrecto, onCorregir }) {
@@ -11,24 +11,24 @@ export function ConfirmCard({ msg, onCorrecto, onCorregir }) {
   const locked = status === 'done' || status === 'saving'
   return (
     <InBubble wide time={time}>
-      <h2 className="chat-card__title">
-        Anoté esto, ¿está bien?
-        {dudoso && <Badge tone="warning">Revisa</Badge>}
-      </h2>
+      <div className="chat-card__head">
+        <h2 className="chat-card__title">Anoté esto, ¿está bien?</h2>
+        {dudoso && <Status tone="warning">Revisa antes de guardar</Status>}
+      </div>
       <KVTable rows={filasMovimiento(mov)} label="Lo que anoté" />
       {res.origen_monto === 'catalogo' && item?.precio_unitario && (
         <p className="chat-note">Usé el precio de tu lista: {soles(item.precio_unitario, { cents: true })} cada una.</p>
       )}
       {res.origen_monto === 'estimado' && <p className="chat-note">El monto es un estimado; corrígelo si no es así.</p>}
       <div className="chat-actions">
-        <Button onClick={onCorrecto} disabled={locked}>
-          ✅ Correcto
+        <Button icon="check" onClick={onCorrecto} disabled={locked}>
+          Correcto
         </Button>
-        <Button variant="secondary" onClick={onCorregir} disabled={locked || status === 'editing'}>
-          ✏️ Corregir
+        <Button variant="ghost" onClick={onCorregir} disabled={locked || status === 'editing'}>
+          Corregir
         </Button>
       </div>
-      {status === 'done' && <p className="chat-status">Guardado</p>}
+      {status === 'done' && <SavedLine />}
     </InBubble>
   )
 }
@@ -41,18 +41,19 @@ export function ClarifyCard({ msg, onElegir }) {
       <RichText text={resumenEntendido(res.movimiento_propuesto)} />
       <p className="chat-card__q">{res.pregunta_aclaratoria}</p>
       {opciones.length > 0 && (
-        <div className="chat-actions">
+        <div className="chat-quick">
           {opciones.map((o) => (
-            <Button
+            <button
               key={o.valor}
-              variant="secondary"
+              type="button"
+              className="chat-chip"
               onClick={() => onElegir(o)}
               disabled={status !== 'pending'}
               aria-pressed={elegido === o.valor}
-              className={elegido === o.valor ? 'chat-opt--chosen' : undefined}
             >
+              {elegido === o.valor && <Icon name="check" size={16} />}
               {o.texto}
-            </Button>
+            </button>
           ))}
         </div>
       )}

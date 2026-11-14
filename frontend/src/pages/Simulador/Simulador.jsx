@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { ddmm, soles } from '../../lib/format.js'
-import { Card, ErrorState, Icon, LoadingBlock, MetaLine, PageHeader, Skeleton } from '../../components/ui/index.jsx'
+import { ErrorState, LoadingBlock, MetaLine, PageHeader, Skeleton } from '../../components/ui/index.jsx'
 import './Simulador.css'
 
 // Escenario del mockup: pedido a Distribuidora Andina que vence el 30/11.
@@ -67,66 +67,82 @@ export default function Simulador() {
 
   return (
     <div className="sim-page">
-      <PageHeader back kicker="Antes del 30/11" title="¿Qué puedo hacer?" />
+      <PageHeader back sub="Antes del 30/11" title="¿Qué puedo hacer?" />
       <div className="sim-body">
         <div className="sim-options">
           <fieldset className="sim-group">
-            <legend className="sim-legend">Tu pedido a Andina · ¿cuánto pedir?</legend>
-            {OPCIONES.map((o) => (
-              <label key={o.monto} className="sim-option">
-                <input
-                  type="radio"
-                  name="sim-monto"
-                  className="sim-input"
-                  value={o.monto}
-                  checked={monto === o.monto}
-                  onChange={() => setMonto(o.monto)}
-                />
-                <span className="sim-option__text">
-                  <span className="sim-option__amount display num">{soles(o.monto)}</span>
-                  <span className="sim-option__sub">{o.texto}</span>
-                </span>
-                {monto === o.monto && <span className="sim-option__chosen">Elegido</span>}
-              </label>
-            ))}
+            <legend className="sim-legend">¿Cuánto le pides a Andina?</legend>
+            <div className="sim-list">
+              {OPCIONES.map((o) => (
+                <label key={o.monto} className="sim-row">
+                  <input
+                    type="radio"
+                    name="sim-monto"
+                    className="sim-input"
+                    value={o.monto}
+                    checked={monto === o.monto}
+                    onChange={() => setMonto(o.monto)}
+                  />
+                  <span className="sim-row__text">
+                    <span className="sim-row__title num">{soles(o.monto)}</span>
+                    <span className="sim-row__sub">{o.texto}</span>
+                  </span>
+                  <span className="sim-radio" aria-hidden="true" />
+                </label>
+              ))}
+            </div>
           </fieldset>
 
           <fieldset className="sim-group">
-            <legend className="sr-only">Otras cosas que puedes hacer</legend>
-            <label className="sim-option sim-option--check">
-              <input type="checkbox" className="sim-input" checked={partes} onChange={(e) => setPartes(e.target.checked)} />
-              <span className="sim-box" aria-hidden="true">
-                <Icon name="check" size={18} />
-              </span>
-              <span className="sim-option__text">
-                <span className="sim-option__title">Pagar en 2 partes</span>
-                <span className="sim-option__sub">Mitad el 30/11 y mitad el 15/12 (pídelo a Andina)</span>
-              </span>
-            </label>
-
-            {fiados.loading ? (
-              <Skeleton height={72} />
-            ) : fiados.error ? (
-              <p className="cc-small cc-muted">
-                No pude traer tus fiados.{' '}
-                <button type="button" className="sim-link" onClick={fiados.reload}>
-                  Intentar otra vez
-                </button>
-              </p>
-            ) : items.length ? (
-              <label className="sim-option sim-option--check">
-                <input type="checkbox" className="sim-input" checked={cobrar} onChange={(e) => setCobrar(e.target.checked)} />
-                <span className="sim-box" aria-hidden="true">
-                  <Icon name="check" size={18} />
+            <legend className="sim-legend">También puedes</legend>
+            <div className="sim-list">
+              <label className="sim-row">
+                <span className="sim-row__text">
+                  <span className="sim-row__title">Pagar en 2 partes</span>
+                  <span className="sim-row__sub">Mitad el 30/11 y mitad el 15/12 (pídelo a Andina)</span>
                 </span>
-                <span className="sim-option__text">
-                  <span className="sim-option__title">Cobrar los fiados esta semana</span>
-                  <span className="sim-option__sub">
-                    {joinNombres(items.map((f) => f.cliente))} · <span className="num">{soles(totalFiados)}</span>
-                  </span>
-                </span>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  className="sim-input"
+                  checked={partes}
+                  onChange={(e) => setPartes(e.target.checked)}
+                />
+                <span className="sim-switch" aria-hidden="true" />
               </label>
-            ) : null}
+
+              {fiados.loading ? (
+                <div className="sim-row" aria-hidden="true">
+                  <Skeleton height={40} style={{ flex: 1 }} />
+                </div>
+              ) : fiados.error ? (
+                <div className="sim-row">
+                  <p className="cc-small cc-muted">
+                    No pude traer tus fiados.{' '}
+                    <button type="button" className="sim-link" onClick={fiados.reload}>
+                      Intentar otra vez
+                    </button>
+                  </p>
+                </div>
+              ) : items.length ? (
+                <label className="sim-row">
+                  <span className="sim-row__text">
+                    <span className="sim-row__title">Cobrar los fiados esta semana</span>
+                    <span className="sim-row__sub">
+                      {joinNombres(items.map((f) => f.cliente))} · <span className="num">{soles(totalFiados)}</span>
+                    </span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    className="sim-input"
+                    checked={cobrar}
+                    onChange={(e) => setCobrar(e.target.checked)}
+                  />
+                  <span className="sim-switch" aria-hidden="true" />
+                </label>
+              ) : null}
+            </div>
           </fieldset>
         </div>
 
@@ -171,39 +187,40 @@ function Resultado({ r, pending }) {
 
   if (estado === 'no_te_alcanza')
     return (
-      <section className={cls}>
-        <p className="sim-result__kicker">No te alcanza</p>
-        <p>Tu caja el {fecha} después de pagar:</p>
+      <section className={cls} aria-labelledby="sim-result-title">
+        <h2 id="sim-result-title" className="sim-result__title">
+          No te alcanza.
+        </h2>
+        <p className="sim-result__label">Tu caja el {fecha} después de pagar</p>
         <p className="sim-result__amount display num">{soles(saldo)}</p>
-        <p className="sim-result__main">Todavía te faltaría plata para pagar a Andina.</p>
-        <p className="cc-small sim-result__note">Prueba combinar opciones.</p>
+        <p className="sim-result__main">Todavía te faltaría plata para pagar a Andina. Prueba combinar opciones.</p>
       </section>
     )
 
   if (estado === 'justo')
     return (
-      <section className={cls}>
-        <p className="sim-result__kicker">Justo</p>
-        <p>Tu caja el {fecha} después de pagar:</p>
+      <section className={cls} aria-labelledby="sim-result-title">
+        <h2 id="sim-result-title" className="sim-result__title">
+          Justo: te alcanza para pagar.
+        </h2>
+        <p className="sim-result__label">Tu caja el {fecha} después de pagar</p>
         <p className="sim-result__amount display num">{soles(saldo)}</p>
-        <p className="sim-result__main">
-          Te alcanza para pagar, pero quedas debajo de tu mínimo de {soles(MINIMO)}.
-        </p>
+        <p className="sim-result__main">Pero quedas debajo de tu mínimo de {soles(MINIMO)}.</p>
         {mejora > 0 && (
-          <p className="cc-small sim-result__note num">{soles(mejora, { sign: true })} mejor que no hacer nada.</p>
+          <p className="sim-result__note num">{soles(mejora, { sign: true })} mejor que no hacer nada.</p>
         )}
       </section>
     )
 
   return (
-    <section className={cls}>
-      <p className="sim-result__kicker">Te alcanza</p>
-      <p>Después de pagar a Andina el {fecha}, te quedarían:</p>
+    <section className={cls} aria-labelledby="sim-result-title">
+      <h2 id="sim-result-title" className="sim-result__title">
+        Te alcanza.
+      </h2>
+      <p className="sim-result__label">Después de pagar a Andina el {fecha}, te quedarían</p>
       <p className="sim-result__amount display num">{soles(saldo)}</p>
-      {mejora > 0 && (
-        <p className="sim-result__main num">{soles(mejora, { sign: true })} mejor que no hacer nada.</p>
-      )}
-      <p className="cc-small sim-result__note">Pasas tu mínimo de {soles(MINIMO)} para el día a día.</p>
+      <p className="sim-result__main">Pasas tu mínimo de {soles(MINIMO)} para el día a día.</p>
+      {mejora > 0 && <p className="sim-result__note num">{soles(mejora, { sign: true })} mejor que no hacer nada.</p>}
     </section>
   )
 }

@@ -66,12 +66,13 @@ export default function RecordatorioSheet({ fiado, onClose }) {
       onClick={(e) => e.target === ref.current && ref.current.close()}
     >
       <div className="cuentas-sheet__inner">
+        <span className="cuentas-sheet__grip" aria-hidden="true" />
         <div className="cuentas-sheet__head">
           <div>
             <h2 id={titleId} className="cuentas-sheet__title">
               Recordarle a {fiado.cliente}
             </h2>
-            <p className="cc-muted cc-small num">Te debe {soles(fiado.monto)}</p>
+            <p className="cuentas-sheet__sub num">Te debe {soles(fiado.monto)}</p>
           </div>
           <button type="button" className="cuentas-sheet__close" aria-label="Cerrar" onClick={() => ref.current?.close()}>
             <Icon name="close" size={22} />
@@ -82,20 +83,18 @@ export default function RecordatorioSheet({ fiado, onClose }) {
         {error && <ErrorState error={error} onRetry={reload} />}
         {data && (
           <>
-            <p className="cc-eyebrow">Mensaje sugerido</p>
-            <blockquote ref={msgRef} className="cuentas-sheet__msg">
-              {mensaje}
-            </blockquote>
-            <p className="cuentas-sheet__note cc-small">
-              <Icon name="info" size={18} />
-              <span>CajaClara no lo envía por ti. Tú decides si lo mandas, cuándo y cómo. Puedes cambiarle las palabras.</span>
-            </p>
+            <div className="cuentas-sheet__group">
+              <h3 className="cuentas-sheet__label">Mensaje sugerido</h3>
+              <blockquote ref={msgRef} className="cuentas-sheet__msg">
+                {mensaje}
+              </blockquote>
+              <p className="cuentas-sheet__note cc-small">
+                CajaClara no lo envía por ti. Tú decides si lo mandas, cuándo y cómo. Puedes cambiarle las palabras.
+              </p>
+            </div>
             <div className="cuentas-sheet__actions">
-              <Button variant="secondary" block onClick={onCopy}>
-                {copy === 'ok' ? 'Copiado' : 'Copiar mensaje'}
-              </Button>
               <a
-                className="cc-btn cc-btn--primary cc-btn--block"
+                className="cc-btn cc-btn--primary cc-btn--block cc-btn--lg"
                 href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -103,6 +102,12 @@ export default function RecordatorioSheet({ fiado, onClose }) {
                 <Icon name="send" size={20} />
                 Enviar por WhatsApp
               </a>
+              <Button variant="secondary" block onClick={onCopy}>
+                {copy === 'ok' ? 'Copiado' : 'Copiar mensaje'}
+              </Button>
+              <Button variant="ghost" block onClick={() => ref.current?.close()}>
+                Cancelar
+              </Button>
             </div>
             <p className="sr-only" role="status" aria-live="polite">
               {copy === 'ok' ? 'Mensaje copiado' : copy === 'fail' ? 'No pude copiarlo. El mensaje quedó seleccionado para que lo copies.' : ''}

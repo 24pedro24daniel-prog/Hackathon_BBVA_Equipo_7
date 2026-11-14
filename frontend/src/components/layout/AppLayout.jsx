@@ -23,7 +23,7 @@ export default function AppLayout() {
     <div className={isChat ? 'cc-app cc-app--chat' : 'cc-app'}>
       <nav className="cc-nav" aria-label="Secciones">
         <div className="cc-nav__brand" aria-hidden="true">
-          <span className="cc-nav__logo">CC</span>
+          <span className="cc-nav__logo">cc</span>
           <span className="cc-nav__name">CajaClara</span>
         </div>
         {tabs.map((t) => (

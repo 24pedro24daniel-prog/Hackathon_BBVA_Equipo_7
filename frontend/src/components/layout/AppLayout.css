@@ -43,18 +43,10 @@
   text-decoration: none;
   min-height: var(--tap);
 }
-.cc-nav__link.active { color: var(--brand); font-weight: 700; }
-.cc-nav__link.active::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 28px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: var(--brand);
-}
+.cc-nav__link { transition: color 0.15s ease; }
+.cc-nav__link:hover { color: var(--title); }
+.cc-nav__link.active { color: var(--brand); font-weight: 600; }
+.cc-nav__link.active svg { stroke-width: 2.2; }
 
 /* ---------- Tablet: riel lateral ---------- */
 @media (min-width: 768px) {
@@ -74,18 +66,15 @@
     border-top: 0;
     border-right: 1px solid var(--border);
   }
-  .cc-nav__brand { display: flex; justify-content: center; margin-bottom: 16px; }
-  .cc-nav__logo {
-    width: 44px; height: 44px; border-radius: var(--radius-pill);
-    display: grid; place-items: center;
-    background: var(--title); color: var(--on-brand);
-    font-family: var(--font-display); font-weight: var(--display-weight); font-size: 16px;
+  .cc-nav__brand {
+    display: flex; justify-content: center; align-items: center; height: 44px; margin-bottom: 16px;
+    font-family: var(--font-display); font-weight: var(--display-weight); color: var(--title);
   }
+  .cc-nav__logo { font-size: 20px; letter-spacing: -0.03em; }
   .cc-nav__name { display: none; }
   .cc-nav__link { min-height: 64px; border-radius: var(--radius); font-size: 13px; }
-  .cc-nav__link:hover { background: var(--bg); }
+  .cc-nav__link:hover { background: var(--row-hover); }
   .cc-nav__link.active { background: var(--brand-soft); }
-  .cc-nav__link.active::before { display: none; }
 }
 
 /* ---------- Escritorio: barra lateral con marca ---------- */
@@ -93,15 +82,16 @@
   .cc-app { --content-max: 1120px; padding-left: var(--sidebar-w); }
   .cc-nav,
   .cc-app--chat .cc-nav { width: var(--sidebar-w); padding: 24px 16px; }
-  .cc-nav__brand { justify-content: flex-start; align-items: center; gap: 12px; padding: 0 8px; margin-bottom: 24px; }
-  .cc-nav__name { display: inline; font-family: var(--font-display); font-weight: var(--display-weight); font-size: 20px; color: var(--title); }
+  .cc-nav__brand { justify-content: flex-start; padding: 0 16px; margin-bottom: 24px; }
+  .cc-nav__logo { display: none; }
+  .cc-nav__name { display: inline; font-size: 22px; letter-spacing: -0.03em; }
   .cc-nav__link {
     flex-direction: row;
     justify-content: flex-start;
     gap: 12px;
     min-height: 48px;
     padding: 0 16px;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius);
     font-size: 16px;
   }
 }

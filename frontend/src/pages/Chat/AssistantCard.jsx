@@ -1,5 +1,5 @@
 // F7: respuesta del asistente (incluye el ejemplo de préstamo informal y el "Modo básico").
-import { Badge, Button } from '../../components/ui/index.jsx'
+import { Button, Status } from '../../components/ui/index.jsx'
 import { soles } from '../../lib/format.js'
 import { HowIKnow, InBubble, KVTable, RichText } from './ChatParts.jsx'
 
@@ -41,18 +41,22 @@ export function AssistantCard({ msg, onAccion }) {
     <InBubble wide time={time} footer={res.disclaimer || 'Orientación educativa · no es asesoría'}>
       {fallback && (
         <p>
-          <Badge tone="warning">Modo básico</Badge>
+          <Status tone="warning">Modo básico</Status>
         </p>
       )}
       <RichText text={res.respuesta} />
       {ej && (
         <div className="chat-ejemplo">
           <p className="chat-ejemplo__k">Ejemplo de préstamo informal</p>
-          <RichText
-            className="chat-ejemplo__v num"
-            text={`Recibes **${soles(ej.recibes)}** → devuelves **${soles(ej.devuelves)}** en ${ej.dias} días`}
+          <KVTable
+            label="Ejemplo de préstamo informal"
+            rows={[
+              ['Recibes', soles(ej.recibes)],
+              [`Devuelves en ${ej.dias} días`, soles(ej.devuelves), 'neg'],
+              ...(ej.cuota_diaria ? [['Pagas cada día', soles(ej.cuota_diaria)]] : []),
+            ]}
           />
-          {ej.cuota_diaria && <p className="chat-ejemplo__s">{soles(ej.cuota_diaria)} diarios que salen de la venta del día.</p>}
+          {ej.cuota_diaria && <p className="chat-note">La cuota diaria sale de la venta del día.</p>}
         </div>
       )}
       {res.respuesta_post && <RichText text={res.respuesta_post} />}
@@ -60,9 +64,9 @@ export function AssistantCard({ msg, onAccion }) {
         <KVTable label="Tus números" rows={res.tabla.map((r) => [r.etiqueta, typeof r.valor === 'number' ? soles(r.valor) : r.valor])} />
       )}
       {acciones.length > 0 && (
-        <div className="chat-actions">
+        <div className="chat-actions chat-actions--stack">
           {acciones.map((a, i) => (
-            <Button key={a.tipo} variant={i === 0 ? 'primary' : 'secondary'} onClick={() => onAccion(a)}>
+            <Button key={a.tipo} block variant={i === 0 ? 'primary' : 'ghost'} onClick={() => onAccion(a)}>
               {a.texto}
             </Button>
           ))}

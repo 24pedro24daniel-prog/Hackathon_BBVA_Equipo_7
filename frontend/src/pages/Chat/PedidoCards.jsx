@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom'
 import { Button, Icon } from '../../components/ui/index.jsx'
 import { confianzaLabel, ddmm, soles } from '../../lib/format.js'
-import { HowIKnow, InBubble, RichText } from './ChatParts.jsx'
+import { HowIKnow, InBubble, RichText, SavedLine } from './ChatParts.jsx'
 import { sugerenciaTexto } from './chatText.js'
 
 export function WarningCard({ msg, onVerOpciones, onRegistrar }) {
@@ -35,7 +35,7 @@ export function WarningCard({ msg, onVerOpciones, onRegistrar }) {
           Registrar igual
         </Button>
       </div>
-      {status === 'done' && <p className="chat-status">Pedido registrado</p>}
+      {status === 'done' && <SavedLine>Pedido registrado</SavedLine>}
       <HowIKnow
         fundamento={chequeo.fundamento}
         limites={chequeo.limites}
@@ -67,7 +67,7 @@ export function OptionsCard({ msg, onRegistrar }) {
         {(alcanzan.length ? alcanzan : noAlcanzan).map((s) => (
           <li key={s.accion} className="chat-opts__row">
             <span>{sugerenciaTexto(s, sugs)}</span>
-            <strong className={s.saldo_resultante < 0 ? 'chat-neg num' : 'num'}>
+            <strong className={s.saldo_resultante < 0 ? 'chat-neg num' : 'chat-pos num'}>
               {s.saldo_resultante < 0 ? `te faltan ${soles(-s.saldo_resultante)}` : `te quedan ${soles(s.saldo_resultante)}`}
             </strong>
           </li>

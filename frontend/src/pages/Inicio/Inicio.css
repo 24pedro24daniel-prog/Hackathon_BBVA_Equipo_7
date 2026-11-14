@@ -1,102 +1,123 @@
-/* Inicio (mockup págs. 5 y 10). Mobile-first; grilla de tablero en 768 / 1100 px. */
+/* Inicio (mockup págs. 5 y 10). Estructura de inicio de app bancaria:
+   saldo protagonista + acciones rápidas, alerta sobria, listas agrupadas. Mobile-first; 2 columnas desde 1100 px. */
 .inicio__body {
-  padding: 4px var(--gutter) 0;
+  padding: 0 var(--gutter);
 }
 
-/* ---------- Grilla de Pedro ---------- */
-.inicio__dash {
+/* ---------- Grilla ---------- */
+.inicio__grid,
+.inicio__main,
+.inicio__side {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-areas:
-    'alerta alerta'
-    'caja   caja'
-    'deben  debes'
-    'disp   disp'
-    'trace  trace'
-    'resumen resumen';
-  gap: 12px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
 }
-.inicio__dash > * { min-width: 0; }
-.inicio__a-alerta { grid-area: alerta; }
-.inicio__a-caja { grid-area: caja; }
-.inicio__a-deben { grid-area: deben; align-self: stretch; }
-.inicio__a-debes { grid-area: debes; align-self: stretch; }
-.inicio__a-disp { grid-area: disp; }
-.inicio__a-trace { grid-area: trace; }
-.inicio__a-resumen { grid-area: resumen; }
+.inicio__grid { gap: 28px; }
+.inicio__main { gap: 16px; }
+.inicio__side { gap: 28px; }
+.inicio__main > *,
+.inicio__side > * { min-width: 0; }
 
-/* Alerta principal */
-.inicio__alerta { display: grid; gap: 10px; justify-items: start; padding: 18px; }
-.inicio__alerta-kicker {
+/* ---------- Cifra protagonista: caja del negocio ---------- */
+.inicio__hero { padding: 4px 4px 8px; }
+.inicio__hero-label { font-size: 15px; font-weight: 600; color: var(--text-muted); }
+.inicio__hero-value {
+  font-size: var(--fs-hero);
+  line-height: 1.05;
+  margin-top: 6px;
+  white-space: nowrap;
+}
+.inicio__hero-note { font-size: 15px; color: var(--text-muted); margin-top: 6px; }
+
+/* Acciones rápidas: ícono en círculo neutro + etiqueta debajo */
+.inicio__acciones {
   display: flex;
-  align-items: center;
   gap: 8px;
-  color: var(--danger);
+  margin-top: 20px;
+}
+.inicio__accion {
+  flex: 0 0 auto;
+  width: 88px;
+  min-height: var(--tap);
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 8px;
+  padding: 4px 0;
+  text-decoration: none;
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  -webkit-tap-highlight-color: transparent;
+}
+.inicio__accion-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--title);
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s var(--ease-out);
+}
+.inicio__accion:hover .inicio__accion-icon { background: var(--row-hover); border-color: var(--border-strong); }
+.inicio__accion:active .inicio__accion-icon { transform: scale(0.96); }
+.inicio__accion-label {
   font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  line-height: 1.25;
+  text-align: center;
+}
+
+/* ---------- Alerta principal: superficie con borde fino, título en color de alerta ---------- */
+.inicio__alerta {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding: 18px;
+  border-color: var(--danger-border);
 }
 .inicio__alerta-title {
-  font-size: 24px;
-  line-height: 1.18;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 21px;
+  line-height: 1.25;
   font-weight: var(--display-weight);
-  color: var(--title);
-  max-width: 34ch;
+  letter-spacing: -0.01em;
+  color: var(--danger);
+  max-width: 36ch;
+  text-wrap: balance;
 }
-.inicio__alerta-why { font-size: 16px; color: var(--text); max-width: 65ch; }
-.inicio__alerta .cc-btn { margin-top: 6px; }
+.inicio__alerta-title svg { flex: none; margin-top: 2px; }
+.inicio__alerta-when { font-size: 15px; font-weight: 600; color: var(--text); }
+.inicio__alerta-why { font-size: 16px; color: var(--text-muted); max-width: 65ch; }
+.inicio__alerta .cc-btn { margin-top: 8px; }
 
 .inicio__ok {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--ok-bg);
-  border-color: var(--ok-bg);
-  color: var(--ok);
   font-weight: 600;
+  color: var(--text);
 }
-.inicio__ok svg { flex: none; }
+.inicio__ok svg { flex: none; color: var(--ok); }
 
-/* Caja del negocio (cifra principal) */
-.inicio__caja { display: grid; gap: 4px; align-content: start; height: 100%; }
-.inicio__caja-label {
+/* ---------- Disponible para gastar ---------- */
+.inicio__disp { display: grid; gap: 8px; }
+.inicio__disp-card { display: grid; gap: 8px; }
+.inicio__disp-top {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--negocio);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  column-gap: 12px;
+  row-gap: 2px;
 }
-.inicio__caja-value {
-  font-size: 40px;
-  line-height: 1.05;
-  margin-top: 4px;
-  font-weight: var(--display-weight);
-  color: var(--title);
-  white-space: nowrap;
-}
-
-/* Disponible para gastar */
-.inicio__disponible { display: grid; gap: 4px; align-content: start; height: 100%; }
-.inicio__disp-label {
-  color: var(--text-muted);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.inicio__disp-value {
-  font-size: 34px;
-  line-height: 1.1;
-  font-weight: var(--display-weight);
-  color: var(--title);
-  white-space: nowrap;
-}
-.inicio__disp-msg { font-size: 16px; color: var(--text); margin-top: 2px; max-width: 65ch; }
+.inicio__disp-label { font-size: 16px; font-weight: 600; color: var(--text); }
+.inicio__disp-value { font-size: 28px; line-height: 1.1; white-space: nowrap; }
+.inicio__disp-msg { font-size: 16px; color: var(--text-muted); max-width: 65ch; }
 
 .inicio__desglose {
   list-style: none;
@@ -114,58 +135,11 @@
   color: var(--title);
 }
 
-/* Te deben / Debes */
-.inicio__link-card {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  border-radius: var(--radius-lg);
-}
-.inicio__link-card:hover .cc-card { border-color: var(--border-strong); }
-.inicio__mini { display: grid; gap: 2px; align-content: start; height: 100%; min-height: var(--tap); }
-.inicio__mini-label { font-size: 15px; color: var(--text-muted); }
-.inicio__mini-value {
-  font-size: 24px;
-  line-height: 1.15;
-  font-weight: var(--display-weight);
-  color: var(--title);
-  white-space: nowrap;
-}
-
-/* Resumen del mes */
-.inicio__resumen-title { margin-bottom: 8px; }
-.inicio__rows { margin: 0; display: grid; gap: 10px; }
-.inicio__row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: baseline;
-  column-gap: 12px;
-  row-gap: 2px;
-}
-.inicio__row dt { font-size: 16px; color: var(--text-muted); }
-.inicio__row dd { margin: 0; font-size: 16px; white-space: nowrap; }
-.inicio__row dd strong { color: var(--title); font-weight: 600; }
-.inicio__row .inicio__delta {
-  grid-column: 1 / -1;
-  justify-self: end;
-  white-space: normal;
-  text-align: right;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-.inicio__row .inicio__delta--mala { color: var(--danger); }
-.inicio__vs { margin-top: 10px; }
+/* ---------- Este mes ---------- */
+.inicio__mala { color: var(--danger); font-weight: 600; }
+.inicio__nota-pie { font-size: 13px; color: var(--text-muted); padding: 0 4px; }
 
 /* ---------- Día 3 ---------- */
-.inicio__nuevo {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-}
-.inicio__nuevo > * { min-width: 0; }
-
 .inicio__progreso { display: grid; gap: 12px; }
 .inicio__progreso-title {
   font-family: var(--font-display);
@@ -174,92 +148,53 @@
   line-height: 1.25;
   color: var(--title);
   max-width: 40ch;
+  text-wrap: balance;
 }
+.inicio__progreso-txt { font-size: 15px; color: var(--text-muted); }
 .inicio__progreso .cc-btn { width: 100%; }
-.inicio__segs { display: flex; gap: 4px; }
+.inicio__segs { display: flex; gap: 3px; }
 .inicio__segs span {
   flex: 1;
-  height: 10px;
+  height: 6px;
   border-radius: var(--radius-pill);
-  background: var(--border);
+  background: var(--hairline);
 }
 .inicio__segs span.is-on { background: var(--brand); }
 
-.inicio__proximos { display: grid; gap: 6px; background: transparent; }
-.inicio__proximos p { max-width: 65ch; }
-.inicio__proximos-title {
+/* Nota en gris: aún no hay proyección */
+.inicio__proximos {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--title);
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0 4px;
+  color: var(--text-muted);
 }
+.inicio__proximos > svg { flex: none; margin-top: 1px; }
+.inicio__proximos-title { font-size: 16px; font-weight: 600; color: var(--text); }
+.inicio__proximos-txt { font-size: 15px; margin-top: 2px; max-width: 65ch; }
 
 @media (max-width: 359px) {
-  .inicio__caja-value { font-size: 34px; }
-  .inicio__disp-value { font-size: 30px; }
-  .inicio__mini-value { font-size: 21px; }
+  .inicio__hero-value { font-size: 38px; }
+  .inicio__accion { width: 80px; }
 }
 
-/* ---------- Tablet: 2 columnas ---------- */
+/* ---------- Tablet ---------- */
 @media (min-width: 768px) {
-  .inicio__dash {
-    gap: 16px;
-    grid-template-areas:
-      'alerta alerta'
-      'caja   disp'
-      'deben  debes'
-      'trace  trace'
-      'resumen resumen';
-  }
-  .inicio__a-caja,
-  .inicio__a-disp { align-self: stretch; }
   .inicio__alerta { padding: 24px; }
-  .inicio__alerta-title { font-size: 28px; }
-
-  .inicio__nuevo {
-    gap: 16px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas:
-      'progreso progreso'
-      'caja     resumen'
-      'proximos proximos';
-  }
-  .inicio__n-progreso { grid-area: progreso; }
-  .inicio__n-caja { grid-area: caja; align-self: stretch; }
-  .inicio__n-resumen { grid-area: resumen; align-self: stretch; }
-  .inicio__n-proximos { grid-area: proximos; }
+  .inicio__alerta-title { font-size: 24px; }
+  .inicio__disp-card { padding: 20px 24px; }
+  .inicio__disp-value { font-size: 32px; }
   .inicio__progreso { padding: 24px; }
   .inicio__progreso-title { font-size: 22px; }
   .inicio__progreso .cc-btn { width: auto; justify-self: start; }
 }
 
-/* ---------- Escritorio: tablero ---------- */
+/* ---------- Escritorio: saldo, alerta y disponible a la izquierda; listas a la derecha ---------- */
 @media (min-width: 1100px) {
-  .inicio__dash {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-template-areas:
-      'alerta  alerta  alerta  alerta'
-      'caja    disp    deben   debes'
-      'resumen resumen trace   trace';
-  }
-  .inicio__alerta { padding: 28px 32px; }
-  .inicio__caja-value { font-size: 44px; }
-  .inicio__disp-value { font-size: 44px; }
-  .inicio__mini { padding: 16px 20px; }
-  .inicio__mini-label { font-size: 14px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
-  .inicio__mini-value { font-size: 32px; margin-top: 4px; line-height: 1.05; }
-  .inicio__a-resumen { padding: 20px 24px; }
-
-  .inicio__nuevo {
+  .inicio__grid {
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    grid-template-areas:
-      'progreso caja'
-      'progreso resumen'
-      'proximos proximos';
+    column-gap: 32px;
+    align-items: start;
   }
-  .inicio__n-caja,
-  .inicio__n-resumen { align-self: start; }
-  .inicio__n-progreso { align-self: stretch; align-content: start; }
+  .inicio__main { gap: 20px; }
 }

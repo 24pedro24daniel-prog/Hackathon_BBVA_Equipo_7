@@ -4,7 +4,18 @@ import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { useDemo } from '../../lib/useDemo.js'
 import { ddmm, soles, weekdayDdmm } from '../../lib/format.js'
-import { Button, Card, ErrorState, LoadingBlock, PageHeader, TraceInfo } from '../../components/ui/index.jsx'
+import {
+  Button,
+  Card,
+  ErrorState,
+  List,
+  ListRow,
+  LoadingBlock,
+  PageHeader,
+  Section,
+  Status,
+  TraceInfo,
+} from '../../components/ui/index.jsx'
 import ForecastChart from './ForecastChart.jsx'
 import './Forecast.css'
 
@@ -20,10 +31,10 @@ export default function Forecast() {
 
   return (
     <div className="fc-page">
-      <PageHeader kicker="Próximos 30 días" title="Así se mueve tu caja" />
+      <PageHeader sub="Próximos 30 días" title="Así se mueve tu caja" />
       <div className="fc-body">
         {loading && !data ? (
-          <LoadingBlock heights={[300, 200, 52]} />
+          <LoadingBlock heights={[120, 300, 200]} />
         ) : error ? (
           <ErrorState error={error} onRetry={reload} />
         ) : data?.disponible === false || !data?.serie?.length ? (
@@ -75,67 +86,89 @@ function ForecastContent({ f }) {
   const minimo = f.minimo_operativo
   const eventos = f.proximos_eventos || []
 
+  // Punto más bajo: el día crítico del backend o, si no viene, el menor "lo esperado" de la serie.
+  const bajo = useMemo(() => {
+    if (critico) return { fecha: critico.fecha, saldo: critico.saldo_p50 }
+    const m = points.reduce((a, p) => (p.p50 < a.p50 ? p : a), points[0])
+    return { fecha: m.fecha, saldo: m.p50 }
+  }, [critico, points])
+
+  const riesgo = useMemo(
+    () => new Set(minimo == null ? [] : points.filter((p) => !p.hoy && p.p50 < minimo).map((p) => p.fecha)),
+    [points, minimo],
+  )
+
+  const enRiesgo = minimo != null && bajo.saldo < minimo
+  const heroTone = bajo.saldo < 0 ? 'danger' : enRiesgo ? 'warning' : 'ok'
+
   return (
     <div className="fc-layout">
-      <Card className="fc-chart-card">
-        <div className="fc-kpis">
-          <div>
-            <p className="fc-kpi__label">Hoy</p>
-            <p className="fc-kpi__value display num">{soles(f.saldo_actual)}</p>
-          </div>
-          {critico && (
-            <div className="fc-kpi--danger">
-              <p className="fc-kpi__label">Peor día · {ddmm(critico.fecha)}</p>
-              <p className="fc-kpi__value display num">{soles(critico.saldo_p50)}</p>
-            </div>
+      <div className="fc-main">
+        <section className="fc-hero" aria-labelledby="fc-hero-lead">
+          <p id="fc-hero-lead" className="fc-hero__lead">
+            {enRiesgo ? `El ${ddmm(bajo.fecha)} tu caja bajaría a` : `Lo más bajo que llegaría tu caja (${ddmm(bajo.fecha)})`}
+          </p>
+          <p className={`fc-hero__num display num fc-hero__num--${heroTone}`}>{soles(bajo.saldo)}</p>
+          <p className="fc-hero__ctx">
+            Hoy tienes <span className="num">{soles(f.saldo_actual)}</span>
+            {minimo != null && (
+              <>
+                {' · '}Tu mínimo para operar es <span className="num">{soles(minimo)}</span>
+              </>
+            )}
+          </p>
+          {riesgo.size > 0 && (
+            <p className="fc-hero__risk">
+              <Status tone="danger">
+                {riesgo.size === 1 ? '1 día debajo de tu mínimo' : `${riesgo.size} días debajo de tu mínimo`}
+              </Status>
+            </p>
           )}
-        </div>
+        </section>
 
-        <ForecastChart points={points} minimo={minimo} worstFecha={critico?.fecha} />
-
-        <ul className="fc-legend" aria-label="Leyenda">
-          <li>
-            <span className="fc-sw fc-sw--line" aria-hidden="true" />
-            Lo esperado
-          </li>
-          <li>
-            <span className="fc-sw fc-sw--band" aria-hidden="true" />
-            Rango mejor–peor
-          </li>
-          {minimo != null && (
-            <li>
-              <span className="fc-sw fc-sw--min" aria-hidden="true" />
-              Mínimo {soles(minimo)}
-            </li>
-          )}
-          <li>
-            <span className="fc-sw fc-sw--risk" aria-hidden="true" />
-            Días en riesgo
-          </li>
-        </ul>
-      </Card>
+        <Card className="fc-chart-card">
+          <ForecastChart points={points} minimo={minimo} worstFecha={critico?.fecha} />
+          <p className="fc-legend">
+            La línea es lo esperado; la sombra, el rango entre el peor y el mejor caso.
+            {riesgo.size > 0 && ' En naranja, los días debajo de tu mínimo.'}
+          </p>
+        </Card>
+      </div>
 
       <div className="fc-side">
-        <Card className="fc-next">
-          <h2 className="fc-card-title">Lo que viene</h2>
+        <Section title="Lo que viene">
           {eventos.length ? (
-            <ul className="fc-events">
-              {eventos.map((e) => (
-                <li key={`${e.fecha}-${e.concepto}`}>
-                  <span>
-                    {weekdayDdmm(e.fecha)} · {e.concepto}
-                  </span>
-                  <strong className={'num' + (e.monto > 0 ? ' fc-pos' : '')}>{soles(e.monto, { sign: true })}</strong>
-                </li>
-              ))}
-            </ul>
+            <List>
+              {eventos.map((e) => {
+                const esRiesgo = riesgo.has(e.fecha)
+                return (
+                  <ListRow
+                    key={`${e.fecha}-${e.concepto}`}
+                    title={e.concepto}
+                    sub={
+                      <>
+                        {weekdayDdmm(e.fecha)}
+                        {esRiesgo && (
+                          <>
+                            {' · '}
+                            <Status tone="danger">Día en riesgo</Status>
+                          </>
+                        )}
+                      </>
+                    }
+                    amount={<span className="num">{soles(e.monto, { sign: true })}</span>}
+                    amountTone={e.monto > 0 ? 'pos' : undefined}
+                  />
+                )
+              })}
+            </List>
           ) : (
-            <p className="cc-muted">No tienes pagos ni cobros con fecha en los próximos 30 días.</p>
+            <p className="cc-muted fc-none">No tienes pagos ni cobros con fecha en los próximos 30 días.</p>
           )}
           {eventos.some((e) => e.tipo === 'cobro_fiado') && (
-            <p className="cc-small cc-muted">Fiados contados según qué tan probable es que te paguen.</p>
+            <p className="cc-small cc-muted fc-note">Fiados contados según qué tan probable es que te paguen.</p>
           )}
-        </Card>
+        </Section>
 
         <TraceInfo fundamento={f.fundamento} limites={f.limites} confianza={f.confianza} meta={f.meta} />
 

@@ -70,7 +70,7 @@ export default function Composer({ busy, onText, onVoice, onPhoto }) {
         type="text"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Escribe o mantén para hablar"
+        placeholder="Escribe un mensaje"
         aria-label="Mensaje"
         autoComplete="off"
         enterKeyHint="send"
