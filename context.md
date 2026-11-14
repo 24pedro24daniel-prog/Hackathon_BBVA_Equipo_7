@@ -36,7 +36,7 @@ Demo funcional · Dataset sintético (datos, diccionario, supuestos, justificaci
 
 ## 1. Problemática
 
-Pedro es un bodeguero (persona natural con negocio) que vende y compra mercadería todos los días sin llevar un registro ordenado. Mezcla el dinero de su casa con el de la tienda ("caja única") y anota sus ventas y fiados en un cuaderno físico.
+Pedro es un bodeguero (persona natural con negocio) que vende y compra mercadería todos los días sin llevar un registro ordenado. Mezcla el dinero de su casa con el de la tienda ("caja única") y anota sus ventas y fiados en un cuaderno físico. Se asume que Pedro tiene RUC 10, persona natural con negocio.
 
 A fin de mes sufre porque no le alcanza para pagar a sus proveedores, ya sea porque se excedió en gastos personales o porque pidió mercadería de más sin prever sus vencimientos.
 
