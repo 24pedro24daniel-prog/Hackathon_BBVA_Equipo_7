@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
 
-from app.core.config import get_settings
+from app.core.config import settings
 from app.core.deps import get_db
 
 router = APIRouter(tags=["Operación"])
@@ -23,7 +23,7 @@ def health(db=Depends(get_db)):
     bd = _estado_bd(db)
     return {
         "estado": "ok" if bd in ("ok", "sin_configurar") else "degradado",
-        "version_api": get_settings().VERSION_API,
+        "version_api": settings.API_VERSION,
         "componentes": {
             "base_datos": bd,
             # TODO(B12): reemplazar por estado_ia() de Dev A (Whisper/LLM reales)

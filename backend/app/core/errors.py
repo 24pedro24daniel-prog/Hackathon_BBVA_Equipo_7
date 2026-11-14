@@ -1,8 +1,7 @@
-"""Errores con el formato del contrato:
-{ "error": { "codigo", "mensaje", "detalles", "request_id" } }
-"""
+"""Errores con el formato del contrato: {"error": {codigo, mensaje, detalles, request_id}}."""
+
 import logging
-from enum import StrEnum
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -13,77 +12,88 @@ from app.core.meta import request_id_actual
 
 log = logging.getLogger("cajaclara")
 
-
-class Codigo(StrEnum):
-    VALIDACION = "VALIDACION"                          # 400
-    NO_AUTORIZADO = "NO_AUTORIZADO"                    # 401
-    NO_ENCONTRADO = "NO_ENCONTRADO"                    # 404
-    CONFLICTO = "CONFLICTO"                            # 409
-    NO_INTERPRETABLE = "NO_INTERPRETABLE"              # 422
-    SERVICIO_NO_DISPONIBLE = "SERVICIO_NO_DISPONIBLE"  # 503
-    ERROR_INTERNO = "ERROR_INTERNO"                    # 500
-
-
-_STATUS = {
-    Codigo.VALIDACION: 400,
-    Codigo.NO_AUTORIZADO: 401,
-    Codigo.NO_ENCONTRADO: 404,
-    Codigo.CONFLICTO: 409,
-    Codigo.NO_INTERPRETABLE: 422,
-    Codigo.SERVICIO_NO_DISPONIBLE: 503,
-    Codigo.ERROR_INTERNO: 500,
+CODIGO_POR_STATUS = {
+    400: "VALIDACION",
+    401: "NO_AUTORIZADO",
+    404: "NO_ENCONTRADO",
+    405: "METODO_NO_PERMITIDO",
+    409: "CONFLICTO",
+    422: "NO_INTERPRETABLE",
+    503: "SERVICIO_NO_DISPONIBLE",
 }
 
 
-class ApiError(Exception):
-    """Lanzar desde cualquier router/servicio: raise ApiError(Codigo.NO_ENCONTRADO, "No existe ...")."""
-
-    def __init__(self, codigo: Codigo, mensaje: str, detalles: list[dict] | None = None):
+class ErrorAPI(Exception):
+    def __init__(self, status: int, codigo: str, mensaje: str, detalles: list[dict[str, Any]] | None = None):
         super().__init__(mensaje)
+        self.status = status
         self.codigo = codigo
         self.mensaje = mensaje
         self.detalles = detalles or []
-        self.status = _STATUS[codigo]
 
 
-def _respuesta(status: int, codigo: str, mensaje: str, detalles: list | None = None) -> JSONResponse:
-    return JSONResponse(
-        status_code=status,
-        content={
-            "error": {
-                "codigo": codigo,
-                "mensaje": mensaje,
-                "detalles": detalles or [],
-                "request_id": request_id_actual(),
-            }
-        },
-    )
+class NoEncontrado(ErrorAPI):
+    def __init__(self, mensaje: str = "No encontré ese registro.", detalles=None):
+        super().__init__(404, "NO_ENCONTRADO", mensaje, detalles)
 
 
-def registrar_errores(app: FastAPI) -> None:
-    @app.exception_handler(ApiError)
-    async def _api_error(_: Request, exc: ApiError):
-        return _respuesta(exc.status, exc.codigo.value, exc.mensaje, exc.detalles)
+class Conflicto(ErrorAPI):
+    def __init__(self, mensaje: str, detalles=None):
+        super().__init__(409, "CONFLICTO", mensaje, detalles)
+
+
+class Validacion(ErrorAPI):
+    def __init__(self, mensaje: str, detalles=None):
+        super().__init__(400, "VALIDACION", mensaje, detalles)
+
+
+class NoInterpretable(ErrorAPI):
+    def __init__(self, mensaje: str, detalles=None):
+        super().__init__(422, "NO_INTERPRETABLE", mensaje, detalles)
+
+
+class ServicioNoDisponible(ErrorAPI):
+    def __init__(self, mensaje: str, detalles=None):
+        super().__init__(503, "SERVICIO_NO_DISPONIBLE", mensaje, detalles)
+
+
+def cuerpo_error(codigo: str, mensaje: str, detalles: list | None = None) -> dict:
+    return {"error": {"codigo": codigo, "mensaje": mensaje, "detalles": detalles or [], "request_id": request_id_actual()}}
+
+
+def respuesta_error(status: int, codigo: str, mensaje: str, detalles: list | None = None, headers=None) -> JSONResponse:
+    return JSONResponse(status_code=status, content=cuerpo_error(codigo, mensaje, detalles), headers=headers)
+
+
+def _detalles_validacion(exc: RequestValidationError) -> list[dict[str, str]]:
+    detalles = []
+    for e in exc.errors():
+        loc = [str(p) for p in e.get("loc", ()) if p not in ("body", "query", "path", "header")]
+        detalles.append({"campo": ".".join(loc) or "payload", "problema": e.get("msg", "inválido")})
+    return detalles
+
+
+def registrar_handlers(app: FastAPI) -> None:
+    @app.exception_handler(ErrorAPI)
+    async def _error_api(_: Request, exc: ErrorAPI):
+        return respuesta_error(exc.status, exc.codigo, exc.mensaje, exc.detalles)
 
     @app.exception_handler(RequestValidationError)
     async def _validacion(_: Request, exc: RequestValidationError):
-        detalles = [
-            {"campo": ".".join(str(p) for p in e["loc"] if p not in ("body", "query", "path")),
-             "problema": e["msg"]}
-            for e in exc.errors()
-        ]
-        campo = detalles[0]["campo"] if detalles else ""
-        msg = f"El campo '{campo}' no es válido." if campo else "Datos inválidos."
-        return _respuesta(400, Codigo.VALIDACION.value, msg, detalles)
+        detalles = _detalles_validacion(exc)
+        primero = detalles[0] if detalles else {"campo": "payload", "problema": "inválido"}
+        mensaje = f"El campo '{primero['campo']}' no es válido: {primero['problema']}."
+        return respuesta_error(400, "VALIDACION", mensaje, detalles)
 
     @app.exception_handler(StarletteHTTPException)
     async def _http(_: Request, exc: StarletteHTTPException):
-        codigo = {401: Codigo.NO_AUTORIZADO, 404: Codigo.NO_ENCONTRADO, 409: Codigo.CONFLICTO}.get(
-            exc.status_code, Codigo.ERROR_INTERNO if exc.status_code >= 500 else Codigo.VALIDACION
-        )
-        return _respuesta(exc.status_code, codigo.value, str(exc.detail))
+        codigo = CODIGO_POR_STATUS.get(exc.status_code, "ERROR")
+        mensaje = exc.detail if isinstance(exc.detail, str) else "Error en la solicitud."
+        if exc.status_code == 404 and mensaje == "Not Found":
+            mensaje = "Ruta no encontrada."
+        return respuesta_error(exc.status_code, codigo, mensaje, headers=getattr(exc, "headers", None))
 
     @app.exception_handler(Exception)
     async def _inesperado(_: Request, exc: Exception):
-        log.exception("Error no controlado", exc_info=exc)
-        return _respuesta(500, Codigo.ERROR_INTERNO.value, "Ocurrió un error inesperado.")
+        log.exception("Error no controlado: %s", exc)
+        return respuesta_error(500, "ERROR_INTERNO", "Ocurrió un error inesperado. Intenta otra vez.")

@@ -2,40 +2,62 @@
 
 Registra TODOS los routers desde el inicio (también los de Dev A): nadie vuelve a tocar este archivo.
 """
-from fastapi import Depends, FastAPI, Request
+import logging
+
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.core.auth import verificar_api_key
-from app.core.config import get_settings
-from app.core.errors import registrar_errores
-from app.core.meta import iniciar_peticion
+from app.core.config import settings
+from app.core.errors import registrar_handlers
+from app.core.meta import iniciar_request
 from app.routers import (
     alertas, analisis, asistente, fiados, forecast, health, ingesta,
     impuestos, movimientos, pedidos, resumen, salud, simulador, webhooks,
 )
 
-settings = get_settings()
-PREFIJO = "/api/v1"
+PREFIJO = settings.API_PREFIX
 
-app = FastAPI(title="CajaClara API", version=settings.VERSION_API, docs_url="/docs", redoc_url=None)
+
+class RequestIdMiddleware:
+    """Fija request_id e instante de inicio (para `meta`) y devuelve el header X-Request-ID.
+
+    ASGI puro (no BaseHTTPMiddleware): el request_id sigue visible en los handlers de error 500.
+    """
+
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        entrante = dict(scope.get("headers") or []).get(b"x-request-id")
+        rid = iniciar_request(entrante.decode()[:64] if entrante else None)
+
+        async def enviar(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                message.setdefault("headers", [])
+                message["headers"].append((b"x-request-id", rid.encode()))
+            await send(message)
+
+        await self.app(scope, receive, enviar)
+
+
+logging.basicConfig(level=settings.LOG_LEVEL)
+app = FastAPI(title="CajaClara API", version=settings.API_VERSION, docs_url="/docs", redoc_url=None)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    allow_origins=settings.cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID"],
 )
+app.add_middleware(RequestIdMiddleware)
 
-
-@app.middleware("http")
-async def request_id_middleware(request: Request, call_next):
-    rid = iniciar_peticion()
-    response = await call_next(request)
-    response.headers["X-Request-ID"] = rid
-    return response
-
-
-registrar_errores(app)
+registrar_handlers(app)
 
 # Público (monitoreo)
 app.include_router(health.router, prefix=PREFIJO)

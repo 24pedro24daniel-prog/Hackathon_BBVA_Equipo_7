@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends
 
 from app.core.deps import get_db
-from app.core.errors import ApiError, Codigo
+from app.core.errors import NoEncontrado
 from app.schemas.common import EstadoCuenta
 from app.schemas.cuentas import FiadosResponse, RecordatorioResponse
 from app.services import finanzas
@@ -21,7 +21,7 @@ def recordatorio(fiado_id: str, db=Depends(get_db)):
     items = finanzas.fiados(db, "EMP-0001").items
     f = next((x for x in items if x.fiado_id == fiado_id), None)
     if f is None:
-        raise ApiError(Codigo.NO_ENCONTRADO, "No encontré ese fiado.")
+        raise NoEncontrado("No encontré ese fiado.")
     return RecordatorioResponse(
         mensaje=f"Hola, {f.cliente} 😊 Le recuerdo amablemente los S/ {float(f.monto):g} pendientes en la bodega. ¡Gracias!"
     )
