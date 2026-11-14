@@ -64,8 +64,12 @@ Esto lo empuja a préstamos informales ("gota a gota") con intereses impagables,
   Fuente: Instituto Peruano de Economía (IPE), citado por Infobae (marzo 2026).
   <https://www.infobae.com/peru/2026/03/24/solo-1-de-cada-4-mypes-accede-a-credito-y-paga-mas-por-falta-de-informacion-financiera/>
 
-- **Hoy, para evaluar un crédito de capital de trabajo, un funcionario del banco visita el negocio y levanta su información financiera (aprox. 1 hora) y luego necesita un día adicional para elaborar el informe que sustenta la decisión.** Si el emprendedor tiene las finanzas personales y del negocio mezcladas, o gasta de más, eso juega en contra de su evaluación.
+- **Para un negocio sin historial en el banco, la evaluación de un crédito de capital de trabajo sigue siendo manual: un funcionario visita el negocio y levanta su información financiera (aprox. 1 hora) y luego necesita un día adicional para elaborar el informe que sustenta la decisión.** Si el emprendedor tiene las finanzas personales y del negocio mezcladas, o gasta de más, eso juega en contra de su evaluación.
   Fuente: conversaciones del equipo con ejecutivos de negocio de BBVA (fuente primaria).
+
+- **Para clientes que ya cobran con canales del banco (POS, QR), existe precalificación digital basada en el volumen real de sus ventas.** Pero el banco solo ve lo que pasa por sus canales: las ventas en efectivo y los fiados de un bodeguero como Pedro le son invisibles. CajaClara genera justamente ese historial.
+  Fuente: BBVA Perú, página de Soluciones de Cobro.
+  <https://www.bbva.pe/pymes/productos/cobros/soluciones-de-cobro.html>
 
 ---
 
@@ -91,9 +95,10 @@ Ayudar a bodegas y pymes no bancarizadas a ordenar su flujo de caja, anticipar f
 - Adopta hábitos financieros saludables medidos por su score de salud.
 - Funcionalidades: F1 a F8.
 
-**Estadio 3 — Acceso a crédito formal · roadmap**
-- Al centralizar sus finanzas, Pedro tiene un historial ordenado de ventas, gastos, fiados y pagos.
-- Con su consentimiento explícito, el banco puede evaluar a la pyme más rápido: el asesor ya no tiene que levantar toda la información financiera desde cero.
+**Estadio 3 — Formalización y acceso a crédito formal · roadmap**
+- Al centralizar sus finanzas, Pedro tiene un historial ordenado de ventas (incluidas las de efectivo), gastos, fiados y pagos.
+- Pedro da el paso a la formalidad: saca su RUC (p. ej. Nuevo RUS), abre una cuenta de negocio y empieza a usar los canales digitales del banco para personas naturales con negocio (ver sección 4).
+- Con su consentimiento explícito, su historial ayuda al banco a evaluarlo más rápido: el asesor ya no tiene que levantar toda la información financiera desde cero.
 - Pedro accede a un crédito formal a la medida de sus ciclos de caja, en lugar de un préstamo informal.
 
 ### Objetivos específicos del MVP (medibles)
@@ -108,11 +113,45 @@ Ayudar a bodegas y pymes no bancarizadas a ordenar su flujo de caja, anticipar f
 ### Beneficio por actor
 
 - **Para Pedro:** deja de quedarse sin caja, entiende su negocio y sale del círculo del préstamo informal.
-- **Para el banco:** llega a un segmento hoy no bancarizado con información confiable, evalúa más rápido y a menor costo, y otorga créditos más sanos y alineados a la capacidad real de pago.
+- **Para el banco:** llega a un segmento hoy no bancarizado con información confiable, evalúa más rápido y a menor costo, y otorga créditos más sanos y alineados a la capacidad real de pago. Además, CajaClara funciona como puerta de entrada que lleva nuevos clientes, ya ordenados, hacia los canales y productos existentes para personas naturales con negocio.
 
 ---
 
-## 4. Funcionalidades
+## 4. Relación con soluciones existentes (Perfil Mi Negocio)
+
+BBVA Perú ya ofrece el **Perfil Mi Negocio**: una sección dentro de la App BBVA que permite a clientes persona natural con negocio (PNN) gestionar sus finanzas personales y las de su negocio por separado.
+
+- **Requisito:** estar identificado en el banco como PNN (con RUC) y tener la App BBVA.
+- **Qué ofrece (según su página pública):** saldos y movimientos de cuentas, ventas hechas con POS del banco, transferencias, pago de servicios, tipo de cambio preferencial, apertura de cuenta corriente de negocio, Tarjeta Capital de Trabajo y acceso al Préstamo Digital Negocio (desde S/ 2,000 para PNN, con Cuenta Negocio o Cuenta Emprendedor activa).
+- **Complementos:** Cobro al Toque (el celular como punto de venta) y precalificación a préstamos según el volumen de ventas por canales del banco.
+- Fuentes: <https://www.bbva.pe/pymes/productos/canales/perfil-mi-negocio.html> · <https://www.bbva.pe/pymes/productos/financiamiento/prestamo-digital-negocio.html> · <https://www.bbva.pe/pymes/productos/cobros/soluciones-de-cobro.html>
+
+### Por qué CajaClara no compite, sino que complementa
+
+| | Perfil Mi Negocio | CajaClara |
+|---|---|---|
+| Usuario | PNN ya bancarizado y con RUC | Bodeguero informal, "no cliente", sin RUC ni cuenta de negocio |
+| Qué ve | Movimientos bancarios y ventas por POS/QR | Ventas en efectivo, fiados, pedidos a crédito a proveedores, retiros personales |
+| Cómo registra | Automático, por los canales del banco | Por WhatsApp (voz, texto, foto del cuaderno) |
+| Enfoque | Operar y consultar | Ordenar, anticipar faltantes y crear hábitos (forecast, alertas, educación) |
+| Rol en el recorrido | Destino (Estadio 3) | Puerta de entrada (Estadio 2) |
+
+> Las brechas se identificaron solo con información pública; conviene validarlas con alguien que use la app con perfil PNN.
+
+### Recorrido propuesto
+
+1. **Estadio 1:** Pedro, informal, con cuaderno y efectivo.
+2. **Estadio 2 (CajaClara):** ordena su caja, separa la plata personal y anticipa faltantes.
+3. **Estadio 3 (roadmap):** se formaliza (RUC), abre una cuenta de negocio, usa los canales para PNN y, con su consentimiento, su historial de CajaClara apoya la evaluación de un crédito formal.
+
+### Reglas para el pitch
+
+- No presentar CajaClara como producto oficial ni usar marca, logos o pantallas del banco.
+- Mencionar el Perfil Mi Negocio solo como destino natural del usuario; la integración queda como roadmap.
+
+---
+
+## 5. Funcionalidades
 
 ### F1. Registro multicanal por WhatsApp
 *Historia: "Pedro vende y compra sin anotar".*
@@ -332,7 +371,7 @@ Principio: Pedro registra donde ya está (WhatsApp). Todo lo demás es automáti
 
 ---
 
-## 5. Principios de diseño educativo (transversales)
+## 6. Principios de diseño educativo (transversales)
 
 - **Justo a tiempo:** cada insight trae una microexplicación (30–60 s) y una sola acción sugerida.
 - **Simplicidad:** 5–7 reglas prácticas, cada una medida por un subindicador del score (separar dinero personal y del negocio, pagarse un sueldo fijo, reservar impuestos al cobrar).
@@ -345,7 +384,7 @@ Principio: Pedro registra donde ya está (WhatsApp). Todo lo demás es automáti
 
 ---
 
-## 6. Prioridad para el MVP (2 días)
+## 7. Prioridad para el MVP (2 días)
 
 **Debe estar en la demo**
 - F1.1 voz/texto (Whisper local en chat simulado), F1.5 préstamos de proveedor, F1.6 consulta del estado
@@ -366,11 +405,12 @@ Principio: Pedro registra donde ya está (WhatsApp). Todo lo demás es automáti
 - Integración real con billeteras digitales (F1.3)
 - Foto de comprobantes de impuestos y facturas
 - Comparación real con pares
-- Compartir historial para evaluación de crédito
+- Compartir historial (con consentimiento) para evaluación de crédito
+- Guía de formalización (RUC, Nuevo RUS) y paso a cuenta de negocio y canales digitales para PNN
 
 ---
 
-## 7. Modelo de datos
+## 8. Modelo de datos
 
 Entidad central: la bodega/empresa. Todas las tablas se relacionan con ella.
 
@@ -402,7 +442,7 @@ Entidad central: la bodega/empresa. Todas las tablas se relacionan con ella.
 
 ---
 
-## 8. Storytelling para la demo (Pedro)
+## 9. Storytelling para la demo (Pedro)
 
 1. **Inicio:** Pedro ve la caja de su negocio (S/ 2 340), separada de la plata de su casa, y una alerta: "El 30/11 no te alcanzará".
 2. **Anotar:** registra por voz "vendí dos cervezas" y el bot confirma.
