@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useId, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { useDemo } from '../../lib/useDemo.js'
-import { ddmm, soles, weekdayDdmm } from '../../lib/format.js'
+import { ddmm, weekdayDdmm } from '../../lib/format.js'
 import {
   Button,
   Card,
@@ -13,8 +13,9 @@ import {
   List,
   ListRow,
   LoadingBlock,
+  Money,
   PageHeader,
-  Section,
+  Skeleton,
   Status,
   TraceInfo,
 } from '../../components/ui/index.jsx'
@@ -38,7 +39,11 @@ function fiadoStatus(f) {
   return { tone: e.tone, text: nivel ? `${e.label} · riesgo ${nivel}` : e.label }
 }
 
+// Solo los vencidos y por vencer llevan el botón "Recordar"; los demás, nada
+const necesitaRecordatorio = (f) => Boolean(f.accion_sugerida) && (f.estado === 'vencido' || f.estado === 'por_vencer')
+
 const dias = (n) => `${n} ${n === 1 ? 'día' : 'días'}`
+const vence = (fecha) => `Vence ${weekdayDdmm(fecha).toLowerCase()}`
 
 // Iniciales del círculo de la fila: "Sra. Carmen" → "C", "Distribuidora Andina" → "DA"
 const TRATAMIENTOS = new Set(['sr', 'sra', 'srta', 'don', 'doña', 'dona', 'vecina', 'vecino', 'tía', 'tia', 'tío', 'tio'])
@@ -119,17 +124,20 @@ export default function Cuentas() {
   const totalDeben = fiados.data?.total_pendiente
   const totalDebes =
     pedidos.data && (Number(pedidos.data.total_pendiente) || 0) + (Number(pedidos.data.impuestos?.monto_estimado) || 0)
-  const totals = { deben: totalDeben, debes: totalDebes }
-  const hasTotal = (id) => totals[id] !== undefined && totals[id] !== null
-  // Total junto al título de la sección: solo se ve en escritorio (en móvil ya está en el control segmentado)
-  const sectionTotal = (id) => (hasTotal(id) ? <span className="cuentas-sec-total num">{soles(totals[id])}</span> : null)
 
   return (
     <div className="cuentas">
       <PageHeader title="Cuentas" sub="Lo que te deben y lo que debes" />
 
+      <div className="cuentas-summary-wrap">
+        <Card className="cuentas-summary" aria-label="Resumen">
+          <Figure label="Te deben" value={totalDeben} tone="pos" loading={fiados.loading} />
+          <Figure label="Debes" value={totalDebes} loading={pedidos.loading} />
+        </Card>
+      </div>
+
       <div className="cuentas-seg-wrap">
-        <div className="cuentas-seg" role="tablist" aria-label="Ir a">
+        <div className="cc-seg cuentas-seg" role="tablist" aria-label="Ir a">
           {TABS.map((t, i) => (
             <button
               key={t.id}
@@ -140,12 +148,11 @@ export default function Cuentas() {
               aria-selected={selected === t.id}
               aria-controls={`cuentas-panel-${t.id}`}
               tabIndex={selected === t.id ? 0 : -1}
-              className="cuentas-seg__btn"
+              className="cc-seg__opt"
               onClick={() => goTo(t.id)}
               onKeyDown={(e) => onTabKey(e, i)}
             >
               {t.label}
-              {hasTotal(t.id) && <span className="cuentas-seg__amount num"> {soles(totals[t.id])}</span>}
             </button>
           ))}
         </div>
@@ -157,11 +164,13 @@ export default function Cuentas() {
           role="tabpanel"
           aria-labelledby="cuentas-tab-deben"
           ref={(el) => (sectionRefs.current.deben = el)}
-          className="cuentas-panel cuentas-panel--deben"
+          className="cuentas-panel"
         >
-          <Section title="Te deben" action={sectionTotal('deben')} headingRef={(el) => (headingRefs.current.deben = el)}>
-            <FiadosBlock state={fiados} onRecordar={setSheetFiado} />
-          </Section>
+          <FiadosBlock
+            state={fiados}
+            onRecordar={setSheetFiado}
+            headingRef={(el) => (headingRefs.current.deben = el)}
+          />
         </div>
 
         <div
@@ -169,11 +178,9 @@ export default function Cuentas() {
           role="tabpanel"
           aria-labelledby="cuentas-tab-debes"
           ref={(el) => (sectionRefs.current.debes = el)}
-          className="cuentas-panel cuentas-panel--debes"
+          className="cuentas-panel"
         >
-          <Section title="Debes" action={sectionTotal('debes')} headingRef={(el) => (headingRefs.current.debes = el)}>
-            <DebesBlock state={pedidos} />
-          </Section>
+          <DebesBlock state={pedidos} headingRef={(el) => (headingRefs.current.debes = el)} />
         </div>
 
         <Footnote />
@@ -184,40 +191,65 @@ export default function Cuentas() {
   )
 }
 
-function EmptyBlock({ title, cta, children }) {
+/** Cifra del resumen: monto arriba, etiqueta debajo (SoFi). En el DOM va primero la etiqueta para lectores. */
+function Figure({ label, value, tone, loading }) {
   return (
-    <Card variant="dashed" className="cuentas-empty">
-      <p className="cuentas-empty__title">{title}</p>
-      <p className="cc-muted cc-small">{children}</p>
-      <Link to="/chat" className="cc-btn cc-btn--secondary cc-btn--sm">
-        <Icon name="chat" size={20} />
-        {cta}
-      </Link>
+    <div className="cuentas-figure">
+      <p className="cuentas-figure__label">{label}</p>
+      {loading ? (
+        <Skeleton height={31} style={{ width: 104, borderRadius: 8 }} />
+      ) : (
+        <Money value={value} size="lg" tone={tone} />
+      )}
+    </div>
+  )
+}
+
+/** Tarjeta blanca con título dentro (como "Activity" de Monzo). El título recibe el foco al elegir el segmento. */
+function ListCard({ title, headingRef, children }) {
+  const id = useId()
+  return (
+    <Card flush className="cuentas-card" aria-labelledby={id}>
+      <div className="cc-card__head">
+        <h2 id={id} ref={headingRef} tabIndex={-1} className="cc-card__title cuentas-card__title">
+          {title}
+        </h2>
+      </div>
+      {children}
     </Card>
   )
 }
 
-function FiadosBlock({ state, onRecordar }) {
-  const { data, error, loading, reload } = state
-  if (loading) return <LoadingBlock heights={[220, 52]} />
-  if (error) return <ErrorState error={error} onRetry={reload} />
-
-  const items = data?.items || []
-  if (!items.length) {
-    return (
-      <EmptyBlock title="Nadie te debe por ahora" cta="Anotar un fiado">
-        Cuando fíes algo, cuéntamelo en el chat. Por ejemplo: “le fié S/ 20 a Rosa”. Aquí verás cuánto te deben y a quién
-        conviene recordarle.
-      </EmptyBlock>
-    )
-  }
-
+/** Vacío: una frase en gris y un solo botón. */
+function Empty({ cta, children }) {
   return (
-    <div className="cuentas-stack">
+    <div className="cuentas-empty">
+      <p className="cc-muted">{children}</p>
+      <Link to="/chat" className="cc-btn cc-btn--secondary cc-btn--sm">
+        {cta}
+      </Link>
+    </div>
+  )
+}
+
+function FiadosBlock({ state, onRecordar, headingRef }) {
+  const { data, error, loading, reload } = state
+  const items = data?.items || []
+
+  let body
+  if (loading) body = <div className="cuentas-card__pad"><LoadingBlock heights={[64, 64, 64]} /></div>
+  else if (error) body = <div className="cuentas-card__pad"><ErrorState error={error} onRetry={reload} /></div>
+  else if (!items.length) {
+    body = (
+      <Empty cta="Anotar un fiado">
+        Nadie te debe por ahora. Cuando fíes algo, cuéntamelo en el chat, por ejemplo: “le fié S/ 20 a Rosa”.
+      </Empty>
+    )
+  } else {
+    body = (
       <List aria-label="Fiados pendientes">
         {items.map((f) => {
           const s = fiadoStatus(f)
-          const label = f.accion_sugerida?.texto_boton || 'Recordarle'
           return (
             <ListRow
               key={f.fiado_id}
@@ -231,19 +263,18 @@ function FiadosBlock({ state, onRecordar }) {
                   <Status tone={s.tone}>{s.text}</Status>
                 </span>
               }
-              amount={soles(f.monto)}
+              amount={<Money value={f.monto} />}
             >
-              {f.accion_sugerida && (
+              {necesitaRecordatorio(f) && (
                 <div className="cuentas-row-actions">
-                  {/* Solo el vencido lleva botón con borde; los demás, enlace discreto */}
                   <Button
-                    variant={f.estado === 'vencido' ? 'secondary' : 'ghost'}
+                    variant="secondary"
                     size="sm"
-                    className="cuentas-row-btn"
+                    className="cuentas-recordar"
                     onClick={() => onRecordar(f)}
-                    aria-label={`${label} a ${f.cliente}`}
+                    aria-label={`Recordarle a ${f.cliente}`}
                   >
-                    {label}
+                    Recordar
                   </Button>
                 </div>
               )}
@@ -251,12 +282,22 @@ function FiadosBlock({ state, onRecordar }) {
           )
         })}
       </List>
+    )
+  }
 
-      <TraceInfo
-        fundamento={data.fundamento || 'Cada riesgo sale de cuánto se demoró esa persona antes y de cuántos días lleva este fiado.'}
-        limites={data.limites || 'Es una estimación; no sabe si la persona tuvo un imprevisto.'}
-        meta={data.meta}
-      />
+  return (
+    <div className="cuentas-stack">
+      <ListCard title="Te deben" headingRef={headingRef}>
+        {body}
+      </ListCard>
+
+      {data && items.length > 0 && (
+        <TraceInfo
+          fundamento={data.fundamento || 'Cada riesgo sale de cuánto se demoró esa persona antes y de cuántos días lleva este fiado.'}
+          limites={data.limites || 'Es una estimación; no sabe si la persona tuvo un imprevisto.'}
+          meta={data.meta}
+        />
+      )}
     </div>
   )
 }
@@ -265,74 +306,77 @@ function pedidoStatus(p) {
   const vencido = p.estado === 'vencido' || p.dias_para_vencer < 0
   if (vencido) return { tone: 'danger', text: 'Vencido' }
   if (p.dias_para_vencer === 0) return { tone: 'danger', text: 'Vence hoy' }
-  return { tone: 'warning', text: `Vence en ${dias(p.dias_para_vencer)}` }
+  return { tone: 'warning', text: `En ${dias(p.dias_para_vencer)}` }
 }
 
-function DebesBlock({ state }) {
-  const navigate = useNavigate()
+function DebesBlock({ state, headingRef }) {
   const { data, error, loading, reload } = state
-  if (loading) return <LoadingBlock heights={[160]} />
-  if (error) return <ErrorState error={error} onRetry={reload} />
-
   const items = data?.items || []
   const imp = data?.impuestos
 
-  return (
-    <div className="cuentas-stack">
-      {items.length === 0 && (
-        <EmptyBlock title="No tienes pagos pendientes a proveedores" cta="Anotar un pedido">
-          Si haces un pedido a crédito, cuéntamelo en el chat. Por ejemplo: “pedí 2 400 a Andina, pago el 30”. Te aviso antes
-          de que venza.
-        </EmptyBlock>
-      )}
-      {(items.length > 0 || imp) && (
-        <List aria-label="Pagos pendientes">
-          {items.map((p) => {
-            const s = pedidoStatus(p)
-            return (
+  let body
+  if (loading) body = <div className="cuentas-card__pad"><LoadingBlock heights={[64, 64]} /></div>
+  else if (error) body = <div className="cuentas-card__pad"><ErrorState error={error} onRetry={reload} /></div>
+  else {
+    body = (
+      <>
+        {(items.length > 0 || imp) && (
+          <List aria-label="Pagos pendientes">
+            {items.map((p) => {
+              const s = pedidoStatus(p)
+              return (
+                <ListRow
+                  key={p.pedido_id}
+                  lead={iniciales(p.proveedor)}
+                  title={p.proveedor}
+                  sub={
+                    <span className="cuentas-sub">
+                      <span>{vence(p.fecha_vencimiento)}</span>
+                      <Status tone={s.tone}>{s.text}</Status>
+                    </span>
+                  }
+                  amount={<Money value={p.monto_pendiente ?? p.monto} />}
+                >
+                  <div className="cuentas-row-actions">
+                    <Link
+                      to="/simulador"
+                      className="cc-btn cc-btn--ghost cc-btn--sm cuentas-link"
+                      aria-label={`Ver opciones para pagar a ${p.proveedor}`}
+                    >
+                      Ver opciones →
+                    </Link>
+                  </div>
+                </ListRow>
+              )
+            })}
+            {imp && (
               <ListRow
-                key={p.pedido_id}
-                lead={iniciales(p.proveedor)}
-                title={p.proveedor}
+                lead={<Icon name="receipt" size={20} />}
+                title={imp.nombre || 'Impuesto del mes'}
                 sub={
                   <span className="cuentas-sub">
-                    <span>
-                      Pedido del {ddmm(p.fecha_pedido)} · vence {weekdayDdmm(p.fecha_vencimiento).toLowerCase()}
-                    </span>
-                    <Status tone={s.tone}>{s.text}</Status>
+                    {imp.proximo_vencimiento && <span>{vence(imp.proximo_vencimiento)}</span>}
+                    {imp.estado === 'al_dia' ? <Status tone="ok">Al día</Status> : <Status tone="warning">Por pagar</Status>}
                   </span>
                 }
-                amount={soles(p.monto_pendiente ?? p.monto)}
-              >
-                <div className="cuentas-row-actions">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="cuentas-row-btn"
-                    onClick={() => navigate('/simulador')}
-                    aria-label={`Ver opciones para pagar a ${p.proveedor}`}
-                  >
-                    Ver opciones
-                  </Button>
-                </div>
-              </ListRow>
-            )
-          })}
-          {imp && (
-            <ListRow
-              lead={<Icon name="receipt" size={20} />}
-              title={imp.nombre || 'Impuesto del mes'}
-              sub={
-                <span className="cuentas-sub">
-                  {imp.proximo_vencimiento && <span>Vence {ddmm(imp.proximo_vencimiento)}</span>}
-                  {imp.estado === 'al_dia' ? <Status tone="ok">Al día</Status> : <Status tone="warning">Por pagar</Status>}
-                </span>
-              }
-              amount={imp.monto_estimado != null ? soles(imp.monto_estimado) : undefined}
-            />
-          )}
-        </List>
-      )}
-    </div>
+                amount={imp.monto_estimado != null ? <Money value={imp.monto_estimado} /> : undefined}
+              />
+            )}
+          </List>
+        )}
+        {items.length === 0 && (
+          <Empty cta="Anotar un pedido">
+            No le debes a ningún proveedor. Si haces un pedido a crédito, cuéntamelo en el chat, por ejemplo: “pedí 2 400 a
+            Andina, pago el 30”. Te aviso antes de que venza.
+          </Empty>
+        )}
+      </>
+    )
+  }
+
+  return (
+    <ListCard title="Debes" headingRef={headingRef}>
+      {body}
+    </ListCard>
   )
 }

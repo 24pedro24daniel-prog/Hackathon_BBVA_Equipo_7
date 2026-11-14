@@ -1,7 +1,7 @@
 // F7: respuesta del asistente (incluye el ejemplo de préstamo informal y el "Modo básico").
-import { Button, Status } from '../../components/ui/index.jsx'
+import { Button, Money } from '../../components/ui/index.jsx'
 import { soles } from '../../lib/format.js'
-import { HowIKnow, InBubble, KVTable, RichText } from './ChatParts.jsx'
+import { HowIKnow, InBubble, KVTable, RichText, StatusText } from './ChatParts.jsx'
 
 // Fuente técnica de una cifra → frase para Pedro. Si no la reconocemos, no se muestra.
 const FUENTES = [
@@ -41,7 +41,9 @@ export function AssistantCard({ msg, onAccion }) {
     <InBubble wide time={time} footer={res.disclaimer || 'Orientación educativa · no es asesoría'}>
       {fallback && (
         <p>
-          <Status tone="warning">Modo básico</Status>
+          <StatusText tone="warning" icon="info">
+            Modo básico
+          </StatusText>
         </p>
       )}
       <RichText text={res.respuesta} />
@@ -51,9 +53,9 @@ export function AssistantCard({ msg, onAccion }) {
           <KVTable
             label="Ejemplo de préstamo informal"
             rows={[
-              ['Recibes', soles(ej.recibes)],
-              [`Devuelves en ${ej.dias} días`, soles(ej.devuelves), 'neg'],
-              ...(ej.cuota_diaria ? [['Pagas cada día', soles(ej.cuota_diaria)]] : []),
+              ['Recibes', <Money key="r" value={ej.recibes} />],
+              [`Devuelves en ${ej.dias} días`, <Money key="d" value={ej.devuelves} tone="neg" />],
+              ...(ej.cuota_diaria ? [['Pagas cada día', <Money key="c" value={ej.cuota_diaria} />]] : []),
             ]}
           />
           {ej.cuota_diaria && <p className="chat-note">La cuota diaria sale de la venta del día.</p>}
@@ -61,7 +63,10 @@ export function AssistantCard({ msg, onAccion }) {
       )}
       {res.respuesta_post && <RichText text={res.respuesta_post} />}
       {res.tabla?.length > 0 && (
-        <KVTable label="Tus números" rows={res.tabla.map((r) => [r.etiqueta, typeof r.valor === 'number' ? soles(r.valor) : r.valor])} />
+        <KVTable
+          label="Tus números"
+          rows={res.tabla.map((r) => [r.etiqueta, typeof r.valor === 'number' ? <Money key="v" value={r.valor} /> : r.valor])}
+        />
       )}
       {acciones.length > 0 && (
         <div className="chat-actions chat-actions--stack">

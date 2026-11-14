@@ -1,68 +1,73 @@
-/* CajaClara — design tokens + base. Mobile-first (360px). */
+/* CajaClara — design tokens + base. Mobile-first (360px).
+   Paleta: BBVA actual (2025, tokens "Spherica" de bbva.com / bbva.mx). Contrastes verificados ≥ 4.5:1 en texto. */
 :root {
-  /* Paleta CajaClara — "patrones ux ui.pdf" (azules propios + acento aqua). Pares texto/fondo ≥ 4.5:1 */
   /* Neutros */
-  --bg: #f4f6f9;
-  --surface: #ffffff;
-  --surface-sunken: #f4f6f9;
-  --border: #d5dce5;
-  --border-strong: #b9c4d2;
-  --hairline: #e4e9ef;       /* Divisores entre filas de una lista */
-  --row-hover: #f6f8fb;
-  --control-off: #7b8899;    /* Borde de radio/switch apagado: ≥ 3:1 sobre blanco */
+  --bg: #f7f8f8;             /* Off-white: fondo de página */
+  --surface: #ffffff;        /* Hojas y tarjetas */
+  --surface-sunken: #eff1f4; /* Rellenos grises: círculos de íconos, filas de acceso, pistas */
+  --border: #e2e6ea;
+  --border-strong: #cad1d8;  /* Divisor BBVA */
+  --hairline: #e9ecef;       /* Líneas entre filas */
+  --row-hover: #f7f8f8;
+  --control-off: #6b7891;    /* Radio/switch apagado: ≥ 3:1 sobre blanco */
 
   /* Texto */
-  --title: #0b2447;          /* Azul noche: títulos y cifras clave */
-  --text: #13202f;           /* Texto principal */
-  --text-muted: #4a5868;     /* Texto secundario: etiquetas, fechas, notas */
-  --text-subtle: #4a5868;
+  --title: #070e46;          /* Midnight navy: títulos y montos */
+  --text: #070e46;
+  --text-muted: #46536d;     /* Slate: etiquetas, fechas, notas (7.7:1 sobre blanco) */
+  --text-subtle: #46536d;
 
-  /* Acción (azul medio) */
-  --brand: #1464a5;
-  --brand-strong: #0b2447;
-  --brand-soft: #e3eef9;     /* Fondo de tarjetas informativas y chips seleccionados */
-  --brand-band: #c3d9ef;     /* Banda de rango del forecast, barras pasadas */
+  /* Acción: Electric blue */
+  --brand: #001391;
+  --brand-hover: #000e6e;
+  --brand-strong: #070e46;
+  --brand-soft: #e8edff;     /* Selección suave */
+  --brand-band: #cfe7ff;     /* Banda de rango del forecast, barras pasadas */
+  --accent: #85c8ff;         /* Light blue BBVA: solo relleno/decoración o texto sobre Electric */
   --on-brand: #ffffff;
-  --negocio: #1464a5;
+  --on-brand-muted: #c9d8ff; /* Texto secundario sobre Electric (≥ 9:1) */
+  --negocio: #001391;
 
-  /* Estados */
-  --ok: #096b67;             /* Aqua oscuro: te alcanza, metas, montos a favor */
-  --ok-bg: #d3f2f0;
-  --danger: #b5450b;         /* Naranja: faltante de caja, días en riesgo */
-  --danger-bg: #fce9df;
-  --danger-border: #f3c7ad;
-  --warning: #6f4a00;        /* Ámbar: justo, por vencer */
-  --warning-bg: #fff2cc;
+  /* Estados: texto de color + ícono; los fondos tintados casi no se usan */
+  --ok: #024700;
+  --ok-bg: #ebfff0;
+  --danger: #c30a0a;
+  --danger-bg: #ffe9e5;
+  --danger-border: #f3c4bb;
+  --warning: #906401;
+  --warning-bg: #fff5e5;
 
   /* Chat */
-  --chat-bg: #e8edf3;
-  --bubble-out: #1464a5;
+  --chat-bg: #eef1f4;
+  --bubble-out: #001391;
   --bubble-in: #ffffff;
 
-  /* Tipografía */
-  --font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --display-weight: 600;     /* títulos firmes pero no pesados (la guía evita 700) */
+  /* Tipografía: Libre Franklin ≈ Benton Sans; Source Serif 4 ≈ Tiempos Headline */
+  --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-body: 'Libre Franklin', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-amount: 'Libre Franklin', system-ui, sans-serif;
+  --display-weight: 600;
 
-  /* Forma: plana, sin sombras. Base de espaciado 8px */
+  /* Forma */
   --radius-xs: 8px;
   --radius-sm: 10px;
   --radius: 12px;
   --radius-lg: 16px;
+  --radius-sheet: 24px;
   --radius-pill: 9999px;
   --gutter: 16px;
   --nav-h: 64px;
   --rail-w: 88px;
   --sidebar-w: 240px;
   --tap: 44px;
-  --shadow: none;
-  --scrim: rgba(11, 36, 71, 0.45);
+  --shadow: 0 1px 2px rgba(7, 14, 70, 0.06), 0 4px 12px rgba(7, 14, 70, 0.04);
+  --scrim: rgba(7, 14, 70, 0.5);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
-  /* Escala tipográfica: monto principal > título > monto de fila > cuerpo > nota */
-  --fs-hero: 44px;
+  /* Escala tipográfica */
+  --fs-hero: 40px;
   --fs-title: 26px;
-  --fs-amount: 20px;
+  --fs-amount: 18px;
   --fs-section: 18px;
   --fs-body: 16px;
   --fs-note: 14px;
@@ -134,12 +139,20 @@ a {
   font-feature-settings: 'tnum';
 }
 
+/* Montos grandes: sans semibold con cifras tabulares (como Nu / Monzo / SoFi) */
 .display {
-  font-family: var(--font-display);
-  font-weight: var(--display-weight);
+  font-family: var(--font-amount);
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--title);
   font-variant-numeric: tabular-nums;
+}
+
+/* Títulos editoriales: serif (≈ Tiempos de BBVA) */
+.serif {
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  letter-spacing: -0.01em;
 }
 
 .sr-only {
@@ -156,7 +169,7 @@ a {
 
 /* Responsive: gutter más amplio en pantallas grandes */
 @media (min-width: 768px) {
-  :root { --gutter: 24px; --fs-hero: 52px; --fs-title: 30px; }
+  :root { --gutter: 24px; --fs-hero: 48px; --fs-title: 30px; }
 }
 @media (min-width: 1100px) {
   :root { --gutter: 32px; }

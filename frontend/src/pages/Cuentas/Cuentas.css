@@ -1,93 +1,98 @@
-/* Cuentas — lista de cobros y pagos al estilo de una app bancaria */
+/* Cuentas — "Payments" de Monzo / "Activity" de SoFi: resumen en una tarjeta, luego dos listas blancas.
+   Estado = texto de color. Sin tarjetas tintadas ni etiquetas con fondo. */
 
-/* Control segmentado neutro: riel gris claro, segmento elegido en blanco */
+/* ---------- Resumen: dos cifras en una sola tarjeta, separadas por un filete vertical ---------- */
+.cuentas-summary-wrap { padding: 0 var(--gutter) 12px; }
+.cuentas-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 20px 0;
+}
+.cuentas-figure {
+  min-width: 0;
+  display: flex;
+  flex-direction: column-reverse; /* monto arriba, etiqueta debajo; en el DOM la etiqueta va primero */
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 0 16px;
+}
+.cuentas-figure + .cuentas-figure { border-left: 1px solid var(--hairline); }
+.cuentas-figure__label { font-size: var(--fs-note); color: var(--text-muted); }
+
+/* ---------- Control segmentado (móvil/tablet): mismo aspecto que .cc-seg, fijo arriba al hacer scroll ---------- */
 .cuentas-seg-wrap {
   position: sticky;
   top: 0;
   z-index: 5;
   background: var(--bg);
-  padding: 0 var(--gutter) 12px;
+  padding: 4px var(--gutter) 12px;
 }
-.cuentas-seg {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px;
-  padding: 3px;
-  background: var(--hairline);
-  border-radius: var(--radius);
-}
-.cuentas-seg__btn {
+.cuentas-seg .cc-seg__opt {
   min-height: var(--tap);
-  padding: 8px 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-muted);
-  font-weight: 600;
-  font-size: 15px;
-  line-height: 1.2;
-  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
-.cuentas-seg__btn:hover { color: var(--title); }
-.cuentas-seg__btn[aria-selected='true'] { background: var(--surface); color: var(--title); }
-.cuentas-seg__amount { font-weight: 600; }
+.cuentas-seg .cc-seg__opt:hover { color: var(--title); }
 
+/* ---------- Cuerpo ---------- */
 .cuentas-body {
   padding: 0 var(--gutter);
   display: grid;
-  gap: 28px;
+  gap: 16px;
 }
-.cuentas-panel { scroll-margin-top: 76px; /* deja ver el control segmentado fijo */ }
+.cuentas-panel { scroll-margin-top: 72px; /* deja ver el control segmentado fijo */ }
 .cuentas-stack { display: grid; gap: 12px; }
 
-/* En móvil el segmento ya nombra "Te deben" y los totales: el encabezado queda solo para lectores */
-.cuentas-panel--deben .cc-section__head {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-.cuentas-sec-total { display: none; font-size: var(--fs-section); font-weight: 600; color: var(--title); }
+/* Tarjeta con título dentro (Monzo "Activity") */
+.cuentas-card__title { scroll-margin-top: 72px; }
+.cuentas-card__title:focus { outline: none; }
+.cuentas-card .cc-card__head { padding-bottom: 0; }
+.cuentas-card > .cc-list { margin-top: 4px; }
+.cuentas-card__pad { padding: 8px 16px 16px; }
+/* Un error dentro de la tarjeta no lleva otra tarjeta encima */
+.cuentas-card .cc-error { box-shadow: none; padding: 0; }
 
 /* Sub línea de la fila: fecha arriba, estado (texto de color) debajo */
 .cuentas-sub { display: grid; gap: 2px; }
 
-/* Acción de la fila, alineada con el texto (16 de relleno + 40 del círculo + 12 de espacio) */
+/* Acción de la fila, bajo el texto (16 de relleno + 40 del círculo + 12 de espacio) */
 .cuentas-row-actions {
   display: flex;
-  padding: 0 16px 10px 68px;
-  margin-top: -6px;
+  padding: 0 16px 14px 68px;
+  margin-top: -4px;
 }
-.cuentas-row-btn.cc-btn { min-height: var(--tap); }
-.cuentas-row-btn.cc-btn--ghost { margin-left: -8px; }
+/* "Recordar": píldora secundaria pequeña; el área táctil sigue siendo de 44px */
+.cuentas-recordar.cc-btn {
+  position: relative;
+  min-height: 36px;
+  padding: 6px 16px;
+  font-size: 14px;
+}
+.cuentas-recordar.cc-btn::after { content: ''; position: absolute; inset: -4px 0; }
+/* "Ver opciones →": enlace alineado con el texto de la fila */
+.cuentas-link.cc-btn { margin: -6px 0 -6px -4px; padding-inline: 4px; font-size: 15px; }
 
-/* Vacíos */
-.cuentas-empty { display: grid; gap: 8px; justify-items: start; }
-.cuentas-empty__title { font-weight: 600; color: var(--title); }
-.cuentas-empty .cc-btn { min-height: var(--tap); margin-top: 4px; }
+/* Vacíos: una frase en gris y un botón */
+.cuentas-empty {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  padding: 8px 16px 16px;
+}
+.cuentas-card .cc-list + .cuentas-empty { border-top: 1px solid var(--hairline); padding-top: 16px; }
 
-/* Hoja del recordatorio: hoja inferior en móvil, diálogo centrado desde 768px */
+/* ---------- Hoja del recordatorio: hoja inferior en móvil (Monzo), diálogo centrado desde 768px ---------- */
 .cuentas-sheet {
   width: 100%;
   max-width: 480px;
   max-height: 90dvh;
   margin: auto auto 0;
   padding: 0;
-  border: 1px solid var(--border);
-  border-bottom: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border: 0;
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
   background: var(--surface);
   color: var(--text);
-  box-shadow: none;
+  box-shadow: 0 -4px 24px rgba(7, 14, 70, 0.12);
 }
 .cuentas-sheet::backdrop { background: var(--scrim); }
 .cuentas-sheet[open] { animation: cuentas-up 0.24s var(--ease-out); }
@@ -98,86 +103,86 @@
 }
 .cuentas-sheet__inner {
   display: grid;
-  gap: 16px;
-  padding: 8px var(--gutter) calc(20px + env(safe-area-inset-bottom));
+  gap: 20px;
+  padding: 8px var(--gutter) calc(16px + env(safe-area-inset-bottom));
 }
 /* Asa de la hoja inferior (solo móvil) */
 .cuentas-sheet__grip {
   width: 36px;
-  height: 4px;
+  height: 5px;
   margin: 0 auto;
   border-radius: var(--radius-pill);
-  background: var(--border);
+  background: var(--border-strong);
 }
-.cuentas-sheet__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.cuentas-sheet__head {
+  position: relative;
+  padding: 4px 48px 0;
+  text-align: center;
+}
 .cuentas-sheet__title {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: var(--display-weight);
-  letter-spacing: -0.02em;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
   color: var(--title);
-  line-height: 1.2;
+  text-wrap: balance;
 }
-.cuentas-sheet__sub { margin-top: 4px; font-size: 15px; color: var(--text-muted); }
+.cuentas-sheet__sub { margin-top: 2px; font-size: var(--fs-note); color: var(--text-muted); }
 .cuentas-sheet__close {
+  position: absolute;
+  top: -6px;
+  right: -8px;
   width: var(--tap);
   height: var(--tap);
-  flex: none;
-  margin: -6px -10px 0 0;
   display: grid;
   place-items: center;
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: var(--title);
+  color: var(--text-muted);
   cursor: pointer;
 }
-.cuentas-sheet__close:hover { background: var(--hairline); }
+.cuentas-sheet__close:hover { background: var(--surface-sunken); color: var(--title); }
 .cuentas-sheet__group { display: grid; gap: 8px; }
-.cuentas-sheet__label { font-size: 15px; font-weight: 600; color: var(--title); }
+.cuentas-sheet__label { font-size: var(--fs-note); font-weight: 600; color: var(--title); }
+/* Mensaje citado: bloque blanco con filete, sin tinte */
 .cuentas-sheet__msg {
   margin: 0;
-  padding: 14px 16px;
-  background: var(--surface-sunken);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   font-size: 16px;
   line-height: 1.5;
   color: var(--text);
   user-select: text;
 }
-.cuentas-sheet__note { color: var(--text-muted); }
+.cuentas-sheet__note { font-size: 13px; line-height: 1.4; color: var(--text-muted); }
 .cuentas-sheet__actions { display: grid; gap: 8px; }
+.cuentas-sheet .cc-error { box-shadow: none; padding: 0; }
 
 @media (min-width: 768px) {
-  .cuentas-body { gap: 32px; }
-
   .cuentas-sheet {
     margin: auto;
-    border-bottom: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-sheet);
+    box-shadow: 0 8px 32px rgba(7, 14, 70, 0.16);
   }
   .cuentas-sheet[open] { animation-name: cuentas-fade; }
   .cuentas-sheet__grip { display: none; }
   .cuentas-sheet__inner { padding: 24px; }
+  .cuentas-sheet__head { padding-top: 0; }
+  .cuentas-sheet__close { top: -10px; right: -10px; }
+
+  .cuentas-figure { padding: 0 24px; }
 }
 
-/* Escritorio: "Te deben" y "Debes" lado a lado; el control segmentado sobra porque se ven las dos */
+/* Escritorio: resumen a lo ancho, luego "Te deben" | "Debes" en columnas; el segmento sobra */
 @media (min-width: 1100px) {
+  .cuentas-summary-wrap { padding-bottom: 16px; }
   .cuentas-seg-wrap { display: none; }
   .cuentas-body {
     grid-template-columns: 1fr 1fr;
     align-items: start;
-    gap: 24px 32px;
+    gap: 16px 24px;
   }
   .cuentas-body > .cc-footnote { grid-column: 1 / -1; }
-  .cuentas-panel--deben .cc-section__head {
-    position: static;
-    width: auto;
-    height: auto;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
-  }
-  .cuentas-sec-total { display: block; }
 }

@@ -1,26 +1,27 @@
+import { useId } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { useDemo } from '../../lib/useDemo.js'
-import { soles, solesRange, weekdayDdmm, daysBetween, diferenciaSoles } from '../../lib/format.js'
+import { soles, weekdayDdmm, daysBetween, diferenciaSoles } from '../../lib/format.js'
 import DemoMenu from '../../components/layout/DemoMenu.jsx'
 import {
   Card,
   Button,
   Icon,
-  PageHeader,
-  Section,
+  Money,
   List,
   ListRow,
+  ProgressBar,
   TraceInfo,
-  LoadingBlock,
   Skeleton,
   ErrorState,
   Footnote,
 } from '../../components/ui/index.jsx'
 import './Inicio.css'
 
-// No hay endpoint de empresa en el contrato todavía; el nombre va fijo para la demo.
+// No hay endpoint de empresa en el contrato todavía; nombre del dueño y del negocio van fijos para la demo.
+const NOMBRE_DUENIO = 'Pedro'
 const NOMBRE_NEGOCIO = 'Bodega Don Pedro'
 const DIAS_REQUERIDOS_DEFAULT = 14
 
@@ -31,13 +32,6 @@ function periodoActual() {
 }
 
 const diasTxt = (n) => `${n} ${n === 1 ? 'día' : 'días'}`
-
-// Acciones rápidas del inicio (solo rutas reales), como la fila "Enviar / Cobrar" de una app bancaria.
-const ACCIONES = [
-  { to: '/chat', icon: 'mic', label: 'Anotar venta' },
-  { to: '/30-dias', icon: 'chart', label: 'Ver 30 días' },
-  { to: '/cuentas', icon: 'list', label: 'Cuentas' },
-]
 
 export default function Inicio() {
   const [demo] = useDemo()
@@ -56,16 +50,20 @@ export default function Inicio() {
       : forecast.data?.disponible === false || (!r && demo.escenario === 'nuevo')
 
   const corte = r?.corte ?? forecast.data?.fecha_corte
-  const sub = esNuevo
-    ? `${NOMBRE_NEGOCIO}${typeof diasConDatos === 'number' ? ` · día ${diasConDatos}` : ''}`
-    : `${NOMBRE_NEGOCIO}${corte ? ` · ${weekdayDdmm(corte).toLowerCase()}` : ''}`
+  const sub = `${NOMBRE_NEGOCIO}${corte ? ` · ${weekdayDdmm(corte).toLowerCase()}` : ''}`
 
   return (
     <div className="inicio">
-      <PageHeader sub={sub} title={esNuevo ? 'Estás empezando bien' : '¿Cómo va mi caja?'} right={<DemoMenu />} />
+      <header className="inicio__top">
+        <div className="inicio__top-text">
+          <h1 className="inicio__hola">Hola, {NOMBRE_DUENIO}</h1>
+          <p className="inicio__top-sub">{sub}</p>
+        </div>
+        <DemoMenu />
+      </header>
       <div className="inicio__body">
         {resumen.loading && !r ? (
-          <LoadingBlock heights={[120, 180, 120, 140]} />
+          <InicioCargando />
         ) : resumen.error ? (
           <ErrorState error={resumen.error} onRetry={resumen.reload} />
         ) : esNuevo ? (
@@ -79,7 +77,24 @@ export default function Inicio() {
   )
 }
 
-/* ---------------- Página 5: Pedro con historial ---------------- */
+function InicioCargando() {
+  return (
+    <div className="inicio__grid" role="status" aria-live="polite">
+      <span className="sr-only">Cargando…</span>
+      <div className="inicio__main">
+        <Skeleton height={224} style={{ borderRadius: 20 }} />
+        <Skeleton height={176} />
+        <Skeleton height={56} />
+      </div>
+      <div className="inicio__side">
+        <Skeleton height={200} />
+        <Skeleton height={268} />
+      </div>
+    </div>
+  )
+}
+
+/* ---------------- Pedro con historial ---------------- */
 
 function InicioPedro({ resumen, forecast, alertas }) {
   const ind = resumen.indicadores
@@ -90,48 +105,49 @@ function InicioPedro({ resumen, forecast, alertas }) {
   return (
     <div className="inicio__grid">
       <div className="inicio__main">
-        <CajaNegocio valor={ind.saldo_caja_negocio.valor} nota="Lo que tienes hoy" acciones />
-        <AlertaPrincipal alertas={alertas} corte={resumen.corte} />
-        <Disponible forecast={forecast} />
+        <CuentaNegocio valor={ind.saldo_caja_negocio.valor}>
+          <DisponibleHoy forecast={forecast} />
+        </CuentaNegocio>
+        <LoQueViene alertas={alertas} corte={resumen.corte} />
+        <DisponibleTrace forecast={forecast} />
       </div>
 
       <div className="inicio__side">
-        <Section title="Cuentas">
-          <List>
-            <ListRow
-              to="/cuentas"
-              title="Te deben"
-              sub={`${cobro.n_fiados} ${cobro.n_fiados === 1 ? 'fiado' : 'fiados'}`}
-              amount={soles(cobro.valor)}
-            />
-            <ListRow
-              to="/cuentas"
-              title="Debes"
-              sub={pagos.detalle || `${pagos.n_obligaciones} ${pagos.n_obligaciones === 1 ? 'pago' : 'pagos'}`}
-              amount={soles(pagos.valor)}
-            />
-          </List>
-        </Section>
+        <CardLista title="Cuentas" action={<VerTodo to="/cuentas" />}>
+          <ListRow
+            lead={<Icon name="arrowDown" size={20} />}
+            title="Te deben"
+            sub={`${cobro.n_fiados} ${cobro.n_fiados === 1 ? 'fiado' : 'fiados'}`}
+            amount={<Money value={cobro.valor} sign tone="pos" />}
+          />
+          <ListRow
+            lead={<Icon name="receipt" size={20} />}
+            title="Debes"
+            sub={pagos.detalle || `${pagos.n_obligaciones} ${pagos.n_obligaciones === 1 ? 'pago' : 'pagos'}`}
+            amount={<Money value={pagos.valor} />}
+          />
+        </CardLista>
 
-        <Section title="Este mes">
-          <List>
-            <ListRow
-              title="Vendiste"
-              sub={comparacion(ind.ingresos_mes.valor, ind.ingresos_mes.variacion_pct, true)}
-              amount={soles(ind.ingresos_mes.valor)}
-            />
-            <ListRow
-              title="Gastaste en el negocio"
-              sub={comparacion(ind.egresos_mes.valor, ind.egresos_mes.variacion_pct)}
-              amount={soles(ind.egresos_mes.valor)}
-            />
-            <ListRow
-              title="Ganancia aproximada"
-              amount={ganancia.rango ? solesRange(ganancia.rango) : soles(ganancia.valor)}
-            />
-          </List>
-          {resumen.variacion_vs && <p className="inicio__nota-pie">Comparado con el mes pasado al mismo día.</p>}
-        </Section>
+        <CardLista
+          title="Este mes"
+          nota={resumen.variacion_vs ? 'Comparado con el mes pasado al mismo día.' : null}
+        >
+          <ListRow
+            title="Vendiste"
+            sub={comparacion(ind.ingresos_mes.valor, ind.ingresos_mes.variacion_pct, true)}
+            amount={<Money value={ind.ingresos_mes.valor} />}
+          />
+          <ListRow
+            title="Gastaste en el negocio"
+            sub={comparacion(ind.egresos_mes.valor, ind.egresos_mes.variacion_pct)}
+            amount={<Money value={ind.egresos_mes.valor} />}
+          />
+          <ListRow
+            title="Ganancia aproximada"
+            sub={ganancia.rango ? `Entre ${soles(ganancia.rango[0])} y ${soles(ganancia.rango[1])}` : null}
+            amount={<Money value={ganancia.valor} />}
+          />
+        </CardLista>
       </div>
     </div>
   )
@@ -150,59 +166,67 @@ function comparacion(valor, variacion, malaSiBaja) {
   )
 }
 
-function AlertaPrincipal({ alertas, corte }) {
-  const navigate = useNavigate()
-  if (alertas.loading && !alertas.data) return <Skeleton height={180} />
-  if (alertas.error) return <ErrorState error={alertas.error} onRetry={alertas.reload} />
-
-  const items = [...(alertas.data?.items ?? [])].sort((a, b) => (a.prioridad ?? 99) - (b.prioridad ?? 99))
-  const a = items[0]
-  if (!a) {
-    return (
-      <Card className="inicio__ok">
-        <Icon name="check" size={22} />
-        <p>Por ahora no veo problemas de caja en tus próximos 30 días.</p>
-      </Card>
-    )
-  }
-
-  const dias = a.dias_para_evento ?? (corte && a.fecha_evento ? daysBetween(corte, a.fecha_evento) : null)
-  const porque = a.resumen_causas || a.causas?.map((c) => c.descripcion.toLowerCase()).join(', ')
-
+/** Tarjeta blanca con título dentro (patrón "Activity" de Monzo) y una lista de filas. */
+function CardLista({ title, action, nota, children }) {
+  const id = useId()
   return (
-    <Card className="inicio__alerta" role="region" aria-label="Alerta de caja">
-      <h2 className="inicio__alerta-title">
-        <Icon name="warning" size={22} />
-        <span>{a.titulo?.replace(/S\/ /g, 'S/ ')}</span>
-      </h2>
-      {dias != null && <p className="inicio__alerta-when">En {diasTxt(dias)}</p>}
-      {porque && <p className="inicio__alerta-why">Por qué: {porque}</p>}
-      <Button onClick={() => navigate('/simulador')}>{a.accion?.texto_boton || 'Ver qué puedo hacer'}</Button>
+    <Card flush aria-labelledby={id}>
+      <div className="cc-card__head">
+        <h2 className="cc-card__title" id={id}>
+          {title}
+        </h2>
+        {action}
+      </div>
+      <List>{children}</List>
+      {nota && <p className="inicio__nota-pie">{nota}</p>}
     </Card>
   )
 }
 
-/** Cifra protagonista: saldo de la caja del negocio, sin caja de color alrededor. */
-function CajaNegocio({ valor, nota, acciones }) {
+function VerTodo({ to }) {
   return (
-    <div className="inicio__hero" role="group" aria-labelledby="inicio-caja-label">
-      <p id="inicio-caja-label" className="inicio__hero-label">
+    <Link className="cc-section__action" to={to}>
+      Ver todo <span aria-hidden="true">→</span>
+    </Link>
+  )
+}
+
+/* ---------------- Tarjeta de cuenta (única superficie de color) ---------------- */
+
+function CuentaNegocio({ valor, nota, children }) {
+  const id = useId()
+  return (
+    <section className="inicio__cuenta" aria-labelledby={id}>
+      <h2 className="inicio__cuenta-label" id={id}>
         Caja del negocio
+      </h2>
+      <p className="inicio__cuenta-saldo">
+        <Money size="hero" inverse value={valor} />
       </p>
-      <p className="inicio__hero-value display num">{soles(valor)}</p>
-      <p className="inicio__hero-note">{nota}</p>
-      {acciones && (
-        <nav className="inicio__acciones" aria-label="Acciones rápidas">
-          {ACCIONES.map((ac) => (
-            <Link key={ac.to} to={ac.to} className="inicio__accion">
-              <span className="inicio__accion-icon" aria-hidden="true">
-                <Icon name={ac.icon} size={22} />
-              </span>
-              <span className="inicio__accion-label">{ac.label}</span>
-            </Link>
-          ))}
-        </nav>
-      )}
+      {nota && <p className="inicio__cuenta-msg">{nota}</p>}
+      {children}
+    </section>
+  )
+}
+
+/** "Puedes gastar hoy" dentro de la tarjeta de cuenta (como "Left to spend" de Monzo). */
+function DisponibleHoy({ forecast }) {
+  if (forecast.loading && !forecast.data) {
+    return (
+      <div className="inicio__cuenta-disp" aria-hidden="true">
+        <span className="inicio__cuenta-skel" />
+      </div>
+    )
+  }
+  const d = forecast.data?.disponible_para_gastar
+  if (forecast.error || !d) return null
+  return (
+    <div className="inicio__cuenta-disp">
+      <div className="inicio__cuenta-row">
+        <p className="inicio__cuenta-row-label">Puedes gastar hoy</p>
+        <Money size="md" inverse value={d.valor} />
+      </div>
+      {d.mensaje && <p className="inicio__cuenta-msg">{d.mensaje}</p>}
     </div>
   )
 }
@@ -215,8 +239,9 @@ const LABELS_COMPONENTES = {
   reserva_impuestos: ['Reserva para impuestos', -1],
 }
 
-function Disponible({ forecast }) {
-  if (forecast.loading && !forecast.data) return <Skeleton height={140} />
+/** Explicabilidad del número "Puedes gastar hoy", con el desglose del cálculo. */
+function DisponibleTrace({ forecast }) {
+  if (forecast.loading && !forecast.data) return <Skeleton height={56} />
   if (forecast.error) return <ErrorState error={forecast.error} onRetry={forecast.reload} />
 
   const f = forecast.data
@@ -249,59 +274,112 @@ function Disponible({ forecast }) {
   )
 
   return (
-    <div className="inicio__disp">
-      <Card className="inicio__disp-card" aria-labelledby="inicio-disp-label">
-        <div className="inicio__disp-top">
-          <p id="inicio-disp-label" className="inicio__disp-label">
-            Disponible para gastar
-          </p>
-          <p className="inicio__disp-value display num">{soles(d.valor)}</p>
-        </div>
-        {d.mensaje && <p className="inicio__disp-msg">{d.mensaje}</p>}
-      </Card>
-      <TraceInfo
-        fundamento={f.fundamento}
-        limites={f.limites}
-        confianza={f.confianza}
-        meta={f.meta}
-        extra={desglose ? [['Cómo se calcula', desglose]] : []}
-      />
-    </div>
+    <TraceInfo
+      label="¿De dónde sale lo que puedes gastar hoy?"
+      fundamento={f.fundamento}
+      limites={f.limites}
+      confianza={f.confianza}
+      meta={f.meta}
+      extra={desglose ? [['Cómo se calcula', desglose]] : []}
+    />
   )
 }
 
-/* ---------------- Página 10: día 3 ---------------- */
+/* ---------------- Lo que viene (alerta principal) ---------------- */
+
+// Fechas "30/11" y montos "S/ 650" dentro del texto de la alerta, para resaltarlos.
+// (\s en JS también cubre los espacios no separables que usa format.js)
+const RE_CIFRAS = /(\d{1,2}\/\d{1,2}|S\/\s?\d[\d\s.,]*\d|S\/\s?\d)/g
+
+/** Resalta fecha y monto dentro de la frase del motor (no se reescribe el texto). */
+function frase(texto) {
+  return texto.split(RE_CIFRAS).map((parte, i) => {
+    if (i % 2 === 0) return parte
+    const esMonto = parte.startsWith('S/')
+    return (
+      <strong key={i} className={esMonto ? 'inicio__alerta-monto' : undefined}>
+        {esMonto ? parte.replace(/^S\/\s?/, 'S/ ') : parte}
+      </strong>
+    )
+  })
+}
+
+function LoQueViene({ alertas, corte }) {
+  const navigate = useNavigate()
+  const id = useId()
+  if (alertas.loading && !alertas.data) return <Skeleton height={176} />
+  if (alertas.error) return <ErrorState error={alertas.error} onRetry={alertas.reload} />
+
+  const items = [...(alertas.data?.items ?? [])].sort((a, b) => (a.prioridad ?? 99) - (b.prioridad ?? 99))
+  const a = items[0]
+
+  if (!a) {
+    return (
+      <Card className="inicio__alerta" aria-labelledby={id}>
+        <div className="inicio__alerta-head">
+          <Icon name="check" size={20} className="inicio__alerta-icon--ok" />
+          <h2 className="inicio__alerta-title" id={id}>
+            Lo que viene
+          </h2>
+        </div>
+        <p className="inicio__alerta-insight">Por ahora no veo problemas de caja en tus próximos 30 días.</p>
+      </Card>
+    )
+  }
+
+  const dias = a.dias_para_evento ?? (corte && a.fecha_evento ? daysBetween(corte, a.fecha_evento) : null)
+  const porque = a.resumen_causas || a.causas?.map((c) => c.descripcion.toLowerCase()).join(', ')
+
+  return (
+    <Card className="inicio__alerta" aria-labelledby={id}>
+      <div className="inicio__alerta-head">
+        <Icon name="warning" size={20} className="inicio__alerta-icon--danger" />
+        <h2 className="inicio__alerta-title" id={id}>
+          Lo que viene
+        </h2>
+      </div>
+      {a.titulo && <p className="inicio__alerta-insight">{frase(a.titulo)}</p>}
+      {(dias != null || porque) && (
+        <div className="inicio__alerta-detalle">
+          {dias != null && <p>En {diasTxt(dias)}</p>}
+          {porque && <p>Por qué: {porque}</p>}
+        </div>
+      )}
+      <Button variant="ghost" className="inicio__alerta-accion" onClick={() => navigate('/simulador')}>
+        {a.accion?.texto_boton || 'Ver qué puedo hacer'} <span aria-hidden="true">→</span>
+      </Button>
+    </Card>
+  )
+}
+
+/* ---------------- Día 3: recién empieza ---------------- */
 
 function InicioNuevo({ resumen, diasConDatos, diasRequeridos }) {
   const navigate = useNavigate()
+  const idProgreso = useId()
   const ind = resumen?.indicadores
   const faltan = Math.max(diasRequeridos - diasConDatos, 0)
   const ganancia = ind?.ganancia_neta
+  const hechos = Math.min(diasConDatos, diasRequeridos)
 
   return (
     <div className="inicio__grid">
       <div className="inicio__main">
-        {ind && <CajaNegocio valor={ind.saldo_caja_negocio.valor} nota="Según lo que anotaste" />}
+        {ind && <CuentaNegocio valor={ind.saldo_caja_negocio.valor} nota="Según lo que anotaste" />}
 
-        <Card className="inicio__progreso">
-          <h2 className="inicio__progreso-title">
-            Necesito {diasRequeridos} días de tus ventas para avisarte antes de que te falte plata
+        <Card className="inicio__progreso" aria-labelledby={idProgreso}>
+          <h2 className="inicio__progreso-title" id={idProgreso}>
+            Tus primeros días
           </h2>
-          <div
-            className="inicio__segs"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={diasRequeridos}
-            aria-valuenow={Math.min(diasConDatos, diasRequeridos)}
-            aria-label="Días con ventas anotadas"
-          >
-            {Array.from({ length: diasRequeridos }, (_, i) => (
-              <span key={i} className={i < diasConDatos ? 'is-on' : undefined} />
-            ))}
-          </div>
-          <p className="inicio__progreso-txt">
-            {diasConDatos} de {diasRequeridos} días · sigue mandando tus ventas por el chat.
+          <p className="inicio__progreso-frase">
+            Necesito {diasRequeridos} días de ventas para avisarte antes de que te falte plata
           </p>
+          <div className="inicio__progreso-barra">
+            <ProgressBar value={hechos} max={diasRequeridos} label="Días con ventas anotadas" />
+            <p className="inicio__progreso-txt">
+              {hechos} de {diasTxt(diasRequeridos)}
+            </p>
+          </div>
           <Button size="lg" icon="mic" onClick={() => navigate('/chat')}>
             Anotar una venta
           </Button>
@@ -310,31 +388,28 @@ function InicioNuevo({ resumen, diasConDatos, diasRequeridos }) {
 
       <div className="inicio__side">
         {ind && (
-          <Section title="Hasta ahora">
-            <List>
-              <ListRow title={`Vendiste en ${diasTxt(diasConDatos)}`} amount={soles(ind.ingresos_mes.valor)} />
-              <ListRow
-                title="Ganancia aproximada"
-                sub={ganancia.es_aproximada ? 'Es un rango porque aún no conozco el costo de todos tus productos.' : null}
-                amount={
-                  ganancia.rango
-                    ? `entre ${soles(ganancia.rango[0])} y ${soles(ganancia.rango[1])}`
-                    : soles(ganancia.valor)
-                }
-              />
-            </List>
-          </Section>
+          <CardLista title="Hasta ahora">
+            <ListRow title={`Vendiste en ${diasTxt(diasConDatos)}`} amount={<Money value={ind.ingresos_mes.valor} />} />
+            <ListRow
+              title="Ganancia aproximada"
+              sub={
+                ganancia.rango
+                  ? `Entre ${soles(ganancia.rango[0])} y ${soles(ganancia.rango[1])}${
+                      ganancia.es_aproximada ? ': aún no conozco el costo de todos tus productos.' : ''
+                    }`
+                  : null
+              }
+              amount={<Money value={ganancia.valor} />}
+            />
+          </CardLista>
         )}
 
         <div className="inicio__proximos">
           <Icon name="clock" size={20} />
-          <div>
-            <h2 className="inicio__proximos-title">Tus próximos 30 días</h2>
-            <p className="inicio__proximos-txt">
-              Aparecerán aquí en {diasTxt(faltan)}. Mientras, cuéntame tus pagos con fecha (“le debo 800 a Andina para
-              el 30”) y te aviso antes de que venzan.
-            </p>
-          </div>
+          <p>
+            Tus próximos 30 días aparecerán aquí en {diasTxt(faltan)}. Mientras, cuéntame tus pagos con fecha (“le debo
+            800 a Andina para el 30”) y te aviso antes de que venzan.
+          </p>
         </div>
       </div>
     </div>

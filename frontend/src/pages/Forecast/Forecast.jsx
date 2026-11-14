@@ -1,18 +1,20 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { useDemo } from '../../lib/useDemo.js'
-import { ddmm, soles, weekdayDdmm } from '../../lib/format.js'
+import { ddmm, soles, solesRange, weekdayDdmm } from '../../lib/format.js'
 import {
   Button,
   Card,
   ErrorState,
+  Icon,
   List,
   ListRow,
   LoadingBlock,
+  Money,
   PageHeader,
-  Section,
+  ProgressBar,
   Status,
   TraceInfo,
 } from '../../components/ui/index.jsx'
@@ -25,16 +27,23 @@ function buildPoints(forecast) {
   return [{ fecha: forecast.fecha_corte, p10: s0, p50: s0, p90: s0, hoy: true }, ...(forecast.serie || [])]
 }
 
+/** tone de la página → props de <Money> (Money solo conoce neutral | pos | neg) */
+function moneyTone(tone) {
+  if (tone === 'danger') return { tone: 'neg' }
+  if (tone === 'warning') return { tone: 'neutral', className: 'fc-money--warning' }
+  return { tone: 'neutral' }
+}
+
 export default function Forecast() {
   const [demo] = useDemo()
   const { data, error, loading, reload } = useApi(() => api.getForecast(30), [demo.escenario])
 
   return (
     <div className="fc-page">
-      <PageHeader sub="Próximos 30 días" title="Así se mueve tu caja" />
+      <PageHeader title="Próximos 30 días" />
       <div className="fc-body">
         {loading && !data ? (
-          <LoadingBlock heights={[120, 300, 200]} />
+          <LoadingBlock heights={[340, 200]} />
         ) : error ? (
           <ErrorState error={error} onRetry={reload} />
         ) : data?.disponible === false || !data?.serie?.length ? (
@@ -48,39 +57,27 @@ export default function Forecast() {
 }
 
 function ForecastEmpty({ data }) {
-  const navigate = useNavigate()
   const tiene = data?.dias_con_datos ?? 0
   const requiere = data?.dias_requeridos ?? 14
   return (
-    <Card className="fc-empty">
-      <h2 className="fc-card-title">Todavía estoy conociendo tu negocio</h2>
-      <p>
-        Para mostrarte cómo se mueve tu caja los próximos 30 días necesito al menos {requiere} días con tus ventas y
-        gastos anotados. Llevas <strong>{tiene}</strong>.
+    <Card className="fc-empty" aria-labelledby="fc-empty-title">
+      <h2 id="fc-empty-title" className="cc-card__title">
+        Todavía estoy conociendo tu negocio
+      </h2>
+      <p className="fc-empty__text">
+        Para mostrarte cómo se mueve tu caja necesito al menos {requiere} días con tus ventas y gastos anotados.
       </p>
-      <div
-        className="fc-progress"
-        role="progressbar"
-        aria-label="Días con datos"
-        aria-valuemin={0}
-        aria-valuemax={requiere}
-        aria-valuenow={Math.min(tiene, requiere)}
-        aria-valuetext={`${tiene} de ${requiere} días`}
-      >
-        <span style={{ width: `${Math.min(100, (tiene / requiere) * 100)}%` }} />
-      </div>
+      <ProgressBar value={Math.min(tiene, requiere)} max={requiere} label="Días con datos" />
       <p className="cc-small cc-muted">
-        {tiene} de {requiere} días · Te faltan {Math.max(0, requiere - tiene)}
+        Llevas {tiene} de {requiere} días · Te faltan {Math.max(0, requiere - tiene)}. Anótalos en el chat.
       </p>
-      <Button block icon="chat" onClick={() => navigate('/chat')}>
-        Anotar mis ventas de hoy
-      </Button>
     </Card>
   )
 }
 
 function ForecastContent({ f }) {
   const navigate = useNavigate()
+  const [sel, setSel] = useState(null)
   const points = useMemo(() => buildPoints(f), [f])
   const critico = f.dia_critico
   const minimo = f.minimo_operativo
@@ -99,51 +96,73 @@ function ForecastContent({ f }) {
   )
 
   const enRiesgo = minimo != null && bajo.saldo < minimo
-  const heroTone = bajo.saldo < 0 ? 'danger' : enRiesgo ? 'warning' : 'ok'
+  const tone = bajo.saldo < 0 ? 'danger' : enRiesgo ? 'warning' : 'ok'
+  const rango = `${ddmm(points[0].fecha)} – ${ddmm(points[points.length - 1].fecha)}`
+  const dia = sel !== null ? points[sel] : null
+
+  let estado
+  if (riesgo.size > 0) estado = riesgo.size === 1 ? '1 día por debajo de tu mínimo' : `${riesgo.size} días por debajo de tu mínimo`
+  else if (minimo != null) estado = 'No bajarías de tu mínimo'
+  const statusTone = riesgo.size === 0 ? 'ok' : tone === 'ok' ? 'warning' : tone
 
   return (
     <div className="fc-layout">
-      <div className="fc-main">
-        <section className="fc-hero" aria-labelledby="fc-hero-lead">
-          <p id="fc-hero-lead" className="fc-hero__lead">
-            {enRiesgo ? `El ${ddmm(bajo.fecha)} tu caja bajaría a` : `Lo más bajo que llegaría tu caja (${ddmm(bajo.fecha)})`}
-          </p>
-          <p className={`fc-hero__num display num fc-hero__num--${heroTone}`}>{soles(bajo.saldo)}</p>
-          <p className="fc-hero__ctx">
-            Hoy tienes <span className="num">{soles(f.saldo_actual)}</span>
-            {minimo != null && (
+      <Card className="fc-chart-card" aria-labelledby="fc-chart-title">
+        <div className="fc-head">
+          <div className="fc-head__start">
+            <h2 id="fc-chart-title" className="cc-card__title">
+              Tu caja
+            </h2>
+            <p className="fc-head__muted">{dia ? (dia.hoy ? `Hoy, ${ddmm(dia.fecha)}` : weekdayDdmm(dia.fecha)) : rango}</p>
+          </div>
+          <div className="fc-head__end">
+            {dia ? (
               <>
-                {' · '}Tu mínimo para operar es <span className="num">{soles(minimo)}</span>
+                <Money value={dia.p50} size="lg" {...moneyTone(dia.p50 < 0 ? 'danger' : 'ok')} />
+                <p className="fc-head__muted">{dia.hoy ? 'lo que tienes hoy' : 'lo esperado'}</p>
+              </>
+            ) : (
+              <>
+                <Money value={bajo.saldo} size="lg" {...moneyTone(tone)} />
+                <p className="fc-head__muted">lo más bajo, el {ddmm(bajo.fecha)}</p>
               </>
             )}
-          </p>
-          {riesgo.size > 0 && (
-            <p className="fc-hero__risk">
-              <Status tone="danger">
-                {riesgo.size === 1 ? '1 día debajo de tu mínimo' : `${riesgo.size} días debajo de tu mínimo`}
-              </Status>
-            </p>
-          )}
-        </section>
+          </div>
+        </div>
 
-        <Card className="fc-chart-card">
-          <ForecastChart points={points} minimo={minimo} worstFecha={critico?.fecha} />
-          <p className="fc-legend">
-            La línea es lo esperado; la sombra, el rango entre el peor y el mejor caso.
-            {riesgo.size > 0 && ' En naranja, los días debajo de tu mínimo.'}
-          </p>
-        </Card>
-      </div>
+        <p className="fc-status">
+          {dia ? (
+            <span className="cc-muted">
+              {dia.hoy
+                ? minimo != null && `Tu mínimo para operar es ${soles(minimo)}`
+                : `Podría estar entre ${solesRange([dia.p10, dia.p90])}`}
+            </span>
+          ) : estado ? (
+            <span className={`fc-status__text fc-status__text--${statusTone}`}>{estado}</span>
+          ) : null}
+        </p>
+
+        <ForecastChart points={points} minimo={minimo} worstFecha={critico?.fecha} sel={sel} onSel={setSel} />
+
+        <p className="fc-legend">La línea es lo esperado; la sombra, el rango posible. Toca el gráfico para ver cada día.</p>
+      </Card>
 
       <div className="fc-side">
-        <Section title="Lo que viene">
+        <Card flush aria-labelledby="fc-next-title">
+          <div className="cc-card__head">
+            <h2 id="fc-next-title" className="cc-card__title">
+              Lo que viene
+            </h2>
+          </div>
           {eventos.length ? (
             <List>
               {eventos.map((e) => {
                 const esRiesgo = riesgo.has(e.fecha)
+                const entra = e.monto > 0
                 return (
                   <ListRow
                     key={`${e.fecha}-${e.concepto}`}
+                    lead={<Icon name={entra ? 'arrowDown' : 'receipt'} size={20} />}
                     title={e.concepto}
                     sub={
                       <>
@@ -156,19 +175,18 @@ function ForecastContent({ f }) {
                         )}
                       </>
                     }
-                    amount={<span className="num">{soles(e.monto, { sign: true })}</span>}
-                    amountTone={e.monto > 0 ? 'pos' : undefined}
+                    amount={entra ? <Money value={e.monto} sign tone="pos" /> : <Money value={e.monto} />}
                   />
                 )
               })}
             </List>
           ) : (
-            <p className="cc-muted fc-none">No tienes pagos ni cobros con fecha en los próximos 30 días.</p>
+            <p className="cc-muted fc-pad">No tienes pagos ni cobros con fecha en los próximos 30 días.</p>
           )}
           {eventos.some((e) => e.tipo === 'cobro_fiado') && (
-            <p className="cc-small cc-muted fc-note">Fiados contados según qué tan probable es que te paguen.</p>
+            <p className="cc-small cc-muted fc-pad fc-note">Fiados contados según qué tan probable es que te paguen.</p>
           )}
-        </Section>
+        </Card>
 
         <TraceInfo fundamento={f.fundamento} limites={f.limites} confianza={f.confianza} meta={f.meta} />
 

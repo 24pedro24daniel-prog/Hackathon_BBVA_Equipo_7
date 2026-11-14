@@ -1,8 +1,26 @@
-/* Inicio (mockup págs. 5 y 10). Estructura de inicio de app bancaria:
-   saldo protagonista + acciones rápidas, alerta sobria, listas agrupadas. Mobile-first; 2 columnas desde 1100 px. */
-.inicio__body {
-  padding: 0 var(--gutter);
+/* Inicio: inicio de app bancaria (Monzo / Nu). Saludo arriba, tarjeta de cuenta Electric
+   (única superficie de color de la app) y tarjetas blancas con título dentro.
+   Mobile-first; 2 columnas desde 1100 px. */
+
+/* ---------- Barra superior: saludo + negocio y fecha ---------- */
+.inicio__top {
+  padding: 20px var(--gutter) 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
+.inicio__top-text { flex: 1; min-width: 0; }
+.inicio__hola {
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--title);
+}
+.inicio__top-sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+.inicio__body { padding: 0 var(--gutter); }
 
 /* ---------- Grilla ---------- */
 .inicio__grid,
@@ -11,114 +29,78 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
+  gap: 12px;
 }
-.inicio__grid { gap: 28px; }
-.inicio__main { gap: 16px; }
-.inicio__side { gap: 28px; }
 .inicio__main > *,
 .inicio__side > * { min-width: 0; }
 
-/* ---------- Cifra protagonista: caja del negocio ---------- */
-.inicio__hero { padding: 4px 4px 8px; }
-.inicio__hero-label { font-size: 15px; font-weight: 600; color: var(--text-muted); }
-.inicio__hero-value {
-  font-size: var(--fs-hero);
-  line-height: 1.05;
-  margin-top: 6px;
-  white-space: nowrap;
+/* ---------- Tarjeta de cuenta (Electric) ---------- */
+.inicio__cuenta {
+  background: var(--brand);
+  color: var(--on-brand);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow);
 }
-.inicio__hero-note { font-size: 15px; color: var(--text-muted); margin-top: 6px; }
-
-/* Acciones rápidas: ícono en círculo neutro + etiqueta debajo */
-.inicio__acciones {
-  display: flex;
-  gap: 8px;
-  margin-top: 20px;
+.inicio__cuenta-label {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--on-brand-muted);
 }
-.inicio__accion {
-  flex: 0 0 auto;
-  width: 88px;
-  min-height: var(--tap);
-  display: grid;
-  justify-items: center;
-  align-content: start;
-  gap: 8px;
-  padding: 4px 0;
-  text-decoration: none;
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  -webkit-tap-highlight-color: transparent;
-}
-.inicio__accion-icon {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--title);
-  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s var(--ease-out);
-}
-.inicio__accion:hover .inicio__accion-icon { background: var(--row-hover); border-color: var(--border-strong); }
-.inicio__accion:active .inicio__accion-icon { transform: scale(0.96); }
-.inicio__accion-label {
+.inicio__cuenta-saldo { margin-top: 6px; }
+.inicio__cuenta-msg {
   font-size: 14px;
-  font-weight: 600;
-  line-height: 1.25;
-  text-align: center;
+  line-height: 1.4;
+  color: var(--on-brand-muted);
+  margin-top: 6px;
+  max-width: 48ch;
 }
-
-/* ---------- Alerta principal: superficie con borde fino, título en color de alerta ---------- */
-.inicio__alerta {
-  display: grid;
-  gap: 8px;
-  justify-items: start;
-  padding: 18px;
-  border-color: var(--danger-border);
+.inicio__cuenta-disp {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
-.inicio__alerta-title {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-family: var(--font-display);
-  font-size: 21px;
-  line-height: 1.25;
-  font-weight: var(--display-weight);
-  letter-spacing: -0.01em;
-  color: var(--danger);
-  max-width: 36ch;
-  text-wrap: balance;
-}
-.inicio__alerta-title svg { flex: none; margin-top: 2px; }
-.inicio__alerta-when { font-size: 15px; font-weight: 600; color: var(--text); }
-.inicio__alerta-why { font-size: 16px; color: var(--text-muted); max-width: 65ch; }
-.inicio__alerta .cc-btn { margin-top: 8px; }
-
-.inicio__ok {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  color: var(--text);
-}
-.inicio__ok svg { flex: none; color: var(--ok); }
-
-/* ---------- Disponible para gastar ---------- */
-.inicio__disp { display: grid; gap: 8px; }
-.inicio__disp-card { display: grid; gap: 8px; }
-.inicio__disp-top {
+.inicio__cuenta-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  flex-wrap: wrap;
-  column-gap: 12px;
-  row-gap: 2px;
+  gap: 12px;
 }
-.inicio__disp-label { font-size: 16px; font-weight: 600; color: var(--text); }
-.inicio__disp-value { font-size: 28px; line-height: 1.1; white-space: nowrap; }
-.inicio__disp-msg { font-size: 16px; color: var(--text-muted); max-width: 65ch; }
+.inicio__cuenta-row-label { font-size: 15px; font-weight: 600; color: var(--on-brand); }
+.inicio__cuenta-skel {
+  display: block;
+  height: 20px;
+  width: 60%;
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.15);
+}
 
+/* ---------- Lo que viene (alerta): tarjeta blanca, el estado va en el ícono y el monto ---------- */
+.inicio__alerta {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.inicio__alerta-head { display: flex; align-items: center; gap: 8px; }
+.inicio__alerta-head svg { flex: none; }
+.inicio__alerta-icon--danger { color: var(--danger); }
+.inicio__alerta-icon--ok { color: var(--ok); }
+.inicio__alerta-title { font-size: 16px; font-weight: 600; line-height: 1.3; color: var(--title); }
+.inicio__alerta-insight {
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--title);
+  max-width: 34ch;
+  text-wrap: pretty;
+}
+.inicio__alerta-insight strong { font-weight: 700; white-space: nowrap; }
+.inicio__alerta-monto { color: var(--danger); font-variant-numeric: tabular-nums; }
+.inicio__alerta-detalle { display: grid; gap: 2px; font-size: 15px; color: var(--text-muted); max-width: 65ch; }
+.inicio__alerta-accion { margin: -4px 0 -8px -4px; }
+
+/* ---------- Desglose dentro de TraceInfo ---------- */
 .inicio__desglose {
   list-style: none;
   margin: 4px 0 6px;
@@ -135,66 +117,61 @@
   color: var(--title);
 }
 
-/* ---------- Este mes ---------- */
+/* ---------- Tarjetas con lista (Cuentas, Este mes, Hasta ahora) ---------- */
 .inicio__mala { color: var(--danger); font-weight: 600; }
-.inicio__nota-pie { font-size: 13px; color: var(--text-muted); padding: 0 4px; }
+.inicio__nota-pie { font-size: 13px; color: var(--text-muted); padding: 0 16px 16px; }
 
 /* ---------- Día 3 ---------- */
 .inicio__progreso { display: grid; gap: 12px; }
-.inicio__progreso-title {
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: var(--display-weight);
-  line-height: 1.25;
+.inicio__progreso-title { font-size: 16px; font-weight: 600; line-height: 1.3; color: var(--title); }
+.inicio__progreso-frase {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.4;
   color: var(--title);
   max-width: 40ch;
-  text-wrap: balance;
+  text-wrap: pretty;
 }
-.inicio__progreso-txt { font-size: 15px; color: var(--text-muted); }
-.inicio__progreso .cc-btn { width: 100%; }
-.inicio__segs { display: flex; gap: 3px; }
-.inicio__segs span {
-  flex: 1;
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--hairline);
-}
-.inicio__segs span.is-on { background: var(--brand); }
+.inicio__progreso-barra { display: grid; gap: 6px; margin-top: 4px; }
+.inicio__progreso-txt { font-size: 14px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.inicio__progreso .cc-btn { width: 100%; margin-top: 4px; }
 
-/* Nota en gris: aún no hay proyección */
+/* Nota en gris, sin caja: aún no hay proyección */
 .inicio__proximos {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 0 4px;
+  gap: 10px;
+  padding: 4px 4px 0;
+  font-size: 14px;
   color: var(--text-muted);
 }
 .inicio__proximos > svg { flex: none; margin-top: 1px; }
-.inicio__proximos-title { font-size: 16px; font-weight: 600; color: var(--text); }
-.inicio__proximos-txt { font-size: 15px; margin-top: 2px; max-width: 65ch; }
+.inicio__proximos p { max-width: 60ch; }
 
 @media (max-width: 359px) {
-  .inicio__hero-value { font-size: 38px; }
-  .inicio__accion { width: 80px; }
+  .inicio__cuenta { padding: 20px; }
+  .inicio__cuenta .cc-money--hero { font-size: 36px; }
 }
 
 /* ---------- Tablet ---------- */
 @media (min-width: 768px) {
-  .inicio__alerta { padding: 24px; }
-  .inicio__alerta-title { font-size: 24px; }
-  .inicio__disp-card { padding: 20px 24px; }
-  .inicio__disp-value { font-size: 32px; }
-  .inicio__progreso { padding: 24px; }
-  .inicio__progreso-title { font-size: 22px; }
+  .inicio__top { padding-top: 32px; padding-bottom: 20px; }
+  .inicio__hola { font-size: 24px; }
+  .inicio__grid,
+  .inicio__main,
+  .inicio__side { gap: 16px; }
+  .inicio__cuenta { padding: 28px; }
+  .inicio__alerta,
+  .inicio__progreso { padding: 20px; }
+  .inicio__alerta-insight { font-size: 21px; }
   .inicio__progreso .cc-btn { width: auto; justify-self: start; }
 }
 
-/* ---------- Escritorio: saldo, alerta y disponible a la izquierda; listas a la derecha ---------- */
+/* ---------- Escritorio: cuenta, alerta y trazabilidad a la izquierda; listas a la derecha ---------- */
 @media (min-width: 1100px) {
   .inicio__grid {
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    column-gap: 32px;
+    column-gap: 24px;
     align-items: start;
   }
-  .inicio__main { gap: 20px; }
 }

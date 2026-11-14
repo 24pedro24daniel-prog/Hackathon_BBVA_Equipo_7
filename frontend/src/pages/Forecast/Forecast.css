@@ -1,26 +1,16 @@
 .fc-body {
   padding: 0 var(--gutter);
   display: grid;
-  gap: 24px;
-}
-.fc-card-title {
-  font-family: var(--font-display);
-  font-weight: var(--display-weight);
-  color: var(--title);
-  font-size: 18px;
+  gap: 16px;
 }
 
 /* Layout: 1 columna en móvil; gráfico ancho + columna lateral en escritorio */
 .fc-layout,
-.fc-main,
 .fc-side {
   display: grid;
-  gap: 24px;
+  gap: 16px;
   min-width: 0;
   align-content: start;
-}
-.fc-main {
-  gap: 16px;
 }
 .fc-layout > * {
   min-width: 0;
@@ -29,52 +19,71 @@
   .fc-layout {
     grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     align-items: start;
-    gap: 32px;
+    gap: 24px;
   }
   .fc-side {
     position: sticky;
     top: 24px;
-    padding-top: 4px;
   }
 }
 
-/* Lo más importante primero: el día más bajo, en grande, sin caja alrededor */
-.fc-hero {
-  display: grid;
-  gap: 4px;
-  padding: 0 4px;
-}
-.fc-hero__lead {
-  font-size: 17px;
-  font-weight: 500;
-  color: var(--text);
-}
-.fc-hero__num {
-  font-size: var(--fs-hero);
-  line-height: 1.05;
-  margin: 2px 0 4px;
-}
-.fc-hero__num--danger {
-  color: var(--danger);
-}
-.fc-hero__num--warning {
-  color: var(--warning);
-}
-.fc-hero__num--ok {
-  color: var(--title);
-}
-.fc-hero__ctx {
-  font-size: 15px;
-  color: var(--text-muted);
-}
-.fc-hero__risk {
-  font-size: 15px;
-}
-
-/* Gráfico */
+/* ---------- Tarjeta del gráfico (Monzo Trends › Balance) ---------- */
 .fc-chart-card {
   padding: 16px 16px 12px;
 }
+@media (min-width: 768px) {
+  .fc-chart-card {
+    padding: 20px 20px 16px;
+  }
+}
+.fc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fc-head__start {
+  min-width: 0;
+}
+.fc-head__end {
+  flex: none;
+  display: grid;
+  justify-items: end;
+  text-align: right;
+}
+.fc-head__muted {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.35;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.fc-head .fc-money--warning {
+  color: var(--warning);
+}
+
+/* Frase de estado en color (SoFi "Pacing high"), alto fijo para que el gráfico no salte */
+.fc-status {
+  min-height: 22px;
+  margin: 8px 0 12px;
+  font-size: 15px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.fc-status__text {
+  font-weight: 600;
+}
+.fc-status__text--danger {
+  color: var(--danger);
+}
+.fc-status__text--warning {
+  color: var(--warning);
+}
+.fc-status__text--ok {
+  color: var(--ok);
+}
+
+/* ---------- Gráfico ---------- */
 .fc-chart {
   margin: 0;
 }
@@ -83,28 +92,35 @@
   touch-action: pan-y;
   cursor: crosshair;
 }
+.fc-chart__plot:focus-visible {
+  outline-offset: 4px;
+}
 .fc-chart__plot svg {
   display: block;
   overflow: visible;
 }
-.fc-band {
-  fill: var(--brand-band);
-  opacity: 0.6;
-}
-.fc-zero {
+.fc-grid {
   stroke: var(--hairline);
   stroke-width: 1;
+}
+.fc-band {
+  fill: var(--brand-band);
+  opacity: 0.45;
 }
 .fc-min {
   stroke: var(--text-muted);
   stroke-width: 1;
-  stroke-dasharray: 3 4;
-  opacity: 0.7;
+  stroke-dasharray: 4 4;
 }
 .fc-min-label {
   fill: var(--text-muted);
   font-size: 12px;
+  font-weight: 500;
   font-family: var(--font-body);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 .fc-line {
   fill: none;
@@ -116,9 +132,37 @@
 .fc-line--risk {
   stroke: var(--danger);
 }
+.fc-ylabel,
+.fc-tick {
+  fill: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.fc-end {
+  fill: var(--surface);
+  stroke: var(--brand);
+  stroke-width: 2;
+}
+.fc-end--risk {
+  stroke: var(--danger);
+}
+.fc-end-label {
+  fill: var(--title);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.fc-end-sub {
+  fill: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font-body);
+}
 .fc-cross {
-  stroke: var(--border-strong);
+  stroke: var(--brand);
   stroke-width: 1;
+  stroke-dasharray: 3 3;
 }
 .fc-dot {
   stroke: var(--surface);
@@ -130,50 +174,29 @@
 .fc-dot--sel {
   fill: var(--brand);
 }
-.fc-tick {
-  fill: var(--text-muted);
-  font-size: 12px;
-  font-family: var(--font-body);
-}
 
-.fc-readout {
-  min-height: 24px;
-  margin-top: 8px;
-  font-size: 15px;
-}
-.fc-readout__range {
-  color: var(--text-muted);
-}
-
-/* Leyenda en texto, sin chips */
 .fc-legend {
-  margin-top: 4px;
+  margin-top: 8px;
   font-size: 13px;
   color: var(--text-muted);
   line-height: 1.4;
 }
 
-/* Lo que viene */
-.fc-none {
-  padding: 0 4px;
+/* ---------- Lo que viene ---------- */
+.fc-pad {
+  padding: 0 16px 16px;
 }
 .fc-note {
-  padding: 0 4px;
+  padding-top: 4px;
 }
 
-/* Sin datos suficientes */
+/* ---------- Sin datos suficientes ---------- */
 .fc-empty {
   display: grid;
   gap: 12px;
 }
-.fc-progress {
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--hairline);
-  overflow: hidden;
-}
-.fc-progress span {
-  display: block;
-  height: 100%;
-  background: var(--brand);
+.fc-empty__text {
+  font-size: 15px;
+  color: var(--text);
+  max-width: 60ch;
 }

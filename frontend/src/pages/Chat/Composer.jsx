@@ -58,12 +58,12 @@ export default function Composer({ busy, onText, onVoice, onPhoto }) {
       )}
       <button
         type="button"
-        className="chat-iconbtn chat-iconbtn--outline"
+        className="chat-iconbtn chat-iconbtn--plain"
         onClick={onPhoto}
         disabled={busy}
         aria-label="Mandar foto del cuaderno de fiados"
       >
-        <Icon name="camera" size={22} />
+        <Icon name="camera" size={24} />
       </button>
       <input
         className="chat-input"

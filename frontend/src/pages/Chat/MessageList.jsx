@@ -62,7 +62,10 @@ function Message({ msg, a }) {
     case 'error':
       return (
         <InBubble time={msg.time} tone="error">
-          <p role="alert">{msg.text}</p>
+          <p role="alert" className="chat-err">
+            <Icon name="warning" size={18} className="chat-ico chat-ico--danger" />
+            <span>{msg.text}</span>
+          </p>
           {msg.retry && (
             <div className="chat-actions chat-actions--stack">
               <Button variant="secondary" size="sm" onClick={() => a.retry(msg.id)} disabled={msg.status === 'done'}>

@@ -44,25 +44,101 @@ export function Status({ tone = 'neutral', children, className }) {
 export const Badge = Status
 
 /**
- * Encabezado de página: título grande y, debajo, una línea de contexto (sub).
- * `kicker` se acepta por compatibilidad y se pinta debajo del título, nunca encima.
+ * Encabezado de página.
+ *  - Pantalla de pestaña (sin back): título serif grande a la izquierda + línea de contexto debajo.
+ *  - Sub-pantalla (back): botón circular "volver" + título centrado de 17px (patrón Monzo / Nu).
+ * `kicker` se acepta por compatibilidad y se pinta como `sub`.
  */
 export function PageHeader({ sub, kicker, title, back, right }) {
   const navigate = useNavigate()
   const subtitle = sub ?? kicker
+  if (back) {
+    return (
+      <header className="cc-header cc-header--sub">
+        <button className="cc-iconbtn" onClick={() => navigate(-1)} aria-label="Volver">
+          <Icon name="back" size={22} />
+        </button>
+        <div className="cc-header__center">
+          <h1 className="cc-header__subtitle-title">{title}</h1>
+          {subtitle && <p className="cc-header__sub">{subtitle}</p>}
+        </div>
+        <div className="cc-header__right">{right}</div>
+      </header>
+    )
+  }
   return (
     <header className="cc-header">
-      {back && (
-        <button className="cc-header__back" onClick={() => navigate(-1)} aria-label="Volver">
-          <Icon name="back" size={24} />
-        </button>
-      )}
       <div className="cc-header__text">
         <h1 className="cc-header__title">{title}</h1>
         {subtitle && <p className="cc-header__sub">{subtitle}</p>}
       </div>
       {right}
     </header>
+  )
+}
+
+/**
+ * Monto con el símbolo "S/" más pequeño y el entero dominante (patrón Nu / Monzo / SoFi).
+ *  value: número; size: hero | lg | md (fila); tone: auto | neutral | pos | neg
+ *  tone="auto": positivo en verde con "+" solo si sign=true (ingresos); negativo en rojo.
+ *  inverse: sobre fondo Electric (texto blanco).
+ */
+export function Money({ value, size = 'md', sign = false, tone = 'neutral', inverse, className, ...rest }) {
+  const n = Number(value)
+  const valid = value !== null && value !== undefined && !Number.isNaN(n)
+  const abs = valid ? Math.round(Math.abs(n)) : null
+  const grouped = valid ? String(abs).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '—'
+  const prefix = !valid ? '' : n < 0 ? '−' : sign && n > 0 ? '+' : ''
+  const t = tone === 'auto' ? (n < 0 ? 'neg' : sign && n > 0 ? 'pos' : 'neutral') : tone
+  return (
+    <span
+      className={cx('cc-money', `cc-money--${size}`, `cc-money--${t}`, inverse && 'cc-money--inverse', className)}
+      {...rest}
+    >
+      {prefix}
+      <span className="cc-money__cur">S/</span>
+      {grouped}
+    </span>
+  )
+}
+
+/**
+ * Control segmentado neutro (pista gris, segmento elegido blanco). Patrón Monzo "Balance | Spending".
+ * options: [{ value, label }]
+ */
+export function Segmented({ options, value, onChange, label, className }) {
+  return (
+    <div className={cx('cc-seg', className)} role="radiogroup" aria-label={label}>
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="radio"
+          aria-checked={value === o.value}
+          className="cc-seg__opt"
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Barra de progreso fina y plana. tone: brand | ok | warning | danger */
+export function ProgressBar({ value, max = 100, tone = 'brand', label, className }) {
+  const pct = Math.max(0, Math.min(100, (Number(value) / max) * 100 || 0))
+  return (
+    <div
+      className={cx('cc-bar', `cc-bar--${tone}`, className)}
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={max}
+      aria-valuenow={value}
+      aria-label={label}
+    >
+      <span style={{ width: `${pct}%` }} />
+    </div>
   )
 }
 
@@ -147,7 +223,7 @@ export function ListRow({ lead, title, sub, amount, amountTone, end, to, onClick
     )
   }
   return (
-    <li>
+    <li className={lead != null ? 'has-lead' : undefined}>
       {row}
       {children}
     </li>

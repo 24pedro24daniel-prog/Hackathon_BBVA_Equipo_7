@@ -1,7 +1,7 @@
 // Foto del cuaderno de fiados → fiados propuestos para revisar.
-import { Button, Status } from '../../components/ui/index.jsx'
+import { Button, Money } from '../../components/ui/index.jsx'
 import { ddmm, soles } from '../../lib/format.js'
-import { HowIKnow, InBubble, RichText, SavedLine } from './ChatParts.jsx'
+import { HowIKnow, InBubble, RichText, SavedLine, StatusText } from './ChatParts.jsx'
 
 export function CuadernoCard({ msg, onGuardar, onCorregir }) {
   const { res, montos, status, time } = msg
@@ -21,7 +21,9 @@ export function CuadernoCard({ msg, onGuardar, onCorregir }) {
               <span className="chat-fiados__sub num">
                 {f.confianza < 0.75 && (
                   <>
-                    <Status tone="warning">Revisa</Status>
+                    <StatusText tone="warning" size={14}>
+                      Revisa
+                    </StatusText>
                     {' · '}
                   </>
                 )}
@@ -29,7 +31,7 @@ export function CuadernoCard({ msg, onGuardar, onCorregir }) {
                 {f.detalle}
               </span>
             </div>
-            <strong className="chat-fiados__amount num">{soles(montos[i])}</strong>
+            <Money value={montos[i]} className="chat-fiados__amount" />
           </li>
         ))}
       </ul>
@@ -45,7 +47,7 @@ export function CuadernoCard({ msg, onGuardar, onCorregir }) {
         <Button onClick={onGuardar} disabled={locked}>
           Sí, guardar
         </Button>
-        <Button variant="ghost" onClick={onCorregir} disabled={locked || status === 'editing'}>
+        <Button variant="secondary" onClick={onCorregir} disabled={locked || status === 'editing'}>
           No, corregir
         </Button>
       </div>

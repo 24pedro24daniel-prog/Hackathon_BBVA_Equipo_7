@@ -230,7 +230,7 @@ export const salud = () => ({
   ],
   rachas: [{ tipo: 'semanas_registrando', valor: 4 }],
   metas_activas: [ // EXT
-    { meta_id: 'MET-0004', plantilla: 'apartar_para_pedido', titulo: 'Apartar para el pedido', detalle: 'S/ 1 de cada S/ 10 que vendes', acumulado: 420.0, estado: 'activa' },
+    { meta_id: 'MET-0004', plantilla: 'apartar_para_pedido', titulo: 'Apartar para el pedido', detalle: 'S/ 1 de cada S/ 10 que vendes', acumulado: 420.0, objetivo: 800.0, estado: 'activa' },
   ],
   consentimiento_compartir_historial: false,
   meta: meta('score-reglas', '0.1.0'),

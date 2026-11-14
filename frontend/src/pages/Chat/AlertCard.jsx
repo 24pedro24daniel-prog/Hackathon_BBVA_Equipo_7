@@ -1,7 +1,7 @@
 // F6: alerta proactiva como primer mensaje del día.
-import { Button, Icon } from '../../components/ui/index.jsx'
+import { Button } from '../../components/ui/index.jsx'
 import { probabilidadTexto, soles } from '../../lib/format.js'
-import { HowIKnow, InBubble, RichText } from './ChatParts.jsx'
+import { CardTitle, HowIKnow, InBubble, RichText } from './ChatParts.jsx'
 import { boldMonto } from './chatText.js'
 
 export function AlertCard({ msg, onAccion }) {
@@ -12,11 +12,10 @@ export function AlertCard({ msg, onAccion }) {
     alerta.resumen_causas ||
     (alerta.causas || []).map((c) => `${c.descripcion.toLowerCase()} (${soles(c.monto)})`).join(', ')
   return (
-    <InBubble wide time={time} footer={total > 0 ? `Alerta 1 de ${total} hoy` : null}>
-      <h2 className="chat-card__title chat-card__title--danger">
-        <Icon name="bell" size={20} />
+    <InBubble wide time={time} className="chat-alert" footer={total > 0 ? `Alerta 1 de ${total} hoy` : null}>
+      <CardTitle icon="warning" tone="danger">
         {alerta.titulo_corto || alerta.titulo}
-      </h2>
+      </CardTitle>
       <RichText text={`${boldMonto(base, alerta.monto)}.${prob ? ` ${prob}.` : ''}`} />
       {causas && <p className="chat-why">Por qué: {causas}</p>}
       {alerta.accion && (

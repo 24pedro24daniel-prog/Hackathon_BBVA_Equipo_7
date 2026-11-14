@@ -68,18 +68,16 @@ export default function RecordatorioSheet({ fiado, onClose }) {
       <div className="cuentas-sheet__inner">
         <span className="cuentas-sheet__grip" aria-hidden="true" />
         <div className="cuentas-sheet__head">
-          <div>
-            <h2 id={titleId} className="cuentas-sheet__title">
-              Recordarle a {fiado.cliente}
-            </h2>
-            <p className="cuentas-sheet__sub num">Te debe {soles(fiado.monto)}</p>
-          </div>
+          <h2 id={titleId} className="cuentas-sheet__title">
+            Recordarle a {fiado.cliente}
+          </h2>
+          <p className="cuentas-sheet__sub num">Te debe {soles(fiado.monto)}</p>
           <button type="button" className="cuentas-sheet__close" aria-label="Cerrar" onClick={() => ref.current?.close()}>
             <Icon name="close" size={22} />
           </button>
         </div>
 
-        {loading && <LoadingBlock heights={[96]} />}
+        {loading && <LoadingBlock heights={[120, 48, 48]} />}
         {error && <ErrorState error={error} onRetry={reload} />}
         {data && (
           <>
@@ -88,18 +86,17 @@ export default function RecordatorioSheet({ fiado, onClose }) {
               <blockquote ref={msgRef} className="cuentas-sheet__msg">
                 {mensaje}
               </blockquote>
-              <p className="cuentas-sheet__note cc-small">
+              <p className="cuentas-sheet__note">
                 CajaClara no lo envía por ti. Tú decides si lo mandas, cuándo y cómo. Puedes cambiarle las palabras.
               </p>
             </div>
             <div className="cuentas-sheet__actions">
               <a
-                className="cc-btn cc-btn--primary cc-btn--block cc-btn--lg"
+                className="cc-btn cc-btn--primary cc-btn--block"
                 href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Icon name="send" size={20} />
                 Enviar por WhatsApp
               </a>
               <Button variant="secondary" block onClick={onCopy}>

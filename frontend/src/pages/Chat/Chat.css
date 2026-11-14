@@ -1,8 +1,9 @@
 /* Chat simulado (estilo WhatsApp, con la identidad de CajaClara). Ocupa toda la altura de la columna principal:
    header arriba, lista con scroll, compositor abajo. Nada es position:fixed, así que respeta el riel/barra
    lateral (≥768) del layout. La conversación se centra en una columna de --chat-max; el fondo ocupa todo el ancho.
-   Tarjetas dentro del chat = comprobante: filas etiqueta/monto con divisores finos, estado como texto de color,
-   una acción principal y la secundaria como texto. */
+   Tarjetas dentro del chat = comprobante (Nu): blancas, filas etiqueta/valor con divisores finos, estado como
+   texto de color + ícono, un solo botón principal. Ningún bloque tintado: el único color de superficie es la
+   burbuja saliente Electric y el botón principal. */
 
 .cc-main > .chat-page {
   --chat-max: 760px;
@@ -14,34 +15,34 @@
   background: var(--chat-bg);
 }
 
-/* ---------- Header ---------- */
+/* ---------- Header: barra blanca, volver circular, título centrado (Nu / Monzo) ---------- */
 .chat-header {
   flex: none;
   position: sticky;
   top: 0;
   z-index: 5;
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--tap) minmax(0, 1fr) var(--tap);
   align-items: center;
-  gap: 4px;
-  min-height: 60px;
-  padding: 8px var(--chat-pad);
-  padding-top: calc(8px + env(safe-area-inset-top));
+  gap: 8px;
+  min-height: 64px;
+  padding: 10px var(--chat-pad);
+  padding-top: calc(10px + env(safe-area-inset-top));
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--hairline);
 }
-.chat-header > .chat-iconbtn { margin-left: -6px; color: var(--title); }
-.chat-header__text { min-width: 0; display: grid; gap: 1px; }
-.chat-header__title {
-  font-family: var(--font-display);
-  font-weight: var(--display-weight);
-  color: var(--title);
-  font-size: 18px;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+.chat-header__text { min-width: 0; display: grid; gap: 1px; text-align: center; }
+.chat-header__title { font-size: 17px; font-weight: 600; line-height: 1.25; color: var(--title); }
+.chat-header__sub {
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.chat-header__sub { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ---------- Botones de ícono ---------- */
+/* ---------- Botones de ícono del compositor ---------- */
 .chat-iconbtn {
   flex: none;
   width: var(--tap);
@@ -52,17 +53,16 @@
   border: 0;
   background: none;
   cursor: pointer;
-  color: var(--text);
-  transition: background-color 0.15s ease, opacity 0.15s ease;
+  color: var(--title);
+  transition: background-color 0.15s ease, transform 0.12s var(--ease-out);
   -webkit-tap-highlight-color: transparent;
 }
-.chat-iconbtn:disabled { opacity: 0.5; cursor: not-allowed; }
-.chat-iconbtn--outline { background: var(--surface); border: 1px solid var(--border-strong); color: var(--title); }
-.chat-iconbtn--brand { width: 48px; height: 48px; background: var(--brand); color: var(--on-brand); }
-.chat-iconbtn--brand:hover:not(:disabled) { opacity: 0.85; }
-.chat-iconbtn--plain:hover:not(:disabled),
-.chat-iconbtn--outline:hover:not(:disabled) { background: var(--brand-soft); }
+.chat-iconbtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.chat-iconbtn:active:not(:disabled) { transform: scale(0.96); }
 .chat-iconbtn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.chat-iconbtn--plain:hover:not(:disabled) { background: var(--surface-sunken); }
+.chat-iconbtn--brand { width: 48px; height: 48px; background: var(--brand); color: var(--on-brand); }
+.chat-iconbtn--brand:hover:not(:disabled) { background: var(--brand-hover); }
 .chat-iconbtn--sm { width: var(--tap); height: var(--tap); }
 
 /* ---------- Lista ---------- */
@@ -91,11 +91,12 @@
 .chat-row--me { justify-content: flex-end; }
 .chat-row--bot { justify-content: flex-start; }
 
-/* Burbujas: radio 16, esquina más chica del lado de la "cola". La entrada solo desliza (nunca parte invisible). */
+/* Burbujas: radio 18 con esquina de 4px del lado de la "cola". La entrada solo desliza (transform), nunca
+   parte de opacidad 0: la alerta del día se ve opaca desde el primer cuadro. */
 .chat-bubble {
   max-width: 82%;
   padding: 10px 14px 7px;
-  border-radius: var(--radius-lg);
+  border-radius: 18px;
   font-size: 16px;
   line-height: 1.45;
   overflow-wrap: anywhere;
@@ -111,16 +112,19 @@
 .chat-bubble--in {
   background: var(--bubble-in);
   color: var(--text);
-  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
   border-bottom-left-radius: 4px;
 }
 .chat-bubble--wide { width: 92%; max-width: 92%; padding: 16px 16px 8px; display: grid; gap: 12px; }
 .chat-bubble--wide > p + p { margin-top: -6px; }
-.chat-bubble--error { border-color: var(--danger-border); }
 @keyframes chat-in { from { transform: translateY(6px); } to { transform: none; } }
 
+/* Error: la misma burbuja blanca; el estado va en el ícono rojo */
+.chat-err { display: flex; align-items: flex-start; gap: 8px; }
+.chat-err .chat-ico { margin-top: 3px; }
+
 .chat-time { font-size: 12px; line-height: 1; color: var(--text-muted); white-space: nowrap; }
-.chat-bubble--out .chat-time { display: block; text-align: right; margin-top: 4px; color: var(--on-brand); opacity: 0.85; }
+.chat-bubble--out .chat-time { display: block; text-align: right; margin-top: 4px; color: var(--on-brand-muted); }
 .chat-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-top: 2px; }
 .chat-foot__note { font-size: 13px; line-height: 1.35; color: var(--text-muted); }
 .chat-how + .chat-foot { margin-top: -10px; }
@@ -131,16 +135,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: var(--display-weight);
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
   color: var(--title);
   text-wrap: balance;
 }
-.chat-card__title svg { flex: none; }
-.chat-card__title--danger { color: var(--danger); }
+/* Solo el ícono lleva el color del estado; el texto del título queda en navy */
+.chat-ico { flex: none; }
+.chat-ico--danger { color: var(--danger); }
+.chat-ico--warning { color: var(--warning); }
+.chat-ico--ok { color: var(--ok); }
 .chat-card__q { font-weight: 600; color: var(--title); }
 .chat-why { color: var(--text-muted); font-size: 15px; }
 .chat-note { font-size: 14px; color: var(--text-muted); }
@@ -148,8 +153,11 @@
 .chat-status { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--ok); }
 .chat-neg { color: var(--danger); }
 .chat-pos { color: var(--ok); }
+/* Estado en línea: texto de color + ícono pequeño, sin fondo */
+.chat-st { display: inline-flex; align-items: center; gap: 4px; }
+.chat-st svg { flex: none; }
 
-/* Filas tipo comprobante: etiqueta izquierda, valor derecha, divisores finos */
+/* Filas tipo comprobante (Nu): etiqueta izquierda, valor derecha, divisores finos */
 .chat-kv { margin: 0; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
 .chat-kv__row {
   display: flex;
@@ -165,15 +173,23 @@
 .chat-kv__row dd { margin: 0; font-weight: 600; font-size: 16px; color: var(--title); text-align: right; }
 .chat-kv__row dd.chat-kv__v--neg { color: var(--danger); }
 .chat-kv__row dd.chat-kv__v--pos { color: var(--ok); }
+.chat-kv__row dd .cc-money--md { font-size: 16px; }
 
-/* Acciones: una principal; la secundaria como texto (ghost) */
+/* Acciones: una principal; la secundaria gris (lado a lado) o como texto (apiladas) */
 .chat-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .chat-actions--stack { grid-template-columns: 1fr; gap: 2px; }
 .chat-actions .cc-btn { padding-inline: 12px; }
 .chat-actions .cc-btn--ghost { padding-inline: 8px; }
 
-/* Respuestas rápidas: píldoras neutras con borde */
-.chat-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Respuestas sugeridas (SoFi Coach): píldoras con borde, bajo la burbuja y del lado de Pedro */
+.chat-quick {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+  max-width: 92%;
+}
 .chat-chip {
   display: inline-flex;
   align-items: center;
@@ -183,26 +199,29 @@
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-strong);
   background: var(--surface);
-  color: var(--title);
+  color: var(--brand);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.2;
+  text-align: left;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s var(--ease-out);
   -webkit-tap-highlight-color: transparent;
 }
+.chat-chip svg { flex: none; }
 .chat-chip:hover:not(:disabled) { background: var(--row-hover); border-color: var(--brand); }
+.chat-chip:active:not(:disabled) { transform: scale(0.98); }
 .chat-chip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-.chat-chip:disabled { opacity: 0.5; cursor: not-allowed; }
+.chat-chip:disabled { opacity: 0.45; cursor: not-allowed; }
 .chat-chip[aria-pressed='true'],
-.chat-chip[aria-pressed='true']:disabled { opacity: 1; border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
+.chat-chip[aria-pressed='true']:disabled { opacity: 1; border-color: var(--brand); background: var(--surface); }
 
 /* Opciones del pedido */
 .chat-opts { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
 .chat-opts__row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 11px 0; font-size: 15px; }
 .chat-opts__row + .chat-opts__row { border-top: 1px solid var(--hairline); }
 .chat-opts__row span { color: var(--text); }
-.chat-opts__row strong { text-align: right; white-space: nowrap; font-weight: 600; }
+.chat-opts__row strong { text-align: right; white-space: nowrap; font-weight: 600; align-self: center; }
 
 /* Ejemplo de préstamo informal: mismo comprobante, con su propio subtítulo */
 .chat-ejemplo { display: grid; gap: 6px; }
@@ -215,7 +234,9 @@
 .chat-fiados__main { min-width: 0; display: grid; gap: 2px; }
 .chat-fiados__name { font-weight: 600; color: var(--title); }
 .chat-fiados__sub { font-size: 14px; color: var(--text-muted); }
-.chat-fiados__amount { flex: none; font-weight: 600; color: var(--title); white-space: nowrap; }
+.chat-fiados__sub .chat-st { vertical-align: -2px; }
+.chat-fiados__amount { flex: none; }
+.chat-fiados__amount.cc-money--md { font-size: 16px; }
 
 /* "¿De dónde sale este número?" */
 .chat-how { border-top: 1px solid var(--hairline); margin-top: 2px; }
@@ -245,7 +266,7 @@
 .chat-wave { flex: none; opacity: 0.9; }
 .chat-audio__text { font-style: italic; margin-top: 4px; }
 
-/* Foto del cuaderno: hoja rayada dibujada con CSS */
+/* Foto del cuaderno: hoja rayada dibujada con CSS (margen rojo + renglones celestes de un cuaderno real) */
 .chat-photo { padding: 8px 8px 6px; }
 .chat-photo__img {
   width: min(220px, 60vw);
@@ -274,7 +295,7 @@
 .chat-typing__dots i:nth-child(3) { animation-delay: 0.3s; }
 @keyframes chat-dot { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
 
-/* ---------- Compositor ---------- */
+/* ---------- Compositor: barra blanca, campo gris en píldora, micrófono/enviar Electric ---------- */
 .chat-composer {
   flex: none;
   position: relative;
@@ -284,30 +305,25 @@
   padding: 8px var(--chat-pad);
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
   background: var(--surface);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--hairline);
 }
 .chat-input {
   flex: 1;
   min-width: 0;
   min-height: 48px;
-  padding: 10px 16px;
+  padding: 10px 18px;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--border-strong);
+  border: 0;
   background: var(--surface-sunken);
   font: inherit;
   font-size: 16px;
   color: var(--text);
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 .chat-input::placeholder { color: var(--text-muted); opacity: 1; }
-.chat-input:hover { border-color: var(--text-muted); }
+.chat-input:hover { background: var(--border); }
 .chat-input:focus { outline: none; }
-.chat-input:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: -1px;
-  border-color: var(--brand);
-  background: var(--surface);
-}
+.chat-input:focus-visible { background: var(--surface-sunken); box-shadow: 0 0 0 2px var(--brand); }
 
 .chat-picker {
   position: absolute;
@@ -318,7 +334,7 @@
   padding: 8px;
   border-radius: var(--radius-lg);
   background: var(--surface);
-  border: 1px solid var(--border-strong);
+  box-shadow: 0 2px 4px rgba(7, 14, 70, 0.06), 0 12px 32px rgba(7, 14, 70, 0.12);
   display: grid;
   gap: 2px;
 }
@@ -349,6 +365,7 @@
   .chat-bubble { max-width: 70%; }
   .chat-bubble--wide { width: 70%; max-width: 70%; min-width: min(100%, 420px); }
   .chat-bubble--in.chat-typing { max-width: 70%; }
+  .chat-quick { max-width: 70%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .chat-bubble { animation: none; }

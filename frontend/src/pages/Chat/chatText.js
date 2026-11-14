@@ -127,20 +127,20 @@ export function textoConfirmado(mov, correcciones = {}, res) {
     let detalle = soles(final.monto, { cents: true })
     if (correcciones.metodo_pago) detalle += ` ${PAGO_CORTO[final.metodo_pago] || pagoLabel(final.metodo_pago)}`
     else if (correcciones.tipo) detalle += ` (${tipoLabel(final.tipo).toLowerCase()})`
-    lines.push('Listo, corregido:', `**${detalle}**`, '✅')
+    lines.push('Listo, corregido:', `**${detalle}**`)
   } else if (final.tipo === 'compra') {
     const fecha = final.fecha_vencimiento ? `, lo pagas el ${ddmm(final.fecha_vencimiento)}` : ''
-    lines.push('Listo, anotado ✅', `Pedido${final.contraparte ? ` a ${final.contraparte}` : ''} por **${soles(final.monto)}**${fecha}.`)
+    lines.push('Listo, anotado.', `Pedido${final.contraparte ? ` a ${final.contraparte}` : ''} por **${soles(final.monto)}**${fecha}.`)
   } else if (final.tipo === 'pago_impuesto') {
-    lines.push('Listo, anotado ✅', `Pagaste **${soles(final.monto)} de impuesto**. Ya salió de tu caja.`)
+    lines.push('Listo, anotado.', `Pagaste **${soles(final.monto)} de impuesto**. Ya salió de tu caja.`)
   } else {
-    lines.push('Listo, anotado ✅')
+    lines.push('Listo, anotado.')
   }
   if (res?.saldo_caja_negocio !== undefined && res?.saldo_caja_negocio !== null) {
     lines.push(`Caja del negocio hoy: ${soles(res.saldo_caja_negocio)}`)
   }
   const alerta = res?.alertas_disparadas?.[0]
-  if (alerta) lines.push(`⚠ Ojo: ${alerta.titulo || alerta.titulo_corto}.`)
+  if (alerta) lines.push(`Ojo: ${alerta.titulo || alerta.titulo_corto}.`)
   return lines.join('\n')
 }
 

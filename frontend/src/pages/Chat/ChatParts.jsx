@@ -1,6 +1,6 @@
 // Piezas visuales básicas del chat: filas, burbujas, texto con **negrita**, tabla clave/valor, "¿Cómo lo sé?".
 import { useId, useState } from 'react'
-import { Icon, MetaLine } from '../../components/ui/index.jsx'
+import { Icon, MetaLine, Status } from '../../components/ui/index.jsx'
 import { confianzaLabel } from '../../lib/format.js'
 
 const cx = (...c) => c.filter(Boolean).join(' ')
@@ -64,6 +64,26 @@ export function KVTable({ rows, label }) {
         </div>
       ))}
     </dl>
+  )
+}
+
+/** Estado como texto de color + ícono pequeño (sin fondo, sin píldora). tone: danger | warning | ok */
+export function StatusText({ tone = 'warning', icon = 'warning', size = 16, children }) {
+  return (
+    <Status tone={tone} className="chat-st">
+      <Icon name={icon} size={size} />
+      {children}
+    </Status>
+  )
+}
+
+/** Título de tarjeta con ícono de estado (solo el ícono lleva el color; el texto queda en navy) */
+export function CardTitle({ icon, tone = 'danger', children }) {
+  return (
+    <h2 className="chat-card__title">
+      {icon && <Icon name={icon} size={20} className={`chat-ico chat-ico--${tone}`} />}
+      {children}
+    </h2>
   )
 }
 
