@@ -1,0 +1,175 @@
+.sim-body {
+  padding: 0 var(--gutter);
+  display: grid;
+  gap: 12px;
+}
+
+.sim-group {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.sim-legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+/* Tarjetas seleccionables: input nativo oculto visualmente, la tarjeta es su <label> */
+.sim-input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+.sim-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.sim-option:hover {
+  border-color: var(--border-strong);
+}
+.sim-option:has(.sim-input:checked) {
+  border: 2px solid var(--brand);
+  padding: 11.5px 15.5px;
+  background: color-mix(in srgb, var(--brand-soft) 45%, var(--surface));
+}
+.sim-option:has(.sim-input:focus-visible) {
+  outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent);
+  outline-offset: 2px;
+}
+.sim-option__text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.sim-option__amount {
+  font-size: 20px;
+  line-height: 1.15;
+}
+.sim-option__title {
+  font-weight: 700;
+  font-size: 16px;
+}
+.sim-option__sub {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.sim-option__chosen {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.sim-box {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  color: transparent;
+}
+.sim-option:has(.sim-input:checked) .sim-box {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+}
+
+/* Resultado */
+.sim-result {
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: grid;
+  gap: 4px;
+  border: 1px solid transparent;
+  transition: opacity 0.15s ease;
+}
+.sim-result.is-pending {
+  opacity: 0.7;
+}
+.sim-result__kicker {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sim-result__amount {
+  font-size: 40px;
+  line-height: 1.1;
+  margin: 4px 0 6px;
+}
+.sim-result__main {
+  font-weight: 500;
+}
+.sim-result__note {
+  color: var(--text-muted);
+}
+
+.sim-result--no_te_alcanza {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+}
+.sim-result--no_te_alcanza .sim-result__kicker,
+.sim-result--no_te_alcanza .sim-result__amount {
+  color: var(--danger);
+}
+
+.sim-result--justo {
+  background: var(--warning-bg);
+  border-color: color-mix(in srgb, var(--warning) 25%, transparent);
+}
+.sim-result--justo .sim-result__kicker,
+.sim-result--justo .sim-result__amount {
+  color: var(--warning);
+}
+
+.sim-result--te_alcanza {
+  background: var(--brand-soft);
+  border-color: var(--brand-band);
+}
+.sim-result--te_alcanza .sim-result__kicker,
+.sim-result--te_alcanza .sim-result__amount {
+  color: var(--brand);
+}
+
+.sim-stale {
+  margin-top: 8px;
+  color: var(--danger);
+}
+.sim-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  min-height: var(--tap);
+  color: var(--brand);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sim-foot {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-muted);
+}

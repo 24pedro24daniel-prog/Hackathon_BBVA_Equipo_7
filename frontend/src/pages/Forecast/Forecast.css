@@ -1,0 +1,196 @@
+.fc-body {
+  padding: 0 var(--gutter);
+  display: grid;
+  gap: 12px;
+}
+.fc-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+/* KPIs del gráfico */
+.fc-kpis {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.fc-kpi--danger {
+  text-align: right;
+  color: var(--danger);
+}
+.fc-kpi__label {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.fc-kpi--danger .fc-kpi__label {
+  color: var(--danger);
+  font-weight: 700;
+}
+.fc-kpi__value {
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+/* Gráfico */
+.fc-chart {
+  margin: 0;
+}
+.fc-chart__plot {
+  border-radius: var(--radius-sm);
+  touch-action: pan-y;
+  cursor: crosshair;
+}
+.fc-chart__plot svg {
+  display: block;
+  overflow: visible;
+}
+.fc-risk {
+  fill: var(--danger-bg);
+}
+.fc-band {
+  fill: var(--brand-band);
+  opacity: 0.85;
+}
+.fc-zero {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.fc-min {
+  stroke: var(--danger);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+.fc-line {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.fc-cross {
+  stroke: var(--text-subtle);
+  stroke-width: 1;
+}
+.fc-dot {
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.fc-dot--worst {
+  fill: var(--danger);
+}
+.fc-dot--sel {
+  fill: var(--brand);
+}
+.fc-tick {
+  fill: var(--text-muted);
+  font-size: 11px;
+  font-family: var(--font-body);
+}
+
+.fc-readout {
+  min-height: 24px;
+  margin-top: 6px;
+  font-size: 14px;
+}
+.fc-readout__range {
+  color: var(--text-muted);
+}
+
+/* Leyenda */
+.fc-legend {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.fc-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.fc-sw {
+  display: inline-block;
+  width: 16px;
+  flex: none;
+}
+.fc-sw--line {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--brand);
+}
+.fc-sw--band {
+  height: 12px;
+  border-radius: 3px;
+  background: var(--brand-band);
+}
+.fc-sw--min {
+  height: 0;
+  border-top: 2px dashed var(--danger);
+}
+.fc-sw--risk {
+  height: 12px;
+  border-radius: 3px;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+}
+
+/* Lo que viene */
+.fc-next {
+  display: grid;
+  gap: 10px;
+}
+.fc-next .fc-card-title {
+  margin-bottom: 0;
+}
+.fc-events {
+  list-style: none;
+  margin: 0;
+  padding: 4px 12px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+}
+.fc-events li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 15px;
+}
+.fc-events li + li {
+  border-top: 1px solid var(--border);
+}
+.fc-events strong {
+  white-space: nowrap;
+}
+.fc-pos {
+  color: var(--ok);
+}
+
+/* Sin datos suficientes */
+.fc-empty {
+  display: grid;
+  gap: 12px;
+}
+.fc-empty .fc-card-title {
+  margin-bottom: 0;
+}
+.fc-progress {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.fc-progress span {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+}
