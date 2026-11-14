@@ -1,7 +1,7 @@
 // Foto del cuaderno de fiados → fiados propuestos para revisar.
-import { Badge, Button } from '../../components/ui/index.jsx'
+import { Button, Money } from '../../components/ui/index.jsx'
 import { ddmm, soles } from '../../lib/format.js'
-import { HowIKnow, InBubble, RichText } from './ChatParts.jsx'
+import { HowIKnow, InBubble, RichText, SavedLine, StatusText } from './ChatParts.jsx'
 
 export function CuadernoCard({ msg, onGuardar, onCorregir }) {
   const { res, montos, status, time } = msg
@@ -17,16 +17,21 @@ export function CuadernoCard({ msg, onGuardar, onCorregir }) {
         {fiados.map((f, i) => (
           <li key={`${f.cliente}-${i}`} className="chat-fiados__row">
             <div className="chat-fiados__main">
-              <span className="chat-fiados__name">
-                {f.cliente}
-                {f.confianza < 0.75 && <Badge tone="warning">Revisa</Badge>}
+              <span className="chat-fiados__name">{f.cliente}</span>
+              <span className="chat-fiados__sub num">
+                {f.confianza < 0.75 && (
+                  <>
+                    <StatusText tone="warning" size={14}>
+                      Revisa
+                    </StatusText>
+                    {' · '}
+                  </>
+                )}
+                {f.fecha ? `${ddmm(f.fecha)} · ` : ''}
+                {f.detalle}
               </span>
-              <strong className="num">{soles(montos[i])}</strong>
             </div>
-            <p className="chat-fiados__sub num">
-              {f.fecha ? `${ddmm(f.fecha)} · ` : ''}
-              {f.detalle}
-            </p>
+            <Money value={montos[i]} className="chat-fiados__amount" />
           </li>
         ))}
       </ul>
@@ -46,9 +51,9 @@ export function CuadernoCard({ msg, onGuardar, onCorregir }) {
           No, corregir
         </Button>
       </div>
-      {status === 'done' && <p className="chat-status">Guardado</p>}
+      {status === 'done' && <SavedLine />}
       <HowIKnow
-        fundamento="Leí tu letra con un modelo de lectura de manuscritos; las líneas marcadas «Revisa» son las que leí con menos seguridad."
+        fundamento="Leí tu letra en la foto. Las líneas marcadas «Revisa» son las que leí con menos seguridad; revísalas antes de guardar."
         meta={res.meta}
       />
     </InBubble>

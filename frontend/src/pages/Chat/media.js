@@ -3,7 +3,7 @@
 
 export const DEMO_VOICE_NOTES = [
   { id: 'cervezas', texto: 'vendí dos cervezas', duracion: '0:04', media_url: 'demo://audios/vendi_dos_cervezas.ogg' },
-  { id: 'casa', texto: 'saqué 50 para la casa', duracion: '0:03', media_url: 'demo://audios/saque_50_casa.ogg' },
+  { id: 'rus', texto: 'pagué mi RUS, 20 soles', duracion: '0:03', media_url: 'demo://audios/pague_mi_rus.ogg' },
   { id: 'andina', texto: 'pedí 2400 a andina para el 30', duracion: '0:05', media_url: 'demo://audios/pedi_2400_andina.ogg' },
 ]
 

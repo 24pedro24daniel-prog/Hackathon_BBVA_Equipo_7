@@ -1,25 +1,51 @@
 .sim-body {
   padding: 0 var(--gutter);
   display: grid;
+  gap: 16px;
+}
+.sim-options,
+.sim-aside {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  align-content: start;
+}
+.sim-aside {
   gap: 12px;
 }
 
+/* Escritorio: opciones a la izquierda, resultado fijo a la derecha */
+@media (min-width: 1100px) {
+  .sim-body {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+    gap: 24px;
+  }
+  .sim-aside {
+    position: sticky;
+    top: 24px;
+  }
+}
+
+/* Grupo = tarjeta blanca con título dentro (Monzo "Activity") */
 .sim-group {
   border: 0;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 10px;
   min-width: 0;
 }
+/* float + width: la leyenda se comporta como bloque normal (no se monta sobre el borde) */
 .sim-legend {
-  padding: 0;
-  margin-bottom: 8px;
-  font-size: 16px;
-  color: var(--text-muted);
+  float: left;
+  width: 100%;
+  padding: 16px 16px 4px;
+  line-height: 1.3;
+}
+.sim-list {
+  clear: both;
 }
 
-/* Tarjetas seleccionables: input nativo oculto visualmente, la tarjeta es su <label> */
+/* Fila seleccionable: el input nativo queda oculto visualmente, la fila es su <label> */
 .sim-input {
   position: absolute;
   opacity: 0;
@@ -28,133 +54,175 @@
   margin: 0;
   pointer-events: none;
 }
-.sim-option {
+.sim-row {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   min-height: 64px;
   padding: 12px 16px;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: background-color 0.15s ease;
 }
-.sim-option:hover {
-  border-color: var(--border-strong);
+/* Divisor inset, como en las listas */
+.sim-row + .sim-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 16px;
+  border-top: 1px solid var(--hairline);
 }
-.sim-option:has(.sim-input:checked) {
-  border: 2px solid var(--brand);
-  padding: 11.5px 15.5px;
-  background: color-mix(in srgb, var(--brand-soft) 45%, var(--surface));
+label.sim-row:hover {
+  background: var(--row-hover);
 }
-.sim-option:has(.sim-input:focus-visible) {
-  outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent);
-  outline-offset: 2px;
+.sim-row:has(.sim-input:focus-visible) {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
 }
-.sim-option__text {
+div.sim-row {
+  cursor: default;
+}
+.sim-row__text {
   flex: 1;
   min-width: 0;
   display: grid;
   gap: 2px;
 }
-.sim-option__amount {
-  font-size: 20px;
-  line-height: 1.15;
-}
-.sim-option__title {
-  font-weight: 700;
+.sim-row__title {
+  font-weight: 500;
   font-size: 16px;
+  line-height: 1.3;
+  color: var(--text);
 }
-.sim-option__sub {
-  font-size: 14px;
+.sim-row__title.cc-money {
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--title);
+}
+.sim-row__sub {
+  font-size: var(--fs-note);
+  line-height: 1.35;
   color: var(--text-muted);
 }
-.sim-option__chosen {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--brand);
-}
 
-.sim-box {
+/* Radio a la derecha: aro gris; elegido = aro Electric + punto */
+.sim-radio {
   flex: none;
-  width: 26px;
-  height: 26px;
-  border: 2px solid var(--border-strong);
-  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--control-off);
   background: var(--surface);
   display: grid;
   place-items: center;
-  color: transparent;
+  transition: border-color 0.15s ease;
 }
-.sim-option:has(.sim-input:checked) .sim-box {
+.sim-radio::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
   background: var(--brand);
+  transform: scale(0);
+  transition: transform 0.18s var(--ease-out);
+}
+.sim-row:has(.sim-input:checked) .sim-radio {
   border-color: var(--brand);
-  color: var(--on-brand);
+}
+.sim-row:has(.sim-input:checked) .sim-radio::after {
+  transform: scale(1);
 }
 
-/* Resultado */
+/* Interruptor (checkbox con role="switch"): apagado = pista clara + perilla gris; encendido = Electric + perilla blanca */
+.sim-switch {
+  flex: none;
+  position: relative;
+  width: 48px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  transition: background-color 0.18s ease;
+}
+.sim-switch::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--control-off);
+  transition: transform 0.2s var(--ease-out), background-color 0.18s ease;
+}
+.sim-row:has(.sim-input:checked) .sim-switch {
+  background: var(--brand);
+}
+.sim-row:has(.sim-input:checked) .sim-switch::after {
+  background: var(--surface);
+  transform: translateX(20px);
+}
+
+/* ---------- Resultado: tarjeta blanca; el estado va en texto de color + ícono ---------- */
 .sim-result {
-  border-radius: var(--radius-lg);
-  padding: 16px;
   display: grid;
   gap: 4px;
-  border: 1px solid transparent;
+  padding: 20px;
   transition: opacity 0.15s ease;
 }
 .sim-result.is-pending {
-  opacity: 0.7;
+  opacity: 0.6;
 }
-.sim-result__kicker {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+@media (min-width: 768px) {
+  .sim-result {
+    padding: 24px;
+  }
+}
+.sim-result__label {
+  font-size: 15px;
+  color: var(--text-muted);
 }
 .sim-result__amount {
-  font-size: 40px;
-  line-height: 1.1;
-  margin: 4px 0 6px;
+  margin: 2px 0 6px;
+}
+.sim-result .sim-money--warning {
+  color: var(--warning);
+}
+.sim-result__status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.sim-result__status svg {
+  flex: none;
+}
+.sim-result__status--danger {
+  color: var(--danger);
+}
+.sim-result__status--warning {
+  color: var(--warning);
+}
+.sim-result__status--ok {
+  color: var(--ok);
 }
 .sim-result__main {
-  font-weight: 500;
+  font-size: 15px;
+  color: var(--text-muted);
+  max-width: 60ch;
 }
 .sim-result__note {
+  margin-top: 4px;
+  font-size: var(--fs-note);
   color: var(--text-muted);
 }
 
-.sim-result--no_te_alcanza {
-  background: var(--danger-bg);
-  border-color: var(--danger-border);
-}
-.sim-result--no_te_alcanza .sim-result__kicker,
-.sim-result--no_te_alcanza .sim-result__amount {
-  color: var(--danger);
-}
-
-.sim-result--justo {
-  background: var(--warning-bg);
-  border-color: color-mix(in srgb, var(--warning) 25%, transparent);
-}
-.sim-result--justo .sim-result__kicker,
-.sim-result--justo .sim-result__amount {
-  color: var(--warning);
-}
-
-.sim-result--te_alcanza {
-  background: var(--brand-soft);
-  border-color: var(--brand-band);
-}
-.sim-result--te_alcanza .sim-result__kicker,
-.sim-result--te_alcanza .sim-result__amount {
-  color: var(--brand);
-}
-
 .sim-stale {
-  margin-top: 8px;
   color: var(--danger);
+  padding: 0 4px;
 }
 .sim-link {
   background: none;
@@ -162,14 +230,16 @@
   padding: 0;
   min-height: var(--tap);
   color: var(--brand);
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
 }
 
 .sim-foot {
+  max-width: 70ch;
   display: grid;
   gap: 8px;
+  padding: 0 4px;
   font-size: 14px;
   color: var(--text-muted);
 }

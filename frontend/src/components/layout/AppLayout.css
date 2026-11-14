@@ -1,22 +1,25 @@
+/* Ancho máximo del contenido por breakpoint; las páginas lo leen con var(--content-max) */
 .cc-app {
-  max-width: 480px;
-  margin: 0 auto;
+  --content-max: 560px;
   min-height: 100dvh;
   background: var(--bg);
-  position: relative;
 }
 .cc-main {
   padding-bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom));
 }
+.cc-main > * {
+  max-width: var(--content-max);
+  margin-left: auto;
+  margin-right: auto;
+}
 .cc-main--chat { padding-bottom: 0; }
 
+/* ---------- Teléfono: barra inferior ---------- */
 .cc-nav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
+  left: 0;
+  right: 0;
   height: calc(var(--nav-h) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--surface);
@@ -25,6 +28,8 @@
   grid-template-columns: repeat(5, 1fr);
   z-index: 20;
 }
+.cc-app--chat .cc-nav { display: none; }
+.cc-nav__brand { display: none; }
 .cc-nav__link {
   position: relative;
   display: flex;
@@ -38,42 +43,78 @@
   text-decoration: none;
   min-height: var(--tap);
 }
-.cc-nav__link.active { color: var(--brand); font-weight: 700; }
-.cc-nav__link.active::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 28px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: var(--brand);
+.cc-nav__link { transition: color 0.15s ease; }
+.cc-nav__link:hover { color: var(--title); }
+.cc-nav__link svg { padding: 3px 14px; box-sizing: content-box; border-radius: var(--radius-pill); transition: background-color 0.15s ease; }
+.cc-nav__link.active { color: var(--brand); font-weight: 600; }
+.cc-nav__link.active svg { stroke-width: 2.1; background: var(--brand-soft); }
+
+/* ---------- Tablet: riel lateral ---------- */
+@media (min-width: 768px) {
+  .cc-app { --content-max: 760px; padding-left: var(--rail-w); }
+  .cc-main { padding-bottom: 40px; }
+  .cc-main--chat { padding-bottom: 0; }
+  .cc-nav,
+  .cc-app--chat .cc-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    top: 0;
+    right: auto;
+    width: var(--rail-w);
+    height: 100dvh;
+    padding: 16px 8px;
+    border-top: 0;
+    border-right: 1px solid var(--border);
+  }
+  .cc-nav__brand {
+    display: flex; justify-content: center; align-items: center; height: 44px; margin-bottom: 16px;
+    font-family: var(--font-display); font-weight: var(--display-weight); color: var(--title);
+  }
+  .cc-nav__logo { font-size: 20px; letter-spacing: -0.03em; }
+  .cc-nav__name { display: none; }
+  .cc-nav__link { min-height: 64px; border-radius: var(--radius); font-size: 13px; }
+  .cc-nav__link:hover { background: var(--row-hover); }
+  .cc-nav__link.active { background: var(--brand-soft); }
+  .cc-nav__link svg, .cc-nav__link.active svg { padding: 0; background: none; }
 }
 
-/* Demo chip + menú */
+/* ---------- Escritorio: barra lateral con marca ---------- */
+@media (min-width: 1100px) {
+  .cc-app { --content-max: 1120px; padding-left: var(--sidebar-w); }
+  .cc-nav,
+  .cc-app--chat .cc-nav { width: var(--sidebar-w); padding: 24px 16px; }
+  .cc-nav__brand { justify-content: flex-start; padding: 0 16px; margin-bottom: 24px; }
+  .cc-nav__logo { display: none; }
+  .cc-nav__name { display: inline; font-size: 22px; letter-spacing: -0.03em; }
+  .cc-nav__link {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: var(--radius);
+    font-size: 16px;
+  }
+}
+
+/* ---------- Chip y menú Demo ---------- */
 .cc-demo { position: relative; flex: none; }
 .cc-demo__chip {
-  min-height: 32px; padding: 4px 12px; border-radius: 999px;
-  border: 1px solid var(--border-strong); background: var(--surface);
-  font-size: 13px; font-weight: 700; cursor: pointer;
+  min-height: 36px; padding: 4px 14px; border-radius: var(--radius-pill);
+  border: 0; background: var(--surface-sunken); color: var(--title);
+  font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .cc-demo__menu {
   position: absolute; right: 0; top: calc(100% + 6px); z-index: 30;
-  width: 240px; padding: 8px; border-radius: var(--radius);
-  background: var(--surface); border: 1px solid var(--border);
-  box-shadow: 0 8px 24px rgba(22, 32, 28, 0.12);
+  width: 260px; padding: 8px; border-radius: var(--radius);
+  background: var(--surface); box-shadow: 0 8px 24px rgba(7, 14, 70, 0.14);
   display: grid; gap: 4px;
 }
-.cc-demo__menu p { font-size: 12px; color: var(--text-subtle); padding: 4px 8px; }
+.cc-demo__menu p { font-size: 12px; color: var(--text-muted); padding: 4px 8px; }
 .cc-demo__opt {
-  text-align: left; min-height: 40px; padding: 8px; border-radius: 8px;
-  border: 0; background: none; cursor: pointer; font-size: 14px;
+  text-align: left; min-height: 44px; padding: 8px 12px; border-radius: var(--radius-sm);
+  border: 0; background: none; cursor: pointer; font-size: 14px; color: var(--text);
 }
+.cc-demo__opt:hover { background: var(--bg); }
 .cc-demo__opt[aria-checked='true'] { background: var(--brand-soft); color: var(--brand); font-weight: 700; }
-
-@media (min-width: 768px) {
-  /* Proyección en la demo: el "teléfono" se centra con un marco sutil */
-  body { background: #e4e8e3; }
-  .cc-app { box-shadow: 0 0 0 1px var(--border), 0 20px 60px rgba(22, 32, 28, 0.08); }
-}

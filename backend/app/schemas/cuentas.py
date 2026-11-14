@@ -1,53 +1,49 @@
-"""F4 — Fiados, pedidos/cuentas por pagar, chequeo antes del pedido y recordatorio (contrato §4.3–4.5)."""
-
+"""F4 — Fiados, pedidos, chequeo y recordatorio (contract.md §4.3–4.5). Dueño: B."""
 from datetime import date
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
-from app.schemas.common import Confianza, Dinero, EstadoCaja, EstadoCuenta, Meta, ModeloContrato, ModeloEntrada, NivelRiesgo
+from app.schemas.common import Confianza, Dinero, EstadoCaja, EstadoCuenta, Meta, NivelRiesgo
 
 
-class RiesgoAtraso(ModeloContrato):
+class RiesgoAtraso(BaseModel):
     probabilidad: float
     nivel: NivelRiesgo
     baseline_probabilidad: float | None = None
 
 
-class AccionSugerida(ModeloContrato):
+class AccionSugerida(BaseModel):
     tipo: str
     texto_boton: str
 
 
-class FiadoItem(ModeloContrato):
+class FiadoItem(BaseModel):
     fiado_id: str
     cliente_id: str
     cliente: str
+    detalle: str | None = None  # EXT
     monto: Dinero
     fecha: date
     dias_transcurridos: int
     estado: EstadoCuenta
-    riesgo_atraso: RiesgoAtraso | None = None
+    riesgo_atraso: RiesgoAtraso
     accion_sugerida: AccionSugerida | None = None
 
 
-class FiadosResponse(ModeloContrato):
+class FiadosResponse(BaseModel):
     total_pendiente: Dinero
     total_vencido: Dinero
     items: list[FiadoItem]
+    fundamento: str | None = None  # EXT
+    limites: str | None = None     # EXT
     meta: Meta
 
 
-class RecordatorioResponse(ModeloContrato):
+class RecordatorioResponse(BaseModel):
     mensaje: str
 
 
-class EstadoImpuestos(ModeloContrato):
-    estado: str  # al_dia | vencido
-    proximo_vencimiento: date | None = None
-    monto_estimado: Dinero | None = None
-
-
-class PedidoItem(ModeloContrato):
+class PedidoItem(BaseModel):
     pedido_id: str
     proveedor: str
     monto: Dinero
@@ -58,27 +54,34 @@ class PedidoItem(ModeloContrato):
     dias_para_vencer: int
 
 
-class PedidosResponse(ModeloContrato):
+class EstadoImpuestos(BaseModel):
+    estado: str  # al_dia | vencido | pendiente
+    proximo_vencimiento: date | None = None
+    monto_estimado: Dinero | None = None
+    nombre: str | None = None  # EXT
+
+
+class PedidosResponse(BaseModel):
     total_pendiente: Dinero
     items: list[PedidoItem]
     impuestos: EstadoImpuestos
 
 
-class ChequeoRequest(ModeloEntrada):
-    proveedor: str = Field(min_length=1, max_length=100)
-    monto: Dinero = Field(gt=0)
+class ChequeoRequest(BaseModel):
+    proveedor: str = Field(min_length=1)
+    monto: Dinero
     fecha_vencimiento: date
 
 
-class Sugerencia(ModeloContrato):
-    accion: str
-    saldo_resultante: Dinero
+class Sugerencia(BaseModel):
+    accion: str  # reducir_pedido | pagar_en_partes | combinar
     monto_sugerido: Dinero | None = None
     partes: int | None = None
     detalle: str | None = None
+    saldo_resultante: Dinero
 
 
-class ChequeoResponse(ModeloContrato):
+class ChequeoResponse(BaseModel):
     saldo_proyectado_al_vencimiento: Dinero
     estado_caja: EstadoCaja
     venta_esperada_periodo: Dinero

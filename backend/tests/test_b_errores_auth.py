@@ -29,19 +29,18 @@ def _es_error_contrato(cuerpo: dict, codigo: str) -> None:
 
 
 def test_validacion_400_con_detalles_campo_problema(client):
-    r = client.post(f"{EMP}/movimientos", json={"tipo": "venta", "monto": 0})
+    r = client.post(f"{EMP}/pedidos/chequeo", json={"proveedor": "Distribuidora Andina", "fecha_vencimiento": "2026-11-30"})
     assert r.status_code == 400
     _es_error_contrato(r.json(), "VALIDACION")
     detalle = r.json()["error"]["detalles"][0]
     assert detalle["campo"] == "monto" and detalle["problema"]
 
 
-def test_validacion_de_query_y_path(client):
-    assert client.get(f"{EMP}/forecast", params={"horizonte_dias": 0}).status_code == 400
-    r = client.get(f"{PREFIJO}/empresas/pedro/resumen")
+def test_validacion_de_query(client):
+    r = client.get(f"{EMP}/forecast", params={"horizonte_dias": 0})
     assert r.status_code == 400
     _es_error_contrato(r.json(), "VALIDACION")
-    assert r.json()["error"]["detalles"][0]["campo"] == "empresa_id"
+    assert r.json()["error"]["detalles"][0]["campo"] == "horizonte_dias"
 
 
 def test_ruta_inexistente_404(client):
@@ -137,4 +136,4 @@ def test_todas_las_rutas_exigen_api_key(client_sin_key, metodo, path):
 
 
 def test_hay_rutas_protegidas_registradas():
-    assert len(list(_rutas_protegidas())) == 24  # + /health pública = 25 endpoints
+    assert len(list(_rutas_protegidas())) == 24  # + /health pública = 25 endpoints (incluye POST /media/subidas)

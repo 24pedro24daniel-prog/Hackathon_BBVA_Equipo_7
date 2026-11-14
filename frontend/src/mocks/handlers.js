@@ -14,6 +14,7 @@ const err = (status, codigo, mensaje) => ({
 let seq = 7781
 const borradores = new Map()
 let saldoNegocio = 2340
+const movimientosNuevos = [] // lo que se confirma en el chat aparece en Últimos movimientos
 
 const PEDIDO_BASE = 2400
 const SALDO_BASE = -650
@@ -102,7 +103,7 @@ async function handle(method, path, { query, body }) {
       return ok(nuevo ? { total_pendiente: 0, total_vencido: 0, items: [], meta: D.meta('riesgo-atraso-clf', '0.2.0') } : D.fiados())
 
     case 'POST /fiados/:id/recordatorio': {
-      const f = D.fiados().items.find((x) => path.endsWith(x.fiado_id))
+      const f = D.fiados().items.find((x) => path.includes(x.fiado_id))
       if (!f) return err(404, 'NO_ENCONTRADO', 'No encontré ese fiado.')
       return ok({ mensaje: `Hola, ${f.cliente} 😊 Le recuerdo amablemente los S/ ${f.monto} pendientes en la bodega. ¡Gracias!` })
     }
@@ -163,8 +164,13 @@ async function handle(method, path, { query, body }) {
     case 'POST /empresas/:id/metas':
       return ok({ meta_id: 'MET-0005', estado: 'activa' }, 201)
 
-    case 'GET /empresas/:id/movimientos':
-      return ok({ items: [], next_cursor: null })
+    case 'GET /empresas/:id/movimientos': {
+      const todos = [...movimientosNuevos, ...D.movimientos(escenario)]
+      const desde = Number(query.cursor || 0)
+      const limit = Number(query.limit || 50)
+      const items = todos.slice(desde, desde + limit)
+      return ok({ items, next_cursor: desde + limit < todos.length ? String(desde + limit) : null })
+    }
 
     case 'POST /empresas/:id/movimientos':
     case 'POST /empresas/:id/impuestos':
@@ -199,8 +205,25 @@ async function handle(method, path, { query, body }) {
       borradores.delete(body.borrador_id)
       if (final.tipo === 'venta' && final.metodo_pago !== 'credito') saldoNegocio += final.monto
       if (final.tipo === 'retiro_personal' || final.tipo === 'pago_impuesto') saldoNegocio -= final.monto
+      const movimiento_id = `MOV-000${++seq}`
+      movimientosNuevos.unshift({
+        movimiento_id,
+        fecha_hora: final.fecha_hora || new Date().toISOString(),
+        tipo: final.tipo,
+        categoria: null,
+        descripcion: final.items?.length ? final.items.map((it) => `${it.cantidad} ${it.producto}`).join(', ') : null,
+        items: final.items || [],
+        monto: final.monto,
+        moneda: 'PEN',
+        metodo_pago: final.metodo_pago,
+        contraparte: final.contraparte || null,
+        canal: 'voz',
+        confianza_extraccion: 0.93,
+        afecta_caja: final.metodo_pago !== 'credito',
+        saldo_post: saldoNegocio,
+      })
       return ok({
-        movimiento_id: `MOV-000${++seq}`,
+        movimiento_id,
         registros_creados: [{ tabla: final.tipo === 'compra' ? 'deudas' : 'transacciones', id: `MOV-000${seq}` }],
         alertas_disparadas: final.tipo === 'compra' ? D.alertas().items : [],
         saldo_caja_negocio: saldoNegocio,
@@ -290,7 +313,7 @@ function asistente(mensaje, conversacion_id, fallback) {
       ...base,
       intencion: 'explicar_alerta',
       ofrecer_humano: true,
-      respuesta: 'El 30/11 vence tu pago de S/ 2 400 a Distribuidora Andina. Este mes sacaste S/ 700 más de lo usual para la casa, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ 310 en fiados sin cobrar. Si pides S/ 1 800 y pagas en 2 partes, ese día tendrías S/ 850.',
+      respuesta: 'El 30/11 vence tu pago de S/ 2 400 a Distribuidora Andina. Este mes vendiste unos S/ 560 menos que el mes pasado, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ 310 en fiados sin cobrar. Si pides S/ 1 800 y pagas en 2 partes, ese día tendrías S/ 850.',
       herramientas_llamadas: [{ nombre: 'obtener_alertas', args: { estado: 'activa' } }, { nombre: 'simular', args: { acciones: ['reducir_pedido:1800', 'pagar_en_partes:2'] } }],
       cifras_usadas: [{ valor: 2400, fuente: 'pedidos.PED-0012.monto' }, { valor: 850, fuente: 'simular.con_acciones.saldo_minimo' }],
     }

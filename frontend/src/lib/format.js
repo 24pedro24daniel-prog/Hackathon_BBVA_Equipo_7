@@ -64,10 +64,23 @@ export function daysBetween(a, b) {
   return Math.round((toDate(b) - toDate(a)) / 86400000)
 }
 
-/** confianza textual del contrato ("alta" | "media" | "baja") o numérica → etiqueta */
+/** Confianza en palabras simples (sin porcentajes): "alta" | "media" | "baja" o numérica */
 export function confianzaLabel(c) {
-  if (typeof c === 'string') return `Confianza ${c}`
-  if (c >= 0.85) return 'Confianza alta'
-  if (c >= 0.6) return 'Confianza media'
-  return 'Confianza baja'
+  const nivel = typeof c === 'string' ? c : c >= 0.85 ? 'alta' : c >= 0.6 ? 'media' : 'baja'
+  return { alta: 'Bastante seguro', media: 'Es un cálculo aproximado', baja: 'Poco seguro: revísalo' }[nivel] || 'Es un cálculo aproximado'
+}
+
+/** Probabilidad → palabras, para quien no lee porcentajes. 0.74 → "Es muy probable" */
+export function probabilidadTexto(p) {
+  if (p === null || p === undefined) return null
+  if (p >= 0.7) return 'Es muy probable'
+  if (p >= 0.4) return 'Puede pasar'
+  return 'Es poco probable'
+}
+
+/** Variación porcentual vs. mes anterior → diferencia en soles. (8540, -6.2) → -565 */
+export function diferenciaSoles(valorActual, variacionPct) {
+  if (variacionPct === null || variacionPct === undefined) return null
+  const anterior = valorActual / (1 + variacionPct / 100)
+  return Math.round(valorActual - anterior)
 }

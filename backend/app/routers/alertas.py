@@ -1,50 +1,32 @@
-"""Dueño: B. Alertas (contrato §6): GET /alertas · POST /alertas/{id}/accion · POST /alertas/evaluar ·
-PUT /preferencias-alertas."""
+"""B10/B11 — alertas y preferencias."""
+from fastapi import APIRouter, Body, Depends
 
-from fastapi import Body, Depends, Path, Query
-from sqlalchemy.orm import Session
-
-from app.db.session import get_db
-from app.routers._comun import EmpresaId, router_protegido
+from app.core.deps import get_db
 from app.schemas.alertas import (
-    AccionAlertaRequest,
-    AccionAlertaResponse,
-    AlertasResponse,
-    EvaluarAlertasRequest,
-    PreferenciasAlertasRequest,
+    AccionAlertaRequest, AccionAlertaResponse, AlertasResponse, PreferenciasAlertas,
 )
-from app.schemas.common import EstadoAlerta
-from app.services import alertas as motor
+from app.services import alertas as svc
 
-router = router_protegido("alertas")
-
-_ESTADO_POR_ACCION = {"ejecutada": "atendida", "descartada": "descartada", "posponer": "activa"}
+router = APIRouter(tags=["F6 Alertas"])
 
 
 @router.get("/empresas/{empresa_id}/alertas", response_model=AlertasResponse)
-def listar_alertas(
-    empresa_id: EmpresaId, estado: EstadoAlerta = Query(EstadoAlerta.activa), db: Session = Depends(get_db)
-):
-    return motor.alertas(db, empresa_id, estado.value)
+def listar_alertas(empresa_id: str, estado: str = "activa", db=Depends(get_db)):
+    return svc.alertas(db, empresa_id, estado)
 
 
 @router.post("/alertas/{alerta_id}/accion", response_model=AccionAlertaResponse)
-def accion_alerta(body: AccionAlertaRequest, alerta_id: str = Path(pattern=r"^AL[RE]-\d{4,}$")):
-    # STUB Fase 0 (B10 guarda accion_tomada y fecha_accion)
-    return {"estado": _ESTADO_POR_ACCION[body.accion]}
+def accionar(alerta_id: str, body: AccionAlertaRequest, db=Depends(get_db)):
+    return svc.registrar_accion(db, alerta_id, body)
 
 
 @router.post("/empresas/{empresa_id}/alertas/evaluar", response_model=AlertasResponse)
-def evaluar_alertas(
-    empresa_id: EmpresaId,
-    body: EvaluarAlertasRequest | None = Body(default=None),
-    db: Session = Depends(get_db),
-):
-    body = body or EvaluarAlertasRequest()
-    return {"items": motor.evaluar_alertas(db, empresa_id, body.disparador, body.entidad_id)}
+def evaluar(empresa_id: str, disparador: str | None = Body(None, embed=True),
+            entidad_id: str | None = Body(None, embed=True), db=Depends(get_db)):
+    """Interno: lo llama /ingesta/confirmar. Devuelve las alertas nuevas."""
+    return AlertasResponse(items=svc.evaluar_alertas(db, empresa_id, disparador, entidad_id))
 
 
-@router.put("/empresas/{empresa_id}/preferencias-alertas", response_model=PreferenciasAlertasRequest)
-def actualizar_preferencias(empresa_id: EmpresaId, body: PreferenciasAlertasRequest):
-    # STUB Fase 0 (B11 lo guarda en preferencias_alertas)
-    return body
+@router.put("/empresas/{empresa_id}/preferencias-alertas", response_model=PreferenciasAlertas)
+def preferencias(empresa_id: str, body: PreferenciasAlertas, db=Depends(get_db)):
+    return svc.guardar_preferencias(db, empresa_id, body)

@@ -1,118 +1,180 @@
-/* Progreso — mockup página 9 */
+/* Tu progreso — tarjeta de puntaje tipo SoFi (cifra, palabra, tendencia, escala recta)
+   + factores en lista + metas como "pots" de Monzo. Todo en tarjetas blancas; el estado va en el texto. */
 
 .progreso-body {
   padding: 4px var(--gutter) 0;
   display: grid;
   gap: 12px;
 }
-.progreso-h2 { font-size: 18px; font-weight: 700; line-height: 1.25; }
+.progreso-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
 
-/* Salud de caja */
-.progreso-score { display: grid; gap: 8px; }
-.progreso-score__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+/* ---------- Salud de caja ---------- */
+.progreso-score { display: grid; gap: 12px; }
+.progreso-score__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+.progreso-score__main { display: grid; gap: 6px; }
 .progreso-score__value { display: flex; align-items: baseline; line-height: 1; }
-.progreso-score__num { font-size: 40px; line-height: 1; }
-.progreso-score__den { font-size: 15px; color: var(--text-muted); margin-left: 2px; }
-.progreso-score__trend { color: var(--brand); font-weight: 700; font-size: 15px; }
+.progreso-score__num { font-size: 48px; line-height: 1; }
+.progreso-score__den { font-size: 17px; font-weight: 500; color: var(--text-muted); white-space: pre; }
+.progreso-score__rating { font-size: var(--fs-note); color: var(--text-muted); }
 
-.progreso-chart { margin: 4px 0 0; }
+.progreso-score__trend { display: grid; gap: 2px; min-width: 0; }
+.progreso-score__trend-main { font-size: 15px; font-weight: 600; color: var(--title); line-height: 1.3; }
+.progreso-score__trend-main--ok { color: var(--ok); }
+.progreso-score__trend-main--warning { color: var(--warning); }
+.progreso-score__trend-sub { font-size: var(--fs-note); color: var(--text-muted); }
+
+/* Escala recta: 4 tramos claros + marcador blanco con aro navy en el puntaje */
+.progreso-scale { margin-top: 8px; display: grid; gap: 6px; }
+.progreso-scale__bar {
+  position: relative;
+  height: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  align-items: center;
+}
+.progreso-scale__seg { display: block; height: 6px; }
+.progreso-scale__seg--1 { border-radius: 3px 0 0 3px; background: color-mix(in srgb, var(--danger) 35%, var(--surface)); }
+.progreso-scale__seg--2 { background: color-mix(in srgb, var(--warning) 35%, var(--surface)); }
+.progreso-scale__seg--3 { background: var(--brand-band); }
+.progreso-scale__seg--4 { border-radius: 0 3px 3px 0; background: color-mix(in srgb, var(--ok) 35%, var(--surface)); }
+.progreso-scale__marker {
+  position: absolute;
+  top: 0;
+  left: clamp(7px, calc(var(--pos) * 1%), calc(100% - 7px));
+  width: 14px;
+  height: 14px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--title);
+  box-shadow: 0 1px 3px rgba(7, 14, 70, 0.2);
+}
+.progreso-scale__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Últimos meses ---------- */
+.progreso-hist { display: grid; gap: 12px; }
+.progreso-chart { margin: 0; }
 .progreso-chart__bars {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  gap: 10px;
+  grid-auto-columns: minmax(0, 1fr);
 }
-.progreso-chart__col { display: grid; gap: 6px; justify-items: stretch; }
+.progreso-chart__col { display: grid; gap: 6px; justify-items: center; }
+.progreso-chart__val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--title);
+  line-height: 1.2;
+  visibility: hidden;
+}
+.progreso-chart__col--now .progreso-chart__val,
+.progreso-chart__col:hover .progreso-chart__val { visibility: visible; }
 .progreso-chart__track {
-  height: 114px; /* 90px de barra máx. + etiqueta */
+  height: 96px;
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: stretch;
+  align-items: flex-end;
+  justify-content: center;
+  border-bottom: 1px solid var(--hairline);
 }
-.progreso-chart__val { text-align: center; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-.progreso-chart__bar { background: var(--brand-band); border-radius: 6px 6px 2px 2px; }
-.progreso-chart__bar--now { background: var(--brand); }
-.progreso-chart__label { text-align: center; font-size: 14px; color: var(--text-muted); }
-.progreso-chart__label--now { color: var(--text); font-weight: 600; }
+.progreso-chart__bar {
+  width: 12px;
+  height: calc(var(--h) * 0.96px);
+  background: var(--brand-band);
+  border-radius: 4px 4px 0 0;
+}
+.progreso-chart__col--now .progreso-chart__bar { background: var(--brand); }
+.progreso-chart__label { font-size: 13px; color: var(--text-muted); }
+.progreso-chart__col--now .progreso-chart__label { color: var(--title); font-weight: 600; }
 
-/* Etapas */
-.progreso-steps-card { padding: 16px 8px; }
-.progreso-steps {
+/* ---------- Etapa ---------- */
+.progreso-etapa { display: grid; gap: 12px; }
+.progreso-etapa__track {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 2px;
 }
-.progreso-step { display: grid; justify-items: center; gap: 6px; text-align: center; font-size: 14px; color: var(--text-muted); }
-.progreso-step__dot {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  font-size: 15px;
-  background: var(--surface-sunken);
-  color: var(--text-muted);
+.progreso-etapa__step { display: grid; gap: 8px; min-width: 0; }
+.progreso-etapa__seg { display: block; height: 6px; background: var(--surface-sunken); }
+.progreso-etapa__step:first-child .progreso-etapa__seg { border-radius: 3px 0 0 3px; }
+.progreso-etapa__step:last-child .progreso-etapa__seg { border-radius: 0 3px 3px 0; }
+.progreso-etapa__step--done .progreso-etapa__seg,
+.progreso-etapa__step--current .progreso-etapa__seg { background: var(--brand); }
+/* Nombres de etapa: solo lector de pantalla en móvil; visibles desde tablet */
+.progreso-etapa__name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
-.progreso-step--done { color: var(--brand); }
-.progreso-step--done .progreso-step__dot { background: var(--brand-soft); color: var(--brand); }
-.progreso-step--current { color: var(--text); font-weight: 700; }
-.progreso-step--current .progreso-step__dot {
-  background: var(--surface);
-  color: var(--brand-strong);
-  border: 2px solid var(--brand);
+.progreso-etapa__next { font-size: var(--fs-note); color: var(--text-muted); }
+
+/* ---------- Qué lo compone ---------- */
+.progreso-factor { align-items: flex-start; }
+.progreso-factor .cc-row__sub { display: grid; gap: 10px; }
+.progreso-factor__flag { color: var(--title); font-weight: 600; }
+.progreso-factor__bar { margin-top: 2px; }
+.progreso-factor__rating { font-size: 15px; font-weight: 600; color: var(--title); line-height: 1.3; }
+.progreso-factor__rating--ok { color: var(--ok); }
+.progreso-factor__rating--warning { color: var(--warning); }
+.progreso-factor__value { font-size: var(--fs-note); color: var(--text-muted); white-space: nowrap; }
+.progreso-factores__meta { padding: 0 16px 12px; }
+.progreso-factores__meta:empty { display: none; }
+
+/* ---------- Metas ---------- */
+.progreso-meta { align-items: flex-start; }
+.progreso-meta .cc-row__sub { display: grid; gap: 10px; }
+.progreso-meta__bar { margin-top: 2px; }
+
+.progreso-privacy { color: var(--text-muted); padding: 4px 4px 0; }
+
+@media (min-width: 768px) {
+  .progreso-body { gap: 16px; }
+  .progreso-col { gap: 16px; }
+  .progreso-score,
+  .progreso-hist,
+  .progreso-etapa { padding: 20px; }
+  .progreso-score__num { font-size: 56px; }
+  .progreso-chart__track { height: 128px; }
+  .progreso-chart__bar { width: 16px; height: calc(var(--h) * 1.28px); }
+  .progreso-etapa__name {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .progreso-etapa__step--current .progreso-etapa__name { color: var(--title); font-weight: 600; }
 }
 
-/* Qué lo compone */
-.progreso-inds { list-style: none; margin: 4px 0 0; padding: 0; }
-.progreso-ind { display: grid; gap: 6px; padding: 12px 0; border-top: 1px solid var(--border); }
-.progreso-ind__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-.progreso-ind__name { font-size: 16px; font-weight: 700; }
-.progreso-ind__val { font-weight: 700; white-space: nowrap; }
-.progreso-ind__track { height: 8px; border-radius: 999px; background: var(--surface-sunken); border: 1px solid var(--border); overflow: hidden; }
-.progreso-ind__fill { height: 100%; background: var(--brand); border-radius: 999px; }
-.progreso-ind__detail { color: var(--text-muted); }
-.progreso-ind__peso { color: var(--text-subtle); }
-
-.progreso-formula { color: var(--text-muted); padding: 10px 12px; background: var(--surface-sunken); border-radius: var(--radius-sm); margin-bottom: 4px; }
-
-.progreso-more {
-  width: 100%;
-  min-height: var(--tap);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: 0;
-  border-top: 1px solid var(--border);
-  background: none;
-  color: var(--brand);
-  font-weight: 700;
-  font-size: 15px;
-  cursor: pointer;
-  margin-bottom: 4px;
+/* Escritorio: puntaje + historial + etapa a la izquierda; qué lo compone + metas a la derecha */
+@media (min-width: 1100px) {
+  .progreso-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px 24px;
+  }
+  .progreso-body > :not(.progreso-col) { grid-column: 1 / -1; }
 }
-.progreso-more__chev { transition: transform 0.2s ease; }
-.progreso-more[aria-expanded='true'] .progreso-more__chev { transform: rotate(180deg); }
-
-/* Meta activa */
-.progreso-meta { display: flex; align-items: flex-start; gap: 14px; }
-.progreso-meta__icon {
-  width: 44px;
-  height: 44px;
-  flex: none;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--brand-soft);
-  color: var(--brand);
-}
-.progreso-meta__title { font-size: 17px; font-weight: 700; line-height: 1.25; }
-.progreso-meta__detail { color: var(--text-muted); margin-top: 2px; }
-.progreso-meta-empty { display: grid; gap: 10px; justify-items: start; }
-
-.progreso-privacy { color: var(--text-muted); padding: 4px 2px 0; }

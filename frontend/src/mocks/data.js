@@ -45,7 +45,7 @@ export const resumenNuevo = {
   periodo: '2026-11',
   corte: CORTE,
   dias_con_datos: 3,
-  dias_requeridos_forecast: 14, // EXT
+  dias_requeridos_forecast: 30, // EXT
   indicadores: {
     saldo_caja_negocio: { valor: 1120.0, variacion_pct: null },
     ingresos_mes: { valor: 1870.0, variacion_pct: null },
@@ -59,7 +59,7 @@ export const resumenNuevo = {
 }
 
 // ---------- F3 Forecast ----------
-// Serie determinística: la caja baja por retiros para la casa hasta el 29/11, cae con el pago de Andina el 30/11
+// Serie determinística: la caja baja por compras de mercadería hasta el 29/11, cae con el pago de Andina el 30/11
 // y se recupera despacio. Se generan p10/p50/p90 con una banda que se abre con el horizonte.
 function buildSerie() {
   const out = []
@@ -70,7 +70,7 @@ function buildSerie() {
     const d = new Date(start.getTime() + i * 86400000)
     const fecha = d.toISOString().slice(0, 10)
     let ingresos = 610 + (d.getDay() === 6 || d.getDay() === 0 ? 120 : 0)
-    let egresos = 640 // mercadería + plata para la casa por encima de lo usual
+    let egresos = 640 // mercadería y gastos del día
     if (fecha === '2026-11-16') egresos += 180 // luz y agua
     if (fecha === '2026-11-20') ingresos += 190 // fiados que esperas cobrar (ponderado)
     if (fecha === '2026-11-30') egresos += 2400 // pago a Andina
@@ -107,7 +107,7 @@ export const forecastPedro = () => ({
     valor: 0.0,
     formula: 'saldo_actual + cobros_esperados − pagos_comprometidos_hasta_proximo_vencimiento − minimo_operativo − reserva_impuestos',
     componentes: { saldo_actual: 2340.0, cobros_esperados: 190.0, pagos_comprometidos: 2420.0, minimo_operativo: 800.0, reserva_impuestos: 20.0 },
-    mensaje: 'Hoy no saques para la casa: arriesgas el pago del 30/11.',
+    mensaje: 'Hoy no hagas gastos extra: arriesgas el pago del 30/11.',
   },
   // EXT: lista "Lo que viene" del mockup (30 días)
   proximos_eventos: [
@@ -131,7 +131,7 @@ export const forecastNuevo = () => ({
   horizonte_dias: 30,
   disponible: false, // EXT
   dias_con_datos: 3, // EXT
-  dias_requeridos: 14, // EXT
+  dias_requeridos: 30, // EXT
   saldo_actual: 1120.0,
   serie: [],
   meta: meta('forecast-lgbm-quantile', '0.3.1'),
@@ -193,14 +193,14 @@ export const alertas = () => ({
       titulo: 'El 30/11 te faltarían S/ 650 para pagar a Andina',
       titulo_corto: 'El 30/11 no te alcanzará', // EXT (chat)
       insight: 'Para pagar S/ 2 400 a Distribuidora Andina te faltarían S/ 650.',
-      resumen_causas: 'más plata para la casa, pedido grande y fiados sin cobrar.', // EXT
+      resumen_causas: 'vendiste menos, pedido grande y fiados sin cobrar.', // EXT
       causas: [
-        { descripcion: 'Sacaste más para la casa', monto: 700.0 },
+        { descripcion: 'Vendiste menos que el mes pasado', monto: 560.0 },
         { descripcion: 'Pediste más de lo que vendes', monto: 400.0 },
         { descripcion: 'Fiados sin cobrar', monto: 310.0 },
       ],
       accion: { tipo: 'abrir_simulador', texto_boton: 'Ver qué puedo hacer', payload: { pedido_id: 'PED-0012' } },
-      microexplicacion: 'Cuando el dinero de la casa y del negocio se mezclan, es difícil saber cuánto puedes pedir.',
+      microexplicacion: 'Si pides más de lo que vendes en el plazo de pago, la caja no llega a la fecha.',
       canales: ['whatsapp', 'app'],
       estado: 'activa',
       meta: meta('reglas-alertas + forecast-lgbm-quantile', '0.3.1'),
@@ -216,9 +216,8 @@ export const salud = () => ({
   etapas: ['organizar', 'estabilizar', 'proteger', 'crecer'], // EXT
   subindicadores: [
     { id: 'constancia_registro', nombre: 'Anotar todos los días', valor: 92, detalle: '92 días anotando · 4 semanas seguidas', peso: 0.2, destacado: true },
-    { id: 'separacion_personal', nombre: 'Separar casa y negocio', valor: 70, detalle: 'Sueldo fijo de S/ 400 por semana; este mes te pasaste', peso: 0.2, destacado: true },
-    { id: 'colchon_caja', nombre: 'Colchón de caja', valor: 45, detalle: '5 días de gastos cubiertos', peso: 0.15 },
-    { id: 'pedidos_acordes', nombre: 'Pedidos acordes a ventas', valor: 60, detalle: '1 de 3 pedidos excedió tus ventas', peso: 0.15 },
+    { id: 'colchon_caja', nombre: 'Colchón de caja', valor: 45, detalle: '5 días de gastos cubiertos', peso: 0.25 },
+    { id: 'pedidos_acordes', nombre: 'Pedir según lo que vendes', valor: 60, detalle: '1 de 3 pedidos fue más grande que tus ventas', peso: 0.25, destacado: true },
     { id: 'cobro_fiados', nombre: 'Cobrar fiados a tiempo', valor: 80, detalle: '8 de cada 10 fiados cobrados en menos de 15 días', peso: 0.1, destacado: true },
     { id: 'impuestos_al_dia', nombre: 'Impuestos al día', valor: 100, detalle: 'Al día', peso: 0.1 },
     { id: 'meses_sin_faltante', nombre: 'Meses sin faltantes', valor: 50, detalle: '1 de 2 meses', peso: 0.1 },
@@ -231,7 +230,7 @@ export const salud = () => ({
   ],
   rachas: [{ tipo: 'semanas_registrando', valor: 4 }],
   metas_activas: [ // EXT
-    { meta_id: 'MET-0004', plantilla: 'apartar_para_pedido', titulo: 'Apartar para el pedido', detalle: 'S/ 1 de cada S/ 10 que vendes', acumulado: 420.0, estado: 'activa' },
+    { meta_id: 'MET-0004', plantilla: 'apartar_para_pedido', titulo: 'Apartar para el pedido', detalle: 'S/ 1 de cada S/ 10 que vendes', acumulado: 420.0, objetivo: 800.0, estado: 'activa' },
   ],
   consentimiento_compartir_historial: false,
   meta: meta('score-reglas', '0.1.0'),
@@ -241,3 +240,69 @@ export const salud = () => ({
 export const catalogo = {
   cerveza: { producto_id: 'PRD-0031', producto: 'Cerveza 620 ml', precio_unitario: 6.5 },
 }
+
+// ---------- Movimientos (GET /movimientos) ----------
+// [fecha_hora, tipo, monto, metodo_pago, canal, descripcion, contraparte, items?]
+const movsNuevo = [
+  ['2026-11-12T07:10', 'venta', 420, 'efectivo', 'voz', 'Ventas de la mañana', null],
+  ['2026-11-12T09:30', 'compra', 600, 'efectivo', 'texto', 'Gaseosas y cervezas', 'Distribuidora Andina'],
+  ['2026-11-12T13:05', 'venta', 210, 'billetera_digital', 'billetera_api', 'Ventas por billetera', null],
+  ['2026-11-12T19:40', 'venta', 310, 'efectivo', 'voz', 'Ventas de la tarde', null],
+  ['2026-11-13T08:00', 'gasto_negocio', 60, 'efectivo', 'texto', 'Bolsas y envases', 'Mercado Ceres'],
+  ['2026-11-13T11:20', 'venta', 250, 'efectivo', 'voz', 'Ventas de la mañana', null],
+  ['2026-11-13T15:45', 'compra', 480, 'efectivo', 'voz', 'Pan y leche', 'Panadería San Jorge'],
+  ['2026-11-13T20:10', 'venta', 180, 'billetera_digital', 'billetera_api', 'Ventas por billetera', null],
+  ['2026-11-14T07:30', 'venta', 200, 'efectivo', 'voz', 'Ventas de la mañana', null],
+  ['2026-11-14T09:00', 'pago_impuesto', 20, 'efectivo', 'texto', 'RUS de octubre', 'SUNAT'],
+  ['2026-11-14T10:42', 'venta', 13, 'efectivo', 'voz', '2 cervezas 620 ml', null,
+    [{ producto_id: 'PRD-0031', producto: 'Cerveza 620 ml', cantidad: 2, precio_unitario: 6.5, subtotal: 13 }]],
+  ['2026-11-14T12:15', 'gasto_negocio', 440, 'efectivo', 'texto', 'Luz del local', 'Luz del Sur'],
+  ['2026-11-14T13:40', 'venta', 287, 'billetera_digital', 'billetera_api', 'Ventas por billetera', null],
+]
+
+const movsPedro = [
+  ['2026-11-13T08:10', 'venta', 640, 'efectivo', 'voz', 'Ventas de la mañana', null],
+  ['2026-11-13T10:00', 'compra', 2400, 'credito', 'voz', 'Pedido para el 30/11', 'Distribuidora Andina'],
+  ['2026-11-13T12:30', 'cobro_fiado', 50, 'efectivo', 'voz', 'Abono de fiado', 'Sra. Carmen'],
+  ['2026-11-13T16:20', 'gasto_negocio', 35, 'efectivo', 'texto', 'Bolsas y envases', 'Mercado Ceres'],
+  ['2026-11-13T19:50', 'venta', 520, 'efectivo', 'voz', 'Ventas de la tarde', null],
+  ['2026-11-13T20:30', 'venta', 160, 'billetera_digital', 'billetera_api', 'Ventas por billetera', null],
+  ['2026-11-14T07:20', 'venta', 380, 'efectivo', 'voz', 'Ventas de la mañana', null],
+  ['2026-11-14T08:45', 'compra', 520, 'efectivo', 'texto', 'Pan, leche y huevos', 'Panadería San Jorge'],
+  ['2026-11-14T09:30', 'venta', 95, 'credito', 'foto', 'Fiado: arroz y aceite', 'Don Luis'],
+  ['2026-11-14T10:42', 'venta', 13, 'efectivo', 'voz', '2 cervezas 620 ml', null,
+    [{ producto_id: 'PRD-0031', producto: 'Cerveza 620 ml', cantidad: 2, precio_unitario: 6.5, subtotal: 13 }]],
+  ['2026-11-14T11:15', 'pago_impuesto', 20, 'efectivo', 'texto', 'RUS de octubre', 'SUNAT'],
+  ['2026-11-14T12:05', 'venta', 210, 'billetera_digital', 'billetera_api', 'Ventas por billetera', null],
+]
+
+const INGRESO = new Set(['venta', 'cobro_fiado', 'prestamo_recibido', 'otro_ingreso'])
+
+/** Construye la lista (más reciente primero) con saldo_post que termina en saldoFinal */
+function buildMovs(rows, saldoFinal, prefijo) {
+  const base = rows.map(([fh, tipo, monto, metodo_pago, canal, descripcion, contraparte, items], i) => ({
+    movimiento_id: `MOV-${prefijo}${String(i + 1).padStart(3, '0')}`,
+    fecha_hora: `${fh}:00-05:00`,
+    tipo,
+    categoria: null,
+    descripcion, // EXT: texto corto para la lista
+    items: items || [], // EXT
+    monto,
+    moneda: 'PEN',
+    metodo_pago,
+    contraparte,
+    canal,
+    confianza_extraccion: canal === 'voz' ? 0.92 : canal === 'foto' ? 0.8 : 1,
+    afecta_caja: metodo_pago !== 'credito',
+  }))
+  let saldo = saldoFinal
+  for (let i = base.length - 1; i >= 0; i--) {
+    base[i].saldo_post = saldo
+    const m = base[i]
+    if (m.afecta_caja) saldo += INGRESO.has(m.tipo) ? -m.monto : m.monto
+  }
+  return base.reverse()
+}
+
+export const movimientos = (escenario) =>
+  escenario === 'nuevo' ? buildMovs(movsNuevo, 1120, '0') : buildMovs(movsPedro, 2340, '1')

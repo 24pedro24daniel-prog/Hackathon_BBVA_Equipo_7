@@ -1,49 +1,53 @@
-"""F2 — Resumen financiero (contrato §3)."""
-
+"""F2 — Resumen financiero (contract.md §3). Dueño: B."""
 from datetime import date
 
-from app.schemas.common import Dinero, ModeloContrato
+from pydantic import BaseModel
+
+from app.schemas.common import Dinero
 
 
-class Indicador(ModeloContrato):
+class IndSaldo(BaseModel):
     valor: Dinero
     variacion_pct: float | None = None
 
 
-class IndicadorGanancia(Indicador):
+class IndGanancia(IndSaldo):
     es_aproximada: bool = False
-    rango: list[Dinero] | None = None
+    rango: list[Dinero] | None = None  # [min, max] cuando faltan costos
 
 
-class IndicadorRetiros(ModeloContrato):
+class IndRetiros(BaseModel):
     valor: Dinero
     sueldo_fijo_definido: Dinero | None = None
     promedio_historico: Dinero | None = None
 
 
-class IndicadorCobro(ModeloContrato):
+class IndPendienteCobro(BaseModel):
     valor: Dinero
     n_fiados: int
 
 
-class IndicadorPagos(ModeloContrato):
+class IndPagosPendientes(BaseModel):
     valor: Dinero
     n_obligaciones: int
+    detalle: str | None = None  # EXT del front
 
 
-class Indicadores(ModeloContrato):
-    saldo_caja_negocio: Indicador
-    ingresos_mes: Indicador
-    egresos_mes: Indicador
-    ganancia_neta: IndicadorGanancia
-    retiros_personales: IndicadorRetiros
-    pendiente_cobro: IndicadorCobro
-    pagos_pendientes: IndicadorPagos
+class Indicadores(BaseModel):
+    saldo_caja_negocio: IndSaldo
+    ingresos_mes: IndSaldo
+    egresos_mes: IndSaldo
+    ganancia_neta: IndGanancia
+    retiros_personales: IndRetiros
+    pendiente_cobro: IndPendienteCobro
+    pagos_pendientes: IndPagosPendientes
 
 
-class ResumenResponse(ModeloContrato):
+class ResumenResponse(BaseModel):
     empresa_id: str
     periodo: str
     corte: date
+    dias_con_datos: int | None = None            # EXT: estado "día 3"
+    dias_requeridos_forecast: int | None = None  # EXT
     indicadores: Indicadores
     variacion_vs: str | None = None

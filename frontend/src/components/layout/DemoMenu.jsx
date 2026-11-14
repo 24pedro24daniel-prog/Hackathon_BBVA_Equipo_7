@@ -18,9 +18,10 @@ export default function DemoMenu() {
       </button>
       {open && (
         <div className="cc-demo__menu" role="menu">
-          <p>{USE_MOCK ? 'Datos ficticios' : 'Backend real: estos ajustes no aplican'}</p>
+          {!USE_MOCK && <p>Backend real: estos ajustes no aplican</p>}
           {opt('Pedro · 3 meses de datos', demo.escenario === 'pedro', () => setDemo({ escenario: 'pedro' }))}
           {opt('Pedro · día 3 (recién empieza)', demo.escenario === 'nuevo', () => setDemo({ escenario: 'nuevo' }))}
+          {opt(demo.tecnico ? 'Detalles técnicos: visibles ✓' : 'Ver detalles técnicos', demo.tecnico, () => setDemo({ tecnico: !demo.tecnico }))}
           {opt(demo.fallback ? 'Asistente: modo básico ✓' : 'Simular asistente caído', demo.fallback, () => setDemo({ fallback: !demo.fallback }))}
         </div>
       )}

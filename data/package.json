@@ -1,0 +1,15 @@
+{
+  "name": "cajaclara-data",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node generate_synthetic_data.mjs",
+    "load": "node load_postgres.mjs",
+    "seed": "node generate_synthetic_data.mjs && node load_postgres.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
+

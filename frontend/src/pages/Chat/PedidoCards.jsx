@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom'
 import { Button, Icon } from '../../components/ui/index.jsx'
 import { confianzaLabel, ddmm, soles } from '../../lib/format.js'
-import { HowIKnow, InBubble, RichText } from './ChatParts.jsx'
+import { CardTitle, HowIKnow, InBubble, RichText, SavedLine } from './ChatParts.jsx'
 import { sugerenciaTexto } from './chatText.js'
 
 export function WarningCard({ msg, onVerOpciones, onRegistrar }) {
@@ -21,10 +21,9 @@ export function WarningCard({ msg, onVerOpciones, onRegistrar }) {
       time={time}
       footer={`${confianzaLabel(chequeo.confianza)} · basado en tus últimos 3 meses`}
     >
-      <h2 className="chat-card__title chat-card__title--danger">
-        <Icon name="warning" size={20} />
+      <CardTitle icon="warning" tone={saldo < 0 ? 'danger' : 'warning'}>
         Antes de confirmar
-      </h2>
+      </CardTitle>
       <RichText text={texto} />
       {chequeo.fundamento && <p className="chat-why">Por qué: {lowerFirst(chequeo.fundamento)}</p>}
       <div className="chat-actions chat-actions--stack">
@@ -35,7 +34,7 @@ export function WarningCard({ msg, onVerOpciones, onRegistrar }) {
           Registrar igual
         </Button>
       </div>
-      {status === 'done' && <p className="chat-status">Pedido registrado</p>}
+      {status === 'done' && <SavedLine>Pedido registrado</SavedLine>}
       <HowIKnow
         fundamento={chequeo.fundamento}
         limites={chequeo.limites}
@@ -67,7 +66,8 @@ export function OptionsCard({ msg, onRegistrar }) {
         {(alcanzan.length ? alcanzan : noAlcanzan).map((s) => (
           <li key={s.accion} className="chat-opts__row">
             <span>{sugerenciaTexto(s, sugs)}</span>
-            <strong className={s.saldo_resultante < 0 ? 'chat-neg num' : 'num'}>
+            <strong className={s.saldo_resultante < 0 ? 'chat-st chat-neg num' : 'chat-st chat-pos num'}>
+              <Icon name={s.saldo_resultante < 0 ? 'warning' : 'check'} size={16} />
               {s.saldo_resultante < 0 ? `te faltan ${soles(-s.saldo_resultante)}` : `te quedan ${soles(s.saldo_resultante)}`}
             </strong>
           </li>

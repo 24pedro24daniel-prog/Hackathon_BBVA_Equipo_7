@@ -1,6 +1,6 @@
 // Piezas visuales básicas del chat: filas, burbujas, texto con **negrita**, tabla clave/valor, "¿Cómo lo sé?".
 import { useId, useState } from 'react'
-import { Icon, MetaLine } from '../../components/ui/index.jsx'
+import { Icon, MetaLine, Status } from '../../components/ui/index.jsx'
 import { confianzaLabel } from '../../lib/format.js'
 
 const cx = (...c) => c.filter(Boolean).join(' ')
@@ -53,17 +53,47 @@ export function InBubble({ time, wide, tone, className, footer, children }) {
   )
 }
 
-/** Tabla clave/valor sobre fondo hundido */
+/** Filas clave/valor tipo comprobante: etiqueta a la izquierda, valor a la derecha, divisores finos. Fila: [k, v, tone?] */
 export function KVTable({ rows, label }) {
   return (
     <dl className="chat-kv" aria-label={label}>
-      {rows.map(([k, v]) => (
+      {rows.map(([k, v, tone]) => (
         <div key={k} className="chat-kv__row">
           <dt>{k}</dt>
-          <dd className="num">{v}</dd>
+          <dd className={cx('num', tone && `chat-kv__v--${tone}`)}>{v}</dd>
         </div>
       ))}
     </dl>
+  )
+}
+
+/** Estado como texto de color + ícono pequeño (sin fondo, sin píldora). tone: danger | warning | ok */
+export function StatusText({ tone = 'warning', icon = 'warning', size = 16, children }) {
+  return (
+    <Status tone={tone} className="chat-st">
+      <Icon name={icon} size={size} />
+      {children}
+    </Status>
+  )
+}
+
+/** Título de tarjeta con ícono de estado (solo el ícono lleva el color; el texto queda en navy) */
+export function CardTitle({ icon, tone = 'danger', children }) {
+  return (
+    <h2 className="chat-card__title">
+      {icon && <Icon name={icon} size={20} className={`chat-ico chat-ico--${tone}`} />}
+      {children}
+    </h2>
+  )
+}
+
+/** Confirmación de que algo quedó guardado (texto de color, sin etiqueta) */
+export function SavedLine({ children = 'Guardado' }) {
+  return (
+    <p className="chat-status">
+      <Icon name="check" size={16} />
+      {children}
+    </p>
   )
 }
 
@@ -83,7 +113,7 @@ export function TypingBubble({ label }) {
 }
 
 /** Explicabilidad compacta dentro de una burbuja: fundamento, límites, confianza, cifras, modelo */
-export function HowIKnow({ label = '¿Cómo lo sé?', fundamento, limites, confianza, meta, extra = [] }) {
+export function HowIKnow({ label = '¿De dónde sale este número?', fundamento, limites, confianza, meta, extra = [] }) {
   const [open, setOpen] = useState(false)
   const id = useId()
   const hasContent = fundamento || limites || confianza || meta || extra.length

@@ -1,47 +1,43 @@
-"""Simulador de escenarios (contrato §4.6)."""
-
+"""Simulador de escenarios (contract.md §4.6). Dueño: B."""
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from app.schemas.common import Dinero, EstadoCaja, Meta, ModeloContrato, TipoAccionSimulador
+from app.schemas.common import Confianza, Dinero, EstadoCaja, Meta, TipoAccionSimulador
 
 
 class Accion(BaseModel):
-    """Una acción del simulador. Los campos dependen del tipo; se aceptan extras por tipo."""
-
-    model_config = ConfigDict(extra="allow", use_enum_values=True)
-
     tipo: TipoAccionSimulador
     pedido_id: str | None = None
-    nuevo_monto: Dinero | None = Field(default=None, ge=0)
-    partes: int | None = Field(default=None, ge=2, le=12)
-    fechas: list[date] | None = None
-    fiado_ids: list[str] | None = None
-    fecha: date | None = None
-    monto: Dinero | None = None
+    nuevo_monto: Dinero | None = None   # reducir_pedido
+    partes: int | None = Field(default=None, ge=2)  # pagar_en_partes
+    fechas: list[date] | None = None    # pagar_en_partes / diferir_pago
+    fiado_ids: list[str] | None = None  # cobrar_fiados
+    fecha: date | None = None           # cobrar_fiados / diferir_pago
+    monto: Dinero | None = None         # limitar_retiros / ajustar_gasto
 
 
-class SimularRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
+class SimulacionRequest(BaseModel):
     acciones: list[Accion] = Field(min_length=1)
 
 
-class ResultadoEscenario(ModeloContrato):
+class ResultadoSaldo(BaseModel):
     saldo_minimo: Dinero
     fecha: date
     estado_caja: EstadoCaja
 
 
-class PuntoSimulado(ModeloContrato):
+class PuntoSimulado(BaseModel):
     fecha: date
     p50: Dinero
 
 
-class SimulacionResponse(ModeloContrato):
-    sin_acciones: ResultadoEscenario
-    con_acciones: ResultadoEscenario
+class SimulacionResponse(BaseModel):
+    sin_acciones: ResultadoSaldo
+    con_acciones: ResultadoSaldo
     mejora: Dinero
     serie_con_acciones: list[PuntoSimulado]
+    fundamento: str | None = None   # EXT
+    limites: str | None = None      # EXT
+    confianza: Confianza | None = None  # EXT
     meta: Meta

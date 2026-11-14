@@ -6,6 +6,7 @@ import Simulador from './pages/Simulador/Simulador.jsx'
 import Cuentas from './pages/Cuentas/Cuentas.jsx'
 import Progreso from './pages/Progreso/Progreso.jsx'
 import Chat from './pages/Chat/Chat.jsx'
+import Movimientos from './pages/Movimientos/Movimientos.jsx'
 
 export default function App() {
   return (
@@ -18,6 +19,8 @@ export default function App() {
           <Route path="cuentas" element={<Cuentas />} />
           <Route path="progreso" element={<Progreso />} />
           <Route path="chat" element={<Chat />} />
+          {/* Ruta oculta: no está en la navegación; se llega desde Inicio → Últimos movimientos */}
+          <Route path="movimientos" element={<Movimientos />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

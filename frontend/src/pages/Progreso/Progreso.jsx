@@ -1,16 +1,25 @@
 import { useId, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { useDemo } from '../../lib/useDemo.js'
-import { soles } from '../../lib/format.js'
-import { Card, ErrorState, Footnote, Icon, LoadingBlock, MetaLine, PageHeader } from '../../components/ui/index.jsx'
+import { ddmm } from '../../lib/format.js'
+import {
+  Card,
+  ErrorState,
+  List,
+  ListRow,
+  LoadingBlock,
+  MetaLine,
+  Money,
+  PageHeader,
+  ProgressBar,
+} from '../../components/ui/index.jsx'
 import './Progreso.css'
 
 const ETAPAS_DEFAULT = ['organizar', 'estabilizar', 'proteger', 'crecer']
 
 const cap = (s = '') => s.charAt(0).toUpperCase() + s.slice(1)
-const lowerFirst = (s = '') => s.charAt(0).toLowerCase() + s.slice(1)
+const clamp = (v) => Math.max(0, Math.min(100, Number(v) || 0))
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 
@@ -20,100 +29,188 @@ function mesLabel(mes) {
   return { corto: cap(largo.slice(0, 3)), largo }
 }
 
+/** Palabra del puntaje general (como "Good" en SoFi). */
+function calificacion(score) {
+  const n = Number(score) || 0
+  if (n >= 80) return 'Muy buena'
+  if (n >= 60) return 'Buena'
+  if (n >= 40) return 'Regular'
+  return 'Débil'
+}
+
+/** Palabra + tono de cada parte del puntaje. */
+function calificacionParte(valor) {
+  const n = Number(valor) || 0
+  if (n >= 80) return { texto: 'Muy bien', tono: 'ok' }
+  if (n >= 60) return { texto: 'Bien', tono: 'neutral' }
+  return { texto: 'Mejorable', tono: 'warning' }
+}
+
+/** El subindicador más bajo (donde más puede avanzar), o null si todos están en 100. */
+function masBajo(subs) {
+  if (!subs.length) return null
+  const min = subs.reduce((m, s) => (s.valor < m.valor ? s : m), subs[0])
+  return min.valor < 100 ? min : null
+}
+
+/** Rachas conocidas → texto llano. Las de tipo desconocido no se muestran. */
+const RACHAS = {
+  semanas_registrando: (n) => ({ titulo: 'Anotar cada semana', sub: `${n} ${n === 1 ? 'semana seguida' : 'semanas seguidas'}` }),
+}
+
 export default function Progreso() {
   const [demo] = useDemo()
   const { data, error, loading, reload } = useApi(() => api.getSalud(), [demo.escenario])
 
   return (
     <div className="progreso">
-      <PageHeader kicker="Tu progreso" title="Tu negocio, más ordenado" />
+      <PageHeader title="Tu progreso" />
       <div className="progreso-body">
-        {loading && <LoadingBlock heights={[230, 90, 280, 90]} />}
+        {loading && <LoadingBlock heights={[220, 180, 110, 300]} />}
         {error && <ErrorState error={error} onRetry={reload} />}
         {data && (
           <>
-            <ScoreCard salud={data} />
-            <Etapas etapas={data.etapas || ETAPAS_DEFAULT} actual={data.etapa_actual} />
-            <Componentes salud={data} />
-            <Metas metas={data.metas_activas || []} />
+            <div className="progreso-col">
+              <Score salud={data} />
+              <Historial historial={data.historial || []} />
+              <Etapa etapas={data.etapas || ETAPAS_DEFAULT} actual={data.etapa_actual} />
+            </div>
+            <div className="progreso-col">
+              <Componentes salud={data} />
+              <Metas metas={data.metas_activas || []} rachas={data.rachas || []} />
+            </div>
             <p className="progreso-privacy cc-small">
               Tu historial es tuyo. Solo se comparte si tú lo activas, y puedes retirarlo cuando quieras.
             </p>
           </>
         )}
-        <Footnote />
       </div>
     </div>
   )
 }
 
-function ScoreCard({ salud }) {
+/* ---------- Salud de caja (tarjeta de puntaje, patrón SoFi) ---------- */
+
+function Score({ salud }) {
+  const titleId = useId()
   const historial = salud.historial || []
   const prev = historial.length >= 2 ? historial[historial.length - 2] : null
   const delta = salud.score_anterior != null ? salud.score - salud.score_anterior : null
-  const desde = prev ? ` desde ${mesLabel(prev.mes).largo}` : ''
-  let tendencia = null
-  if (delta > 0) tendencia = `Subiste ${delta} ${delta === 1 ? 'punto' : 'puntos'}${desde}.`
-  else if (delta < 0) tendencia = `Bajaste ${-delta} ${delta === -1 ? 'punto' : 'puntos'}${desde}. Vamos viendo qué lo movió.`
-  else if (delta === 0) tendencia = `Te mantienes igual${desde}.`
+  const desde = prev ? `desde ${mesLabel(prev.mes).largo}` : 'desde el mes pasado'
 
-  const alt = historial.map((h) => `${mesLabel(h.mes).largo}: ${h.score}`).join(', ')
+  let tendencia = null
+  let tono = 'neutral'
+  if (delta > 0) {
+    tendencia = `Subiste ${delta} ${delta === 1 ? 'punto' : 'puntos'}`
+    tono = 'ok'
+  } else if (delta < 0) {
+    tendencia = `Bajaste ${-delta} ${delta === -1 ? 'punto' : 'puntos'}`
+    tono = 'warning'
+  } else if (delta === 0) {
+    tendencia = 'Te mantienes igual'
+  }
+
+  const palabra = salud.etiqueta || calificacion(salud.score)
+  const fechaFuente = salud.actualizado_en || salud.fecha_corte || salud.meta?.generado_en
+  const fecha = fechaFuente ? ddmm(fechaFuente) : null
+  const pos = clamp(salud.score)
 
   return (
-    <Card className="progreso-score" aria-labelledby="progreso-score-title">
-      <div className="progreso-score__head">
-        <h2 id="progreso-score-title" className="progreso-h2">
-          Salud de caja
-        </h2>
-        <p className="progreso-score__value">
-          <span className="progreso-score__num display num">{salud.score}</span>
-          <span className="progreso-score__den num">/100</span>
-          <span className="sr-only"> puntos</span>
-        </p>
-      </div>
-      {tendencia && <p className="progreso-score__trend">{tendencia}</p>}
-
-      {historial.length > 0 && (
-        <figure className="progreso-chart">
-          <div className="progreso-chart__bars" aria-hidden="true">
-            {historial.map((h, i) => {
-              const actual = i === historial.length - 1
-              return (
-                <div key={h.mes} className="progreso-chart__col">
-                  <div className="progreso-chart__track">
-                    <span className="progreso-chart__val num">{h.score}</span>
-                    <div
-                      className={`progreso-chart__bar${actual ? ' progreso-chart__bar--now' : ''}`}
-                      style={{ height: `${Math.round(Math.max(4, Math.min(100, h.score)) * 0.9)}px` }}
-                    />
-                  </div>
-                  <span className={`progreso-chart__label${actual ? ' progreso-chart__label--now' : ''}`}>
-                    {mesLabel(h.mes).corto}
-                  </span>
-                </div>
-              )
-            })}
+    <Card className="progreso-score" aria-labelledby={titleId}>
+      <h2 id={titleId} className="cc-card__title">
+        Salud de caja
+      </h2>
+      <div className="progreso-score__top">
+        <div className="progreso-score__main">
+          <p className="progreso-score__value">
+            <span className="progreso-score__num display num">{salud.score}</span>
+            <span className="progreso-score__den num"> de 100</span>
+          </p>
+          <p className="progreso-score__rating">
+            {palabra}
+            {fecha && <> · actualizado {fecha}</>}
+          </p>
+        </div>
+        {tendencia && (
+          <div className="progreso-score__trend">
+            <p className={`progreso-score__trend-main progreso-score__trend-main--${tono}`}>{tendencia}</p>
+            <p className="progreso-score__trend-sub">{desde}</p>
           </div>
-          <figcaption className="sr-only">Salud de caja por mes, sobre 100. {alt}.</figcaption>
-        </figure>
-      )}
+        )}
+      </div>
+
+      <div className="progreso-scale" aria-hidden="true">
+        <div className="progreso-scale__bar">
+          <span className="progreso-scale__seg progreso-scale__seg--1" />
+          <span className="progreso-scale__seg progreso-scale__seg--2" />
+          <span className="progreso-scale__seg progreso-scale__seg--3" />
+          <span className="progreso-scale__seg progreso-scale__seg--4" />
+          <span className="progreso-scale__marker" style={{ '--pos': pos }} />
+        </div>
+        <div className="progreso-scale__labels">
+          <span>0</span>
+          <span>100</span>
+        </div>
+      </div>
     </Card>
   )
 }
 
-function Etapas({ etapas, actual }) {
-  const idx = Math.max(0, etapas.indexOf(actual))
+/* ---------- Últimos meses: barras finas, mes actual en Electric ---------- */
+
+function Historial({ historial }) {
+  const titleId = useId()
+  if (!historial.length) return null
+  const alt = historial.map((h) => `${mesLabel(h.mes).largo}: ${h.score}`).join(', ')
+
   return (
-    <Card as="nav" aria-label="Etapas de tu plan" className="progreso-steps-card">
-      <ol className="progreso-steps">
+    <Card className="progreso-hist" aria-labelledby={titleId}>
+      <h2 id={titleId} className="cc-card__title">
+        Últimos meses
+      </h2>
+      <figure className="progreso-chart">
+        <div className="progreso-chart__bars" aria-hidden="true">
+          {historial.map((h, i) => {
+            const actual = i === historial.length - 1
+            return (
+              <div key={h.mes} className={`progreso-chart__col${actual ? ' progreso-chart__col--now' : ''}`}>
+                <span className="progreso-chart__val num">{h.score}</span>
+                <div className="progreso-chart__track">
+                  <div className="progreso-chart__bar" style={{ '--h': Math.max(4, clamp(h.score)) }} />
+                </div>
+                <span className="progreso-chart__label">{mesLabel(h.mes).corto}</span>
+              </div>
+            )
+          })}
+        </div>
+        <figcaption className="sr-only">Salud de caja por mes, sobre 100. {alt}.</figcaption>
+      </figure>
+    </Card>
+  )
+}
+
+/* ---------- Etapa: texto + pista de 4 tramos ---------- */
+
+function Etapa({ etapas, actual }) {
+  const titleId = useId()
+  const idx = Math.max(0, etapas.indexOf(actual))
+  const siguiente = etapas[idx + 1]
+  return (
+    <Card className="progreso-etapa" aria-labelledby={titleId}>
+      <h2 id={titleId} className="cc-card__title">
+        Etapa {idx + 1} de {etapas.length}: {cap(etapas[idx])}
+      </h2>
+      <ol className="progreso-etapa__track" aria-label="Etapas de tu plan">
         {etapas.map((e, i) => {
           const state = i < idx ? 'done' : i === idx ? 'current' : 'todo'
           return (
-            <li key={e} className={`progreso-step progreso-step--${state}`} aria-current={state === 'current' ? 'step' : undefined}>
-              <span className="progreso-step__dot num" aria-hidden="true">
-                {state === 'done' ? <Icon name="check" size={18} strokeWidth={2.2} /> : i + 1}
-              </span>
-              <span className="progreso-step__label">
+            <li
+              key={e}
+              className={`progreso-etapa__step progreso-etapa__step--${state}`}
+              aria-current={state === 'current' ? 'step' : undefined}
+            >
+              <span className="progreso-etapa__seg" aria-hidden="true" />
+              <span className="progreso-etapa__name">
                 {cap(e)}
                 <span className="sr-only">
                   {state === 'done' ? ' (completada)' : state === 'current' ? ' (etapa actual)' : ' (por venir)'}
@@ -123,110 +220,140 @@ function Etapas({ etapas, actual }) {
           )
         })}
       </ol>
+      <p className="progreso-etapa__next">{siguiente ? `Siguiente: ${cap(siguiente)}` : 'Estás en la última etapa'}</p>
     </Card>
   )
 }
 
-function Indicador({ s, showPeso }) {
+/* ---------- Qué lo compone (factores, patrón SoFi) ---------- */
+
+function Factor({ s, esMasBajo }) {
+  const { texto, tono } = calificacionParte(s.valor)
+  const sub = (
+    <>
+      <span className="progreso-factor__detail">
+        {esMasBajo && <span className="progreso-factor__flag">Donde más puedes avanzar</span>}
+        {esMasBajo && s.detalle && ' · '}
+        {s.detalle}
+      </span>
+      <ProgressBar value={clamp(s.valor)} label={s.nombre} className="progreso-factor__bar" />
+    </>
+  )
   return (
-    <li className="progreso-ind">
-      <div className="progreso-ind__head">
-        <h3 className="progreso-ind__name">{s.nombre}</h3>
-        <span className="progreso-ind__val num">{s.valor}/100</span>
-      </div>
-      <div className="progreso-ind__track" aria-hidden="true">
-        <div className="progreso-ind__fill" style={{ width: `${Math.max(0, Math.min(100, s.valor))}%` }} />
-      </div>
-      {s.detalle && <p className="progreso-ind__detail cc-small">{s.detalle}</p>}
-      {showPeso && s.peso != null && (
-        <p className="progreso-ind__peso cc-xs num">Pesa {Math.round(s.peso * 100)}% en tu puntaje</p>
-      )}
-    </li>
+    <ListRow
+      className="progreso-factor"
+      title={s.nombre}
+      sub={sub}
+      end={
+        <>
+          <span className={`progreso-factor__rating progreso-factor__rating--${tono}`}>{texto}</span>
+          <span className="progreso-factor__value num">{s.valor} de 100</span>
+        </>
+      }
+    />
   )
 }
 
 function Componentes({ salud }) {
   const [open, setOpen] = useState(false)
+  const titleId = useId()
   const listId = useId()
   const subs = salud.subindicadores || []
-  const destacados = subs.filter((s) => s.destacado)
-  const resto = subs.filter((s) => !s.destacado)
-  const visibles = destacados.length ? destacados : subs.slice(0, 3)
-  const ocultos = destacados.length ? resto : subs.slice(3)
-  const tienePesos = subs.some((s) => s.peso != null)
-  const suma = subs.reduce((acc, s) => acc + (s.peso ?? 0) * s.valor, 0)
-
   if (!subs.length) return null
 
+  const porMejorar = masBajo(subs)
+  const destacados = subs.filter((s) => s.destacado)
+  // Siempre a la vista: los destacados y el más bajo (para que se vea dónde avanzar).
+  const visibles = destacados.length
+    ? subs.filter((s) => s.destacado || s === porMejorar)
+    : subs.slice(0, 3).concat(porMejorar && subs.indexOf(porMejorar) >= 3 ? [porMejorar] : [])
+  const ocultos = subs.filter((s) => !visibles.includes(s))
+  const mostrados = open ? subs : visibles
+
   return (
-    <Card aria-labelledby="progreso-comp-title">
-      <h2 id="progreso-comp-title" className="progreso-h2">
-        Qué lo compone
-      </h2>
-      <ul className="progreso-inds" id={listId}>
-        {visibles.map((s) => (
-          <Indicador key={s.id} s={s} showPeso={open} />
+    <Card flush className="progreso-factores" aria-labelledby={titleId}>
+      <div className="cc-card__head">
+        <h2 id={titleId} className="cc-card__title">
+          Qué lo compone
+        </h2>
+        {ocultos.length > 0 && (
+          <button
+            type="button"
+            className="cc-section__action"
+            aria-expanded={open}
+            aria-controls={listId}
+            onClick={() => setOpen((o) => !o)}
+          >
+            {open ? 'Ver menos' : 'Ver todos →'}
+          </button>
+        )}
+      </div>
+      <List id={listId}>
+        {mostrados.map((s) => (
+          <Factor key={s.id} s={s} esMasBajo={s === porMejorar} />
         ))}
-        {open && ocultos.map((s) => <Indicador key={s.id} s={s} showPeso />)}
-      </ul>
-
-      {open && tienePesos && (
-        <p className="progreso-formula cc-small">
-          Tu puntaje es el promedio de estas {subs.length} partes, cada una según lo que pesa:{' '}
-          <span className="num">
-            {subs.map((s) => `${s.valor}×${Math.round((s.peso ?? 0) * 100)}%`).join(' + ')} ≈ {Math.round(suma)}
-          </span>
-          . Son reglas fijas, no una opinión: si mejoras una parte, sube el puntaje.
-        </p>
+      </List>
+      {salud.meta && (
+        <div className="progreso-factores__meta">
+          <MetaLine meta={salud.meta} />
+        </div>
       )}
-
-      {ocultos.length > 0 && (
-        <button
-          type="button"
-          className="progreso-more"
-          aria-expanded={open}
-          aria-controls={listId}
-          onClick={() => setOpen((o) => !o)}
-        >
-          {open ? 'Ver menos' : `Ver los ${subs.length}`}
-          <Icon name="chevronDown" size={20} className="progreso-more__chev" />
-        </button>
-      )}
-      <MetaLine meta={salud.meta} />
     </Card>
   )
 }
 
-function Metas({ metas }) {
+/* ---------- Metas (patrón "pots" de Monzo) ---------- */
+
+/** Avance 0–100 solo si los datos traen un objetivo; nunca se inventa. */
+function avanceMeta(m) {
+  const objetivo = m.objetivo ?? m.monto_objetivo
+  if (objetivo > 0 && m.acumulado != null) return clamp((m.acumulado / objetivo) * 100)
+  if (m.progreso != null) return clamp(Number(m.progreso) <= 1 ? Number(m.progreso) * 100 : m.progreso)
+  return null
+}
+
+function Metas({ metas, rachas }) {
+  const titleId = useId()
   const activas = metas.filter((m) => !m.estado || m.estado === 'activa')
-  if (!activas.length) {
-    return (
-      <Card variant="dashed" className="progreso-meta-empty">
-        <p className="cc-small cc-muted">
-          Aún no tienes una meta activa. Puedes crear una desde el chat, por ejemplo “quiero apartar para el pedido”.
-        </p>
-        <Link to="/chat" className="cc-btn cc-btn--secondary cc-btn--sm">
-          Crear una meta
-        </Link>
-      </Card>
-    )
-  }
+  const rachasVisibles = rachas
+    .filter((r) => RACHAS[r.tipo] && r.valor > 0)
+    .map((r) => ({ key: r.tipo, ...RACHAS[r.tipo](r.valor) }))
+
   return (
-    <>
-      {activas.map((m) => (
-        <Card key={m.meta_id} className="progreso-meta">
-          <span className="progreso-meta__icon" aria-hidden="true">
-            <Icon name="check" size={22} strokeWidth={2.2} />
-          </span>
-          <div>
-            <h2 className="progreso-meta__title">Meta activa: {lowerFirst(m.titulo)}</h2>
-            <p className="progreso-meta__detail num">
-              {m.detalle}
-              {m.acumulado != null && ` · llevas ${soles(m.acumulado)}`}
-            </p>
-          </div>
-        </Card>
-      ))}
-    </>
+    <Card flush className="progreso-metas" aria-labelledby={titleId}>
+      <div className="cc-card__head">
+        <h2 id={titleId} className="cc-card__title">
+          Tus metas
+        </h2>
+      </div>
+      <List>
+        {activas.map((m) => {
+          const avance = avanceMeta(m)
+          return (
+            <ListRow
+              key={m.meta_id}
+              className="progreso-meta"
+              title={cap(m.titulo)}
+              sub={
+                <>
+                  {m.detalle && <span className="progreso-meta__detail">{m.detalle}</span>}
+                  {avance != null && (
+                    <ProgressBar value={Math.round(avance)} tone="ok" label={`Avance de ${m.titulo}`} className="progreso-meta__bar" />
+                  )}
+                </>
+              }
+              amount={m.acumulado != null ? <Money value={m.acumulado} /> : undefined}
+              end={m.acumulado != null ? <span className="cc-row__sub">apartado</span> : undefined}
+            />
+          )
+        })}
+        {!activas.length && (
+          <ListRow to="/chat" title="Crear una meta" sub="Dila en el chat, por ejemplo “quiero apartar para el pedido”." />
+        )}
+        {rachasVisibles.map((r) => (
+          <ListRow key={r.key} title={r.titulo} sub={r.sub} />
+        ))}
+      </List>
+    </Card>
   )
 }

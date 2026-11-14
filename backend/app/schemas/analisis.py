@@ -1,43 +1,24 @@
-"""F5 — Análisis de ingresos y egresos (contrato §5)."""
-
+"""F5 — Análisis de ingresos y egresos (contract.md §5). Dueño: B."""
 from datetime import date
-from enum import Enum
 
-from app.schemas.common import Dinero, ModeloContrato
+from pydantic import BaseModel
 
-
-class AgruparPor(str, Enum):
-    categoria = "categoria"
-    producto = "producto"
-    proveedor = "proveedor"
-    cliente_fiado = "cliente_fiado"
-    metodo_pago = "metodo_pago"
-    mes = "mes"
+from app.schemas.common import Dinero
 
 
-class TipoAnalisis(str, Enum):
-    ingreso = "ingreso"
-    egreso = "egreso"
-
-
-class CompararCon(str, Enum):
-    periodo_anterior = "periodo_anterior"
-    mismo_periodo_anio_anterior = "mismo_periodo_anio_anterior"
-
-
-class Periodo(ModeloContrato):
-    desde: date
-    hasta: date
-
-
-class Grupo(ModeloContrato):
+class Grupo(BaseModel):
     clave: str
     monto: Dinero
     participacion_pct: float
     variacion_pct: float | None = None
 
 
-class ComparacionPares(ModeloContrato):
+class PeriodoAnalisis(BaseModel):
+    desde: date
+    hasta: date
+
+
+class ComparacionPares(BaseModel):
     metrica: str
     valor_empresa: float
     mediana_pares: float
@@ -46,9 +27,9 @@ class ComparacionPares(ModeloContrato):
     nota: str
 
 
-class AnalisisResponse(ModeloContrato):
-    agrupar_por: AgruparPor
-    tipo: TipoAnalisis
-    periodo: Periodo | None = None
+class AnalisisResponse(BaseModel):
+    agrupar_por: str
+    tipo: str
+    periodo: PeriodoAnalisis | None = None
     grupos: list[Grupo]
     comparacion_pares: ComparacionPares | None = None

@@ -1,0 +1,14 @@
+categoria_id,nombre,tipo,es_del_negocio
+CAT-01,bebidas,ingreso,true
+CAT-02,abarrotes,ingreso,true
+CAT-03,lacteos_panaderia,ingreso,true
+CAT-04,limpieza_aseo,ingreso,true
+CAT-05,snacks_golosinas,ingreso,true
+CAT-06,otros_ingresos,ingreso,true
+CAT-07,mercaderia,egreso,true
+CAT-08,servicios,egreso,true
+CAT-09,alquiler_local,egreso,true
+CAT-10,transporte_flete,egreso,true
+CAT-11,impuestos,egreso,true
+CAT-12,financiamiento,egreso,true
+CAT-13,retiro_personal,egreso,false

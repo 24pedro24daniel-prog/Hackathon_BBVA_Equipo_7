@@ -132,7 +132,7 @@ export function useChat({ demo } = {}) {
     me('text', { text: '✏️ Corregir' })
     update(id, { status: 'editing' })
     pending.current.draftId = id
-    bot('text', { text: '¿Qué cambio? Escríbeme, por ejemplo: «fue por billetera», «fueron 15» o «era para la casa».' })
+    bot('text', { text: '¿Qué cambio? Escríbeme, por ejemplo: «fue por billetera», «fueron 15» o «era una venta».' })
   }
 
   function correcto(id) {

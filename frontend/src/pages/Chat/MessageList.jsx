@@ -62,7 +62,10 @@ function Message({ msg, a }) {
     case 'error':
       return (
         <InBubble time={msg.time} tone="error">
-          <p role="alert">{msg.text}</p>
+          <p role="alert" className="chat-err">
+            <Icon name="warning" size={18} className="chat-ico chat-ico--danger" />
+            <span>{msg.text}</span>
+          </p>
           {msg.retry && (
             <div className="chat-actions chat-actions--stack">
               <Button variant="secondary" size="sm" onClick={() => a.retry(msg.id)} disabled={msg.status === 'done'}>
@@ -92,9 +95,7 @@ export default function MessageList({ messages, typing, actions }) {
 
   return (
     <div className="chat-list" ref={ref} role="log" aria-live="polite" aria-label="Conversación con CajaClara">
-      <p className="chat-date">
-        <span>Hoy</span>
-      </p>
+      <p className="chat-date">Hoy</p>
       {messages.map((m) => (
         <Message key={m.id} msg={m} a={actions} />
       ))}

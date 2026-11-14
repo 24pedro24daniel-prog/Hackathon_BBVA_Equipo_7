@@ -1,0 +1,134 @@
+producto_id,empresa_id,categoria_id,nombre,alias,precio_venta,costo_unitario,activo
+PRD-0001,EMP-0001,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""panes"",""bolsa de pan""]",2.50,1.80,true
+PRD-0002,EMP-0001,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche"",""leche azul""]",4.50,3.60,true
+PRD-0003,EMP-0001,CAT-02,Arroz extra 1 kg,"[""arroz"",""kilo de arroz""]",4.20,3.30,true
+PRD-0004,EMP-0001,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",8.50,6.80,true
+PRD-0005,EMP-0001,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",3.80,3.00,true
+PRD-0006,EMP-0001,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",2.80,2.10,true
+PRD-0007,EMP-0001,CAT-03,Huevos pardos (1 kg),"[""huevos"",""kilo de huevo""]",9.50,7.80,true
+PRD-0008,EMP-0001,CAT-01,Gaseosa familiar 1.5 L,"[""gaseosa"",""gaseosas""]",7.50,5.60,true
+PRD-0009,EMP-0001,CAT-01,Agua mineral 625 ml,"[""agua"",""botella de agua""]",2.00,1.20,true
+PRD-0010,EMP-0001,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.50,4.20,true
+PRD-0011,EMP-0001,CAT-04,Detergente en polvo 500g,"[""detergente""]",6.00,4.50,true
+PRD-0012,EMP-0001,CAT-04,Papel higiénico paquete x4,"[""papel"",""papel higienico""]",5.20,3.90,true
+PRD-0013,EMP-0001,CAT-04,Jabón de lavar barra,"[""jabon"",""barra de jabon""]",3.00,2.10,true
+PRD-0014,EMP-0001,CAT-05,Galletas paquete x6,"[""galleta"",""galletas""]",3.50,2.50,true
+PRD-0015,EMP-0001,CAT-05,Papas fritas snack,"[""papitas"",""snack""]",2.50,,true
+PRD-0016,EMP-0001,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",6.80,5.20,true
+PRD-0017,EMP-0001,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.00,,true
+PRD-0018,EMP-0001,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",4.00,3.10,true
+PRD-0019,EMP-0001,CAT-01,Jugo néctar 1 L,"[""jugo""]",4.80,3.60,true
+PRD-0020,EMP-0001,CAT-03,Panetón clásico 900g (Campaña Navideña),"[""paneton"",""panetones""]",22.00,16.50,true
+PRD-0031,EMP-0001,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza grande"",""cerveza"",""cervezas""]",6.50,4.80,true
+PRD-0100,EMP-0003,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0101,EMP-0003,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0102,EMP-0003,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0103,EMP-0003,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0104,EMP-0004,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0105,EMP-0004,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0106,EMP-0004,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0107,EMP-0004,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0108,EMP-0005,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0109,EMP-0005,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0110,EMP-0005,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0111,EMP-0005,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0112,EMP-0006,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0113,EMP-0006,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0114,EMP-0006,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0115,EMP-0006,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0116,EMP-0007,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0117,EMP-0007,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0118,EMP-0007,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0119,EMP-0007,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0120,EMP-0008,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0121,EMP-0008,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0122,EMP-0008,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0123,EMP-0008,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0124,EMP-0009,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0125,EMP-0009,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0126,EMP-0009,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0127,EMP-0009,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0128,EMP-0010,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0129,EMP-0010,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0130,EMP-0010,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0131,EMP-0010,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0132,EMP-0011,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0133,EMP-0011,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0134,EMP-0011,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0135,EMP-0011,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0136,EMP-0012,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0137,EMP-0012,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0138,EMP-0012,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0139,EMP-0012,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0140,EMP-0013,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0141,EMP-0013,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0142,EMP-0013,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0143,EMP-0013,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0144,EMP-0014,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0145,EMP-0014,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0146,EMP-0014,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0147,EMP-0014,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0148,EMP-0015,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0149,EMP-0015,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0150,EMP-0015,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0151,EMP-0015,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0152,EMP-0016,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0153,EMP-0016,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0154,EMP-0016,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0155,EMP-0016,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0156,EMP-0017,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0157,EMP-0017,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0158,EMP-0017,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0159,EMP-0017,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0160,EMP-0018,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0161,EMP-0018,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0162,EMP-0018,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0163,EMP-0018,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0164,EMP-0019,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0165,EMP-0019,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0166,EMP-0019,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0167,EMP-0019,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0168,EMP-0020,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0169,EMP-0020,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0170,EMP-0020,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0171,EMP-0020,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0172,EMP-0021,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0173,EMP-0021,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0174,EMP-0021,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0175,EMP-0021,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0176,EMP-0022,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0177,EMP-0022,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0178,EMP-0022,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0179,EMP-0022,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0180,EMP-0023,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0181,EMP-0023,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0182,EMP-0023,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0183,EMP-0023,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0184,EMP-0024,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0185,EMP-0024,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0186,EMP-0024,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0187,EMP-0024,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0188,EMP-0025,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0189,EMP-0025,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0190,EMP-0025,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0191,EMP-0025,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0192,EMP-0026,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0193,EMP-0026,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0194,EMP-0026,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0195,EMP-0026,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0196,EMP-0027,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0197,EMP-0027,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0198,EMP-0027,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0199,EMP-0027,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0200,EMP-0028,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0201,EMP-0028,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0202,EMP-0028,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0203,EMP-0028,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0204,EMP-0029,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0205,EMP-0029,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0206,EMP-0029,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0207,EMP-0029,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0208,EMP-0030,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
+PRD-0209,EMP-0030,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
+PRD-0210,EMP-0030,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
+PRD-0211,EMP-0030,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
