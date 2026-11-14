@@ -11,6 +11,7 @@ def estado_ia() -> dict:
 
     whisper_instalado = importlib.util.find_spec("faster_whisper") is not None
     return {
+        "r2": {"estado": "ok" if settings.r2_configurado else "sin_configurar", "bucket": settings.R2_BUCKET},
         "whisper": {
             "estado": "ok" if whisper_instalado else "no_disponible",
             "modelo": f"faster-whisper-{settings.WHISPER_MODEL}",
@@ -20,6 +21,11 @@ def estado_ia() -> dict:
             "estado": "ok" if settings.llm_configurado else "sin_configurar",
             "modelo": settings.LLM_MODEL,
             "proveedor": "openrouter",
-            "prompt_versions": {"extractor": "v3", "asistente": "v2", "cuaderno": "v1"},
+            "prompt_versions": {"extractor": "v3", "asistente": "v2", "cuaderno": "v2"},
+        },
+        "vlm": {
+            "estado": "ok" if settings.llm_configurado else "sin_configurar",
+            "modelo": settings.VLM_MODEL,
+            "proveedor": "openrouter",
         },
     }

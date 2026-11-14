@@ -29,6 +29,8 @@ def health(db: Session = Depends(get_db)):
             "base_datos": base_datos,
             "whisper": ia["whisper"],
             "llm": ia["llm"],
+            "vlm": ia["vlm"],
+            "almacenamiento": ia["r2"],
             "forecast": {"estado": "mock", "modelo_version": None},
             "riesgo_atraso": {"estado": "mock", "modelo_version": None},
         },

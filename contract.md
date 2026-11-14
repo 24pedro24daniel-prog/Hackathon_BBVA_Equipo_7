@@ -239,21 +239,31 @@ Tablas y campos: [modelo_datos.dbml](modelo_datos.dbml) · [diccionario_datos.md
 { "empresa_id": "EMP-0001", "media_url": "r2://empresas/EMP-0001/fotos/2026/11/9a1c….jpg" }
 ```
 - `media_url`: `r2://…` (§1.0, `tipo: "imagen"`) o, solo para demo, `file://data/fotos/…` / `demo://fotos/…`.
-  Sin modelo de visión en el MVP, la lectura sale de fixtures por nombre de foto (`cuaderno_01..03`); una foto
-  `r2://` desconocida devuelve `fiados_propuestos: []`. Objeto inexistente → `422`; ajeno/tipo/tamaño → `400`.
+  La foto se lee con un modelo de visión (VLM) vía OpenRouter (`VLM_MODEL`); la imagen viaja al proveedor como data
+  URL base64. Si el VLM no está disponible (sin key, timeout, error o salida inválida) se usa un fixture por nombre
+  de foto (`cuaderno_01..03`, `meta.fallback_usado = true`) o, si la foto es desconocida, `fiados_propuestos: []`.
+  Las líneas tachadas (ya pagadas) no se proponen: se cuentan en `lineas_tachadas`. Objeto inexistente → `422`;
+  ajeno/tipo/tamaño → `400`.
 
 **Response 200**
 ```json
 {
   "borrador_id": "BOR-7790",
   "fiados_propuestos": [
-    { "cliente": "Sra. Carmen", "detalle": "2 panes, 1 leche", "monto": 120.00, "fecha": "2026-10-27", "confianza": 0.81 },
-    { "cliente": "Don Luis", "detalle": "arroz, aceite", "monto": 95.00, "fecha": "2026-11-02", "confianza": 0.64 }
+    { "cliente": "Vecina Rosa", "detalle": "pan y huevos", "monto": 12.50, "fecha": "2026-11-12", "confianza": 0.85,
+      "cliente_id": "CLI-0110", "cliente_nuevo": false, "posible_duplicado": false },
+    { "cliente": "Marcos", "detalle": "fideos y atún", "monto": 8.00, "fecha": "2026-11-10", "confianza": 0.85,
+      "cliente_id": null, "cliente_nuevo": true, "posible_duplicado": null }
   ],
-  "lineas_no_legibles": 1,
-  "meta": { "modelo": "ocr-manuscrito + llm-estructurador", "modelo_version": "0.1.0", "prompt_version": "cuaderno-v1", "fallback_usado": false }
+  "lineas_no_legibles": 0,
+  "lineas_tachadas": 1,
+  "meta": { "modelo": "vlm-openrouter", "modelo_version": "openai/gpt-4o-mini", "prompt_version": "cuaderno-v2", "fallback_usado": false }
 }
 ```
+Campos extra (opcionales, el front puede ignorarlos): `cliente_id` / `cliente_nuevo` (el nombre se empareja con los
+clientes existentes por alias y se devuelve con el nombre del catálogo; si es nuevo se crea recién al confirmar),
+`posible_duplicado` (ya existe un fiado igual en `cuaderno_fiado`; al confirmar se omite y vuelve en `duplicados`) y
+`lineas_tachadas`. Con fallback a fixture, `meta.modelo = "fixture-cuaderno"`.
 Se confirma con `POST /ingesta/confirmar` (puede aceptar o editar cada fiado).
 
 ### 1.5 `POST /empresas/{empresa_id}/impuestos`
@@ -670,7 +680,8 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
     "base_datos": "ok",
     "whisper": { "estado": "ok", "modelo": "faster-whisper-small" },
     "almacenamiento": { "estado": "ok", "bucket": "cajaclara-media" },
-    "llm": { "estado": "ok", "modelo": "qwen2.5-7b-instruct", "prompt_versions": { "extractor": "v3", "asistente": "v2", "cuaderno": "v1" } },
+    "llm": { "estado": "ok", "modelo": "qwen2.5-7b-instruct", "prompt_versions": { "extractor": "v3", "asistente": "v2", "cuaderno": "v2" } },
+    "vlm": { "estado": "ok", "modelo": "openai/gpt-4o-mini", "proveedor": "openrouter" },
     "forecast": { "estado": "ok", "modelo_version": "0.3.1" },
     "riesgo_atraso": { "estado": "ok", "modelo_version": "0.2.0" }
   }

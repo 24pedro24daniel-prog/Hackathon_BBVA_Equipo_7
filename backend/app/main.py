@@ -21,6 +21,7 @@ from app.routers import (
     health,
     impuestos,
     ingesta,
+    media,
     movimientos,
     pedidos,
     resumen,
@@ -33,6 +34,7 @@ ROUTERS = [
     # Dev A — ingesta y conversación
     webhooks.router,
     ingesta.router,
+    media.router,
     impuestos.router,
     movimientos.router,
     asistente.router,

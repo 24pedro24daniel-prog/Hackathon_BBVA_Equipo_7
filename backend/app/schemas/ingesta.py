@@ -146,12 +146,16 @@ class FiadoPropuesto(ModeloContrato):
     monto: Dinero
     fecha: date
     confianza: float = Field(ge=0, le=1)
+    cliente_id: str | None = None
+    cliente_nuevo: bool | None = None
+    posible_duplicado: bool | None = None
 
 
 class CuadernoResponse(ModeloContrato):
     borrador_id: str
     fiados_propuestos: list[FiadoPropuesto]
     lineas_no_legibles: int = 0
+    lineas_tachadas: int = 0
     meta: Meta
 
 

@@ -7,8 +7,8 @@ Todos los datos son sintéticos (Pedro, "Bodega Don Pedro", EMP-0001).
 
 | Archivo | Qué tiene | ¿Se versiona? |
 |---|---|---|
-| `parametros.env` | Parámetros no secretos: host/puerto/BD, `FECHA_DEMO=2026-11-14`, `TZ`, `LLM_*` (OpenRouter), `WHISPER_*`, `UMBRAL_CONFIANZA` | Sí |
-| `.env` | Solo credenciales: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `API_KEY`, `OPENROUTER_API_KEY` | **No** (`.gitignore`) |
+| `parametros.env` | Parámetros no secretos: host/puerto/BD, `FECHA_DEMO=2026-11-14`, `TZ`, `LLM_*` (OpenRouter), `WHISPER_*`, `UMBRAL_CONFIANZA`, `R2_ACCOUNT_ID`, `R2_BUCKET`, `MEDIA_*` | Sí |
+| `.env` | Solo credenciales: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `API_KEY`, `OPENROUTER_API_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | **No** (`.gitignore`) |
 | `example.env` | Plantilla de `.env` con valores vacíos | Sí |
 
 ```bash
@@ -18,6 +18,24 @@ cp example.env .env        # y llena los valores (el archivo explica cómo gener
 
 `API_KEY` es la que el front manda en `X-API-Key` (ponla también en `frontend/.env` como `VITE_API_KEY`).
 Sin `OPENROUTER_API_KEY` el backend funciona igual; el extractor y el asistente usarán su fallback.
+
+## Audios y fotos en Cloudflare R2
+
+El front sube el archivo directo a R2 con una URL prefirmada (`POST /api/v1/media/subidas`, ver `../contract.md` §1.0) y manda
+`media_url = "r2://..."` a `/ingesta/interpretar`, `/ingesta/cuaderno` o al webhook. Sin R2 configurado el backend funciona
+igual (los `demo://` y `file://` siguen sirviendo); `POST /media/subidas` responde `503` y `/health` marca `almacenamiento: sin_configurar`.
+
+1. Cloudflare > R2 > **Create bucket** (p. ej. `cajaclara-media`, privado; no actives el acceso público).
+2. R2 > **Manage R2 API Tokens** > Create API token: permiso **Object Read & Write**, limitado a ese bucket. Copia el
+   *Access Key ID* y el *Secret Access Key* (solo se muestran una vez).
+3. **CORS** del bucket (Settings > CORS policy), para que el navegador pueda hacer el `PUT`:
+   ```json
+   [{"AllowedOrigins": ["http://localhost:5173"], "AllowedMethods": ["PUT"], "AllowedHeaders": ["Content-Type"], "MaxAgeSeconds": 3600}]
+   ```
+4. Opcional: **Object lifecycle rule** que borre objetos tras N días (los audios son datos personales).
+5. `.env`: `R2_ACCESS_KEY_ID=...` y `R2_SECRET_ACCESS_KEY=...`. `parametros.env`: `R2_ACCOUNT_ID=<Account ID de R2 Overview>`
+   y `R2_BUCKET=<nombre del bucket>` (también `R2_PRESIGN_TTL_S`, `MEDIA_MAX_AUDIO_BYTES`, `MEDIA_MAX_IMAGEN_BYTES`, `MEDIA_TIPOS_*`).
+6. `docker compose up -d --force-recreate backend` y revisa `GET /api/v1/health` (`almacenamiento.estado = ok`).
 
 ## Levantar con Docker
 
@@ -69,9 +87,15 @@ hasta que B los implemente (por eso `saldo_caja_negocio` sigue dando 2 340 tras 
 
 - Extractor: LLM (OpenRouter, tool forzada) con fallback por reglas (`app/services/ingesta/reglas.py`) si no hay key,
   hay timeout o la salida es inválida (`meta.fallback_usado = true`). Montos siempre del usuario o del catálogo.
-- Voz: `media_url` se lee solo dentro de `MEDIA_DIR` (`file://data/...`, `demo://...`); si no hay archivo y el
+- Voz: `media_url` acepta `r2://` (solo claves de la empresa; ver sección R2) o archivos dentro de `MEDIA_DIR` (`file://data/...`, `demo://...`); si no hay archivo y el
   cliente manda `texto` (notas de voz demo del front), se usa ese texto como transcripción.
-- Cuaderno de fiados: sin modelo de visión; fixtures por foto (`cuaderno_01..03`) con `fallback_usado = true`.
+- Cuaderno de fiados: la foto se lee con un modelo de visión vía OpenRouter (`VLM_MODEL`, por defecto
+  `openai/gpt-4o-mini`; misma `OPENROUTER_API_KEY`; `VLM_TIMEOUT_S`, `VLM_MAX_TOKENS`; tamaño máximo
+  `MEDIA_MAX_IMAGEN_BYTES`). La imagen se envía al proveedor como data URL base64 (privacidad: sale del servidor).
+  Los clientes se emparejan por alias, las líneas tachadas no se proponen y las fechas sin año o relativas se resuelven
+  con la fecha de hoy. Si el VLM falla o no hay key se usa el fixture por foto (`cuaderno_01..03`) o una lista vacía,
+  con `fallback_usado = true`. Foto de demo real: `demo://fotos/cuaderno_sintetico_01.jpg` (en `data/fotos/`;
+  tras agregar fotos nuevas hay que reconstruir la imagen: `docker compose build backend`).
 - Evaluación del extractor: `docker compose run --rm backend python -m tests.eval_extractor` (offline, reglas);
   `--llm` agrega la ruta LLM (1 llamada a OpenRouter por frase).
 

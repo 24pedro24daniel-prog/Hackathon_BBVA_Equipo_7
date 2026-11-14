@@ -103,7 +103,8 @@ def test_todas_las_rutas_del_plan_tienen_caso():
     from app.main import app
 
     rutas = {(metodo.upper(), path) for path, ops in app.openapi()["paths"].items() for metodo in ops}
-    probadas = {("POST", f"{P}/ingesta/confirmar")}  # cubierto en tests/test_a_ingesta_flujo.py
+    probadas = {("POST", f"{P}/ingesta/confirmar"),  # cubierto en tests/test_a_ingesta_flujo.py
+                ("POST", f"{P}/media/subidas")}  # cubierto en tests/test_a_media.py (necesita R2 falso)
     for metodo, ruta, *_ in CASOS:
         path = ruta.split("?")[0].replace("EMP-0001", "{empresa_id}").replace("FIA-0045", "{fiado_id}")
         probadas.add((metodo.upper(), path.replace("ALR-0007", "{alerta_id}")))

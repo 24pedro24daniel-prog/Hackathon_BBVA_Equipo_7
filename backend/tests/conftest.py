@@ -6,6 +6,7 @@
 - IA: el LLM (OpenRouter) y Whisper nunca se llaman de verdad. `llm_falso` y `whisper_falso` simulan respuestas.
 """
 
+import io
 from collections.abc import Iterator
 from types import SimpleNamespace
 
@@ -20,7 +21,7 @@ from app.core.config import settings
 from app.db.reset import resetear
 from app.db.session import crear_engine, get_db
 from app.main import app
-from app.services.ingesta import llm_client, transcriptor
+from app.services.ingesta import almacenamiento, llm_client, transcriptor
 
 API_KEY_PRUEBAS = "clave-de-pruebas-cajaclara"
 
@@ -41,6 +42,25 @@ def _sin_ia_real(monkeypatch):
     monkeypatch.setattr(transcriptor, "_modelo", None)
     monkeypatch.setattr(settings, "OPENROUTER_API_KEY", SecretStr(""))
     monkeypatch.setattr(settings, "API_KEY", SecretStr(API_KEY_PRUEBAS))
+
+
+@pytest.fixture(autouse=True)
+def _sin_r2_real(monkeypatch):
+    """Nunca se crea un cliente boto3 real ni se usan credenciales R2 del .env en los tests."""
+
+    def _cliente_prohibido(*_a, **_k):
+        raise AssertionError("Un test intentó crear un cliente boto3 real (usa la fixture s3_falso)")
+
+    import boto3
+    import boto3.session
+
+    monkeypatch.setattr(boto3, "client", _cliente_prohibido)
+    monkeypatch.setattr(boto3.session.Session, "client", _cliente_prohibido)
+    monkeypatch.setattr(almacenamiento, "_crear_cliente", _cliente_prohibido)
+    monkeypatch.setattr(almacenamiento, "_cliente", None)
+    monkeypatch.setattr(settings, "R2_ACCOUNT_ID", "")
+    monkeypatch.setattr(settings, "R2_ACCESS_KEY_ID", SecretStr(""))
+    monkeypatch.setattr(settings, "R2_SECRET_ACCESS_KEY", SecretStr(""))
 
 
 @pytest.fixture
@@ -76,6 +96,51 @@ def whisper_falso(monkeypatch):
 
     monkeypatch.setattr(transcriptor, "_cargar_modelo", _cargar)
     return estado
+
+
+class ClienteS3Falso:
+    """Cliente S3 en memoria: `objetos[clave] = {"cuerpo": bytes, "content_type": str}`."""
+
+    def __init__(self):
+        self.objetos: dict[str, dict] = {}
+        self.presignados: list[dict] = []
+        self.llamadas: list[tuple[str, str]] = []
+
+    def generate_presigned_url(self, operacion, Params, ExpiresIn, HttpMethod=None):  # noqa: N803 - firma de boto3
+        self.presignados.append({"operacion": operacion, "params": Params, "expires_in": ExpiresIn,
+                                 "metodo": HttpMethod})  # fmt: skip
+        return f"https://falso.r2.test/{Params['Bucket']}/{Params['Key']}?X-Amz-Expires={ExpiresIn}&X-Amz-Signature=abc"
+
+    def _obtener(self, clave: str) -> dict:
+        from botocore.exceptions import ClientError
+
+        if clave not in self.objetos:
+            raise ClientError({"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject")
+        return self.objetos[clave]
+
+    def head_object(self, Bucket, Key):  # noqa: N803
+        self.llamadas.append(("head", Key))
+        o = self._obtener(Key)
+        return {"ContentLength": o["tamano"] if o.get("tamano") is not None else len(o["cuerpo"]), "ContentType": o["content_type"]}
+
+    def get_object(self, Bucket, Key):  # noqa: N803
+        self.llamadas.append(("get", Key))
+        return {"Body": io.BytesIO(self._obtener(Key)["cuerpo"])}
+
+    def poner(self, clave: str, cuerpo: bytes = b"datos", content_type: str = "audio/ogg", tamano: int | None = None):
+        self.objetos[clave] = {"cuerpo": cuerpo, "content_type": content_type, "tamano": tamano}
+        return f"r2://{clave}"
+
+
+@pytest.fixture
+def s3_falso(monkeypatch) -> ClienteS3Falso:
+    """R2 configurado con un cliente S3 en memoria (sin red)."""
+    falso = ClienteS3Falso()
+    monkeypatch.setattr(settings, "R2_ACCOUNT_ID", "cuenta-de-prueba")
+    monkeypatch.setattr(settings, "R2_ACCESS_KEY_ID", SecretStr("ak-prueba"))
+    monkeypatch.setattr(settings, "R2_SECRET_ACCESS_KEY", SecretStr("sk-prueba"))
+    monkeypatch.setattr(almacenamiento, "_cliente", falso)
+    return falso
 
 
 # ── BD de pruebas ───────────────────────────────────────────────────────────────────────────────

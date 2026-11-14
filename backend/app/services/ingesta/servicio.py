@@ -61,7 +61,7 @@ def _transcribir(req: InterpretarRequest) -> tuple[str, str | None, bool, bool]:
             raise Validacion("Envía el texto del mensaje.", [{"campo": "texto", "problema": "obligatorio"}])
         return req.texto, None, False, False
     try:
-        escuchado = transcriptor.transcribir_media(req.media_url)
+        escuchado = transcriptor.transcribir_media(req.media_url, req.empresa_id)
     except transcriptor.TranscriptorNoDisponible as exc:
         log.warning("Whisper no disponible: %s", exc)
         if not (req.texto and req.texto.strip()):
@@ -313,9 +313,10 @@ def leer_cuaderno(db, empresa_id: str, media_url: str) -> dict:
     confianzas = [f["confianza"] for f in lectura.fiados]
     borrador = m.Borrador(
         borrador_id=nuevo_id(db, m.Borrador, "BOR"), empresa_id=empresa_id, canal=Canal.foto, media_url=media_url,
-        payload_propuesto={"fiados": publicos, "lineas_no_legibles": lectura.lineas_no_legibles},
+        payload_propuesto={"fiados": publicos, "lineas_no_legibles": lectura.lineas_no_legibles,
+                           "lineas_tachadas": lectura.lineas_tachadas},
         confianza=Decimal(str(min(confianzas))) if confianzas else None, estado=EstadoBorrador.pendiente,
-        modelo_version=cuaderno_mod.MODELO_VERSION, prompt_version=cuaderno_mod.PROMPT_VERSION,
+        modelo_version=lectura.modelo_version[:30], prompt_version=lectura.prompt_version,
         fallback_usado=lectura.fallback_usado, creado_en=ahora(),
     )  # fmt: skip
     db.add(borrador)
@@ -324,8 +325,8 @@ def leer_cuaderno(db, empresa_id: str, media_url: str) -> dict:
         "borrador_id": borrador.borrador_id,
         "fiados_propuestos": publicos,
         "lineas_no_legibles": lectura.lineas_no_legibles,
-        "meta": construir_meta(cuaderno_mod.MODELO, cuaderno_mod.MODELO_VERSION,
-                               prompt_version=cuaderno_mod.PROMPT_VERSION,
+        "lineas_tachadas": lectura.lineas_tachadas,
+        "meta": construir_meta(lectura.modelo, lectura.modelo_version, prompt_version=lectura.prompt_version,
                                fallback_usado=lectura.fallback_usado).model_dump(mode="json"),  # fmt: skip
     }
 

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from app.core.config import BACKEND_DIR, settings
+from app.services.ingesta import almacenamiento
 
 _modelo: Any = None
 _candado = threading.Lock()
@@ -83,8 +84,22 @@ def resolver_media(media_url: str | None) -> Path | None:
     return ruta
 
 
-def transcribir_media(media_url: str | None) -> str | None:
-    """Transcribe el audio de media_url si existe localmente; None si no hay archivo que escuchar."""
+def transcribir_media(media_url: str | None, empresa_id: str | None = None) -> str | None:
+    """Transcribe el audio de media_url; None si no hay archivo que escuchar.
+
+    Acepta archivos locales (file://, demo://) y r2:// (solo claves de `empresa_id`; se baja a un temporal que se
+    borra al terminar).
+    """
+    if almacenamiento.es_r2(media_url):
+        if not empresa_id:
+            return None
+        try:
+            with almacenamiento.archivo_temporal(media_url, empresa_id, "audio") as ruta:
+                return transcribir(str(ruta))
+        except almacenamiento.ObjetoNoEncontrado:
+            return None
+        except almacenamiento.AlmacenamientoNoDisponible as exc:
+            raise TranscriptorNoDisponible(str(exc.mensaje)) from exc
     ruta = resolver_media(media_url)
     if ruta is None:
         return None

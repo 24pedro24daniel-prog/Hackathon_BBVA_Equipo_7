@@ -90,7 +90,7 @@ def test_voz_sin_audio_ni_texto_422(client_db, whisper_falso):
 
 
 def test_voz_whisper_caido_sin_texto_503(client_db, monkeypatch):
-    def _caido(_url):
+    def _caido(_url, *_args):
         raise transcriptor.TranscriptorNoDisponible("sin modelo")
 
     monkeypatch.setattr(transcriptor, "transcribir_media", _caido)
