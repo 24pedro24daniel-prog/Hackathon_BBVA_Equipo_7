@@ -54,7 +54,7 @@
 | 404 | `NO_ENCONTRADO` | Empresa, borrador o registro inexistente |
 | 409 | `CONFLICTO` | Borrador ya confirmado / idempotency key repetida con otro payload |
 | 422 | `NO_INTERPRETABLE` | El LLM/OCR no pudo extraer un movimiento |
-| 503 | `SERVICIO_NO_DISPONIBLE` | LLM o Whisper caídos (se responde con fallback cuando existe) |
+| 503 | `SERVICIO_NO_DISPONIBLE` | LLM, Whisper o R2 (almacenamiento de media) caídos o sin configurar (se responde con fallback cuando existe) |
 
 ### Enums compartidos
 
@@ -76,6 +76,48 @@ tipo_alerta     : faltante_caja | pedido_excesivo | retiro_excesivo | obligacion
 
 Flujo: **interpretar → (aclarar) → confirmar → guardar**. Nada se guarda sin confirmación, salvo `billetera_api`.
 
+### 1.0 `POST /media/subidas` (subir audio o foto a Cloudflare R2)
+Pide una **URL prefirmada** para subir el archivo directo a R2 (el archivo no pasa por el backend). Requiere `X-API-Key`.
+
+Flujo de 3 pasos:
+1. `POST /media/subidas` → devuelve `upload_url` y el `media_url` definitivo (`r2://…`).
+2. El cliente hace `PUT` del archivo a `upload_url` con el header `Content-Type` exacto de `headers_requeridos`
+   (sin `X-API-Key` ni otros headers; R2 responde `200` sin cuerpo).
+3. Llama a `/ingesta/interpretar` (canal `voz`), `/ingesta/cuaderno` o `/webhooks/whatsapp` con `media_url: "r2://…"`.
+
+**Request**
+```json
+{ "empresa_id": "EMP-0001", "tipo": "audio", "content_type": "audio/ogg", "tamano_bytes": 48213 }
+```
+- `tipo`: `audio | imagen`. `content_type` permitido por tipo: audio → `audio/ogg`, `audio/webm`, `audio/mpeg`, `audio/mp4`,
+  `audio/wav`; imagen → `image/jpeg`, `image/png`, `image/webp`. Los parámetros (`audio/webm;codecs=opus`) se ignoran:
+  usa el `Content-Type` que devuelve `headers_requeridos`.
+- `tamano_bytes` máximo: 10 MB (audio) y 8 MB (imagen); el valor real se devuelve en `tamano_max_bytes`.
+
+**Response 201**
+```json
+{
+  "media_url": "r2://empresas/EMP-0001/audios/2026/11/0b7c9f0e-6a41-4c52-9d2b-3f1e8a7d5c10.ogg",
+  "upload_url": "https://<cuenta>.r2.cloudflarestorage.com/cajaclara-media/empresas/EMP-0001/audios/2026/11/0b7c….ogg?X-Amz-Algorithm=…&X-Amz-Signature=…",
+  "metodo": "PUT",
+  "headers_requeridos": { "Content-Type": "audio/ogg" },
+  "expira_en": "2026-11-14T10:52:00-05:00",
+  "tamano_max_bytes": 10485760
+}
+```
+- La URL vale 10 minutos (`R2_PRESIGN_TTL_S`). Si expira, se pide otra.
+- El backend solo lee `r2://` con clave bajo `empresas/{empresa_id}/…` de la empresa que consulta; verifica tipo y tamaño
+  del objeto antes de descargarlo y borra el temporal tras procesar.
+
+**Errores**: `400 VALIDACION` (tipo, `content_type` o tamaño no permitidos; campos faltantes), `401`, `404 NO_ENCONTRADO`
+(empresa), `503 SERVICIO_NO_DISPONIBLE` (R2 sin configurar o caído).
+
+**Configuración del bucket (una vez, en Cloudflare)**
+- CORS del bucket: permitir `PUT` desde `http://localhost:5173` (y el dominio de la demo) con `AllowedHeaders: ["Content-Type"]`.
+  Ejemplo: `[{"AllowedOrigins":["http://localhost:5173"],"AllowedMethods":["PUT"],"AllowedHeaders":["Content-Type"],"MaxAgeSeconds":3600}]`.
+- Recomendado: regla de lifecycle que borre los objetos tras N días (p. ej. 30 en `empresas/`); los audios son datos
+  personales y el backend no los necesita después de transcribir.
+
 ### 1.1 `POST /webhooks/whatsapp`
 Recibe mensajes del proveedor (sandbox de Twilio o chat simulado). Uso interno del bot.
 
@@ -93,6 +135,8 @@ Recibe mensajes del proveedor (sandbox de Twilio o chat simulado). Uso interno d
 ```
 - `tipo`: `texto | audio | imagen | boton`
 - Nunca se guarda el número real: solo `telefono_hash`.
+- `media_url`: `r2://…` (devuelto por `POST /media/subidas`) o, solo para demo/tests, `file://data/…` y `demo://…`.
+  Nunca se aceptan `http(s)://`.
 
 **Response 200**
 ```json
@@ -118,6 +162,9 @@ Convierte texto, audio o foto en un **borrador** de movimiento.
   "media_url": "file://data/audios/demo_001.ogg"
 }
 ```
+
+- `media_url` (canal `voz`): `r2://…` (§1.0) o, solo para demo, `file://data/…` / `demo://…`. Si no se encuentra el
+  archivo y no viene `texto` → `422 NO_INTERPRETABLE`; si es de otra empresa o excede tipo/tamaño → `400 VALIDACION`.
 
 **Response 200**
 ```json
@@ -189,8 +236,11 @@ Tablas y campos: [modelo_datos.dbml](modelo_datos.dbml) · [diccionario_datos.md
 
 **Request**
 ```json
-{ "empresa_id": "EMP-0001", "media_url": "file://data/fotos/cuaderno_01.jpg" }
+{ "empresa_id": "EMP-0001", "media_url": "r2://empresas/EMP-0001/fotos/2026/11/9a1c….jpg" }
 ```
+- `media_url`: `r2://…` (§1.0, `tipo: "imagen"`) o, solo para demo, `file://data/fotos/…` / `demo://fotos/…`.
+  Sin modelo de visión en el MVP, la lectura sale de fixtures por nombre de foto (`cuaderno_01..03`); una foto
+  `r2://` desconocida devuelve `fiados_propuestos: []`. Objeto inexistente → `422`; ajeno/tipo/tamaño → `400`.
 
 **Response 200**
 ```json
@@ -619,6 +669,7 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
   "componentes": {
     "base_datos": "ok",
     "whisper": { "estado": "ok", "modelo": "faster-whisper-small" },
+    "almacenamiento": { "estado": "ok", "bucket": "cajaclara-media" },
     "llm": { "estado": "ok", "modelo": "qwen2.5-7b-instruct", "prompt_versions": { "extractor": "v3", "asistente": "v2", "cuaderno": "v1" } },
     "forecast": { "estado": "ok", "modelo_version": "0.3.1" },
     "riesgo_atraso": { "estado": "ok", "modelo_version": "0.2.0" }
@@ -632,7 +683,7 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
 
 | Funcionalidad | Endpoints | Responsable sugerido |
 |---|---|---|
-| F1 Ingesta | `/webhooks/whatsapp`, `/ingesta/*`, `/impuestos`, `/billeteras/movimientos` | Backend + GenAI |
+| F1 Ingesta | `/webhooks/whatsapp`, `/media/subidas`, `/ingesta/*`, `/impuestos`, `/billeteras/movimientos` | Backend + GenAI |
 | F2 Resumen | `/resumen` | Backend |
 | F3 Forecast | `/forecast`, `/forecast/ajustes` | ML |
 | F4 Cuentas | `/fiados`, `/fiados/{id}/recordatorio`, `/pedidos`, `/pedidos/chequeo` | ML + Backend |
