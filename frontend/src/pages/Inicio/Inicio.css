@@ -1,0 +1,135 @@
+/* Inicio (mockup págs. 5 y 10) */
+.inicio__body {
+  display: grid;
+  gap: 12px;
+  padding: 4px var(--gutter) 0;
+}
+
+.inicio__pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.inicio__pair > * { min-width: 0; }
+
+/* Alerta principal */
+.inicio__alerta { display: grid; gap: 10px; justify-items: start; padding: 18px; }
+.inicio__alerta-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.inicio__alerta-title { font-size: 24px; line-height: 1.18; }
+.inicio__alerta-why { font-size: 16px; color: var(--text); }
+.inicio__alerta .cc-btn { margin-top: 6px; }
+
+.inicio__ok {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--ok-bg);
+  border-color: var(--brand-band);
+  color: var(--ok);
+  font-weight: 600;
+}
+.inicio__ok svg { flex: none; }
+
+/* Negocio / Casa */
+.inicio__saldo { display: grid; gap: 4px; align-content: start; }
+.inicio__saldo-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.inicio__saldo--negocio .inicio__saldo-label { color: var(--negocio); }
+.inicio__saldo--casa .inicio__saldo-label { color: var(--casa); }
+.inicio__saldo-value { font-size: 30px; line-height: 1.1; margin-top: 4px; white-space: nowrap; }
+
+/* Disponible para gastar */
+.inicio__disponible { display: grid; gap: 4px; }
+.inicio__disp-value { font-size: 34px; line-height: 1.1; }
+.inicio__disp-msg { font-size: 16px; color: var(--text); margin-top: 2px; }
+
+.inicio__desglose {
+  list-style: none;
+  margin: 4px 0 6px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.inicio__desglose li { display: flex; justify-content: space-between; gap: 12px; }
+.inicio__desglose li span:last-child { white-space: nowrap; color: var(--text); }
+.inicio__desglose-total {
+  border-top: 1px solid var(--border);
+  padding-top: 4px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Te deben / Debes */
+.inicio__link-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-lg);
+}
+.inicio__link-card:hover .cc-card { border-color: var(--border-strong); }
+.inicio__mini { display: grid; gap: 2px; height: 100%; min-height: var(--tap); }
+.inicio__mini-label { font-size: 15px; color: var(--text-muted); }
+.inicio__mini-value { font-size: 24px; line-height: 1.15; white-space: nowrap; }
+
+/* Filas de resumen */
+.inicio__rows { margin: 0; display: grid; gap: 8px; }
+.inicio__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.inicio__row dt { font-size: 16px; color: var(--text-muted); }
+.inicio__row dd {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 16px;
+}
+.inicio__delta { font-weight: 600; color: var(--text-muted); }
+.inicio__delta--mala { color: var(--danger); }
+.inicio__vs { margin-top: 8px; }
+
+/* Día 3: progreso */
+.inicio__progreso { display: grid; gap: 12px; }
+.inicio__progreso-title { font-size: 18px; font-weight: 700; line-height: 1.25; }
+.inicio__segs { display: flex; gap: 4px; }
+.inicio__segs span {
+  flex: 1;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--border);
+}
+.inicio__segs span.is-on { background: var(--brand); }
+
+.inicio__proximos { display: grid; gap: 6px; background: transparent; box-shadow: none; }
+.inicio__proximos-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+@media (max-width: 359px) {
+  .inicio__saldo-value { font-size: 26px; }
+  .inicio__mini-value { font-size: 21px; }
+}

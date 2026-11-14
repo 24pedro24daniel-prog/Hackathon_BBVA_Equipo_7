@@ -59,8 +59,10 @@
 ### Enums compartidos
 
 ```text
-tipo_movimiento : venta | compra | retiro_personal | gasto_negocio | cobro_fiado | pago_proveedor | pago_impuesto | ingreso_billetera
-metodo_pago     : efectivo | billetera_digital | transferencia | tarjeta | credito
+tipo_movimiento : venta | cobro_fiado | prestamo_recibido | otro_ingreso                                        (ingresos)
+                | compra | gasto_negocio | retiro_personal | pago_proveedor | pago_prestamo | pago_impuesto   (egresos)
+metodo_pago     : efectivo | billetera_digital | transferencia | tarjeta | credito   (credito = fiado o pedido a crédito: no mueve caja)
+tipo_deuda      : proveedor | prestamo_informal | familiar | entidad_financiera
 canal           : voz | texto | foto | billetera_api | manual
 estado_cuenta   : pendiente | por_vencer | vencido | pagado
 nivel_riesgo    : bajo | medio | alto
@@ -148,11 +150,15 @@ Convierte texto, audio o foto en un **borrador** de movimiento.
 | Frase | `tipo` | Destino al confirmar |
 |---|---|---|
 | "vendí dos cervezas" | `venta` | `transacciones` |
-| "saqué 50 para la casa" | `retiro_personal` | `transacciones` (`es_retiro_personal = true`) |
-| "le fié a la señora Carmen 2 panes y una leche" | `venta` + `metodo_pago = credito` | `transacciones` + `cuaderno_fiado` |
-| "la señora Carmen me pagó 50" | `cobro_fiado` | `transacciones` + actualiza `cuaderno_fiado` |
-| "pedí 2 400 a Andina para pagar el 30" | `compra` + `metodo_pago = credito` | `prestamos_proveedor` (+ dispara chequeo de pedido, §4.4) |
+| "saqué 50 para la casa" | `retiro_personal` | `transacciones` |
+| "pagué el colegio de mi hijo" | — | No se registra: el bot explica que la app solo lleva el negocio y pregunta si la plata salió de la caja de la tienda; si es así, se anota como `retiro_personal` |
+| "le fié a la señora Carmen 2 panes y una leche" | `venta` + `metodo_pago = credito` | `transacciones` (`afecta_caja = false`) + `cuaderno_fiado` |
+| "la señora Carmen me pagó 50" | `cobro_fiado` | `transacciones` (con `fiado_id`) |
+| "pedí 2 400 a Andina para pagar el 30" | `compra` + `metodo_pago = credito` | `transacciones` (`afecta_caja = false`) + `deudas` con `tipo = proveedor` (+ dispara chequeo de pedido, §4.5) |
+| "me prestaron 1 000, pago 40 diarios" | `prestamo_recibido` | `transacciones` + `deudas` con `tipo = prestamo_informal` |
 | "pagué mi RUS, 20 soles" | `pago_impuesto` | `transacciones` + `impuestos` |
+
+Tablas y campos: [modelo_datos.dbml](modelo_datos.dbml) · [diccionario_datos.md](diccionario_datos.md) (§4, cómo se registra cada caso).
 
 ### 1.3 `POST /ingesta/confirmar`
 
@@ -247,7 +253,7 @@ Query: `desde`, `hasta`, `tipo`, `categoria`, `canal`, `limit`, `cursor`.
       "contraparte": null,
       "canal": "voz",
       "confianza_extraccion": 0.93,
-      "es_retiro_personal": false,
+      "afecta_caja": true,
       "saldo_post": 2353.00
     }
   ],
@@ -358,7 +364,7 @@ Ajuste manual de partidas ("este mes no pago alquiler").
 ```
 
 ### 4.4 `GET /empresas/{empresa_id}/pedidos?estado=pendiente`
-Préstamos de proveedor (cuentas por pagar).
+Préstamos de proveedor (cuentas por pagar). Lee la tabla `deudas` con `tipo = proveedor`; `pedido_id` es su `deuda_id`. `monto_pendiente`, `estado` y `dias_para_vencer` se calculan al momento de responder (no se guardan). Los préstamos de dinero (`tipo ≠ proveedor`) entran al forecast y al asistente; su endpoint de consulta queda como roadmap.
 ```json
 {
   "total_pendiente": 2400.00,

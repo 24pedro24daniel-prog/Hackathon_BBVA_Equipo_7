@@ -99,6 +99,8 @@ Categorías globales de ingreso y egreso. **Grano:** una categoría.
 | `tipo` | tipo_flujo | no | Ingreso o egreso | `egreso` | feature |
 | `es_del_negocio` | boolean | no | `false` para retiro personal: no cuenta como gasto del negocio en la ganancia | `true` | — |
 
+> **Alcance:** no existen categorías de gastos del hogar (comida, colegio, salud, servicios de la vivienda). Lo único personal que se registra es el retiro personal desde la caja del negocio ([context.md](context.md), §3 "Alcance").
+
 #### `productos`
 Catálogo de cada empresa. **Grano:** un producto de una empresa.
 
@@ -308,7 +310,7 @@ Ingresos y egresos recurrentes, **incluido el sueldo fijo del dueño**. **Grano:
 | `empresa_id` | varchar(20) | no | FK → `empresas` | |
 | `categoria_id` | varchar(20) | no | FK → `categorias` | `servicios` |
 | `tipo` | tipo_flujo | no | Ingreso o egreso | `egreso` |
-| `descripcion` | varchar(100) | no | Concepto | `alquiler`, `sueldo`, `alquiler de cuarto` |
+| `descripcion` | varchar(100) | no | Concepto (solo del negocio, nunca del hogar) | `alquiler del local`, `sueldo`, `venta fija a un comedor` |
 | `monto` | decimal(12,2) | no | Monto por ocurrencia | `350.00` |
 | `frecuencia` | frecuencia | no | Cada cuánto | `mensual` |
 | `dia_semana` | smallint | sí | 1 = lunes … 7 = domingo (para `semanal`) | `6` |
@@ -513,6 +515,7 @@ Score mensual de F8. **Grano:** empresa × mes. PK `(empresa_id, mes)`.
 | "me prestaron 1 000, pago 40 diarios" | `prestamo_recibido`, `deuda_id` | nueva `deudas` (`prestamo_informal`, `frecuencia_cuota = diaria`) | Sí, + |
 | "pagué la cuota del préstamo" | `pago_prestamo`, `deuda_id` | — | Sí, − |
 | "saqué 50 para la casa" | `retiro_personal` (`programado_id` si es el sueldo) | — | Sí, − |
+| "pagué el colegio de mi hijo" | Nada, salvo que la plata haya salido de la caja de la tienda → `retiro_personal` | — | Solo si salió de la caja |
 | "pagué la luz, 80" | `gasto_negocio` (`programado_id` si es recurrente) | — | Sí, − |
 | "pagué mi RUS, 20 soles" | `pago_impuesto`, `impuesto_id` | `impuestos.fecha_pago` | Sí, − |
 | Yape/Plin recibido (API) | `venta`, `billetera_digital`, `billetera_mov_id` | `billeteras_digitales` | Sí, + |

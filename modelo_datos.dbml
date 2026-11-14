@@ -185,6 +185,7 @@ Table categorias {
   nombre varchar(50) [not null, unique, note: 'bebidas, abarrotes, servicios, impuestos, retiro personal…']
   tipo tipo_flujo [not null]
   es_del_negocio boolean [not null, default: true, note: 'false para retiro personal (no cuenta como gasto del negocio)']
+  Note: 'No hay categorías de gastos del hogar: lo único personal que se registra es el retiro personal desde la caja del negocio (context.md §3, Alcance).'
 }
 
 Table productos {
@@ -384,7 +385,7 @@ Table movimientos_programados {
   empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
   categoria_id varchar(20) [not null, ref: > categorias.categoria_id]
   tipo tipo_flujo [not null]
-  descripcion varchar(100) [not null, note: 'luz, agua, alquiler, sueldo, alquiler de cuarto']
+  descripcion varchar(100) [not null, note: 'luz, agua, alquiler del local, sueldo, venta fija a un comedor. Nunca gastos o ingresos del hogar']
   monto decimal(12,2) [not null]
   frecuencia frecuencia [not null]
   dia_semana smallint [note: '1 = lunes … 7 = domingo. Para semanal']
