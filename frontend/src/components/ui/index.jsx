@@ -323,6 +323,7 @@ export function ErrorState({ error, onRetry }) {
   )
 }
 
-export function Footnote({ children = 'Datos ficticios de demostración · Orientación educativa' }) {
+export function Footnote({ children }) {
+  if (!children) return null
   return <p className="cc-footnote">{children}</p>
 }

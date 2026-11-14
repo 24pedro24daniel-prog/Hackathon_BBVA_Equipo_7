@@ -32,7 +32,7 @@ export default function AppLayout() {
             to={t.to}
             end={t.end}
             className={({ isActive }) =>
-              'cc-nav__link' + (isActive || (t.to === '/' && pathname === '/simulador') ? ' active' : '')
+              'cc-nav__link' + (isActive || (t.to === '/' && ['/simulador', '/movimientos'].includes(pathname)) ? ' active' : '')
             }
           >
             <Icon name={t.icon} size={22} />

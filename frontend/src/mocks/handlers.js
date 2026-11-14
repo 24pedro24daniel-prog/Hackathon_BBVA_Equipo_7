@@ -14,6 +14,7 @@ const err = (status, codigo, mensaje) => ({
 let seq = 7781
 const borradores = new Map()
 let saldoNegocio = 2340
+const movimientosNuevos = [] // lo que se confirma en el chat aparece en Últimos movimientos
 
 const PEDIDO_BASE = 2400
 const SALDO_BASE = -650
@@ -163,8 +164,13 @@ async function handle(method, path, { query, body }) {
     case 'POST /empresas/:id/metas':
       return ok({ meta_id: 'MET-0005', estado: 'activa' }, 201)
 
-    case 'GET /empresas/:id/movimientos':
-      return ok({ items: [], next_cursor: null })
+    case 'GET /empresas/:id/movimientos': {
+      const todos = [...movimientosNuevos, ...D.movimientos(escenario)]
+      const desde = Number(query.cursor || 0)
+      const limit = Number(query.limit || 50)
+      const items = todos.slice(desde, desde + limit)
+      return ok({ items, next_cursor: desde + limit < todos.length ? String(desde + limit) : null })
+    }
 
     case 'POST /empresas/:id/movimientos':
     case 'POST /empresas/:id/impuestos':
@@ -199,8 +205,25 @@ async function handle(method, path, { query, body }) {
       borradores.delete(body.borrador_id)
       if (final.tipo === 'venta' && final.metodo_pago !== 'credito') saldoNegocio += final.monto
       if (final.tipo === 'retiro_personal' || final.tipo === 'pago_impuesto') saldoNegocio -= final.monto
+      const movimiento_id = `MOV-000${++seq}`
+      movimientosNuevos.unshift({
+        movimiento_id,
+        fecha_hora: final.fecha_hora || new Date().toISOString(),
+        tipo: final.tipo,
+        categoria: null,
+        descripcion: final.items?.length ? final.items.map((it) => `${it.cantidad} ${it.producto}`).join(', ') : null,
+        items: final.items || [],
+        monto: final.monto,
+        moneda: 'PEN',
+        metodo_pago: final.metodo_pago,
+        contraparte: final.contraparte || null,
+        canal: 'voz',
+        confianza_extraccion: 0.93,
+        afecta_caja: final.metodo_pago !== 'credito',
+        saldo_post: saldoNegocio,
+      })
       return ok({
-        movimiento_id: `MOV-000${++seq}`,
+        movimiento_id,
         registros_creados: [{ tabla: final.tipo === 'compra' ? 'deudas' : 'transacciones', id: `MOV-000${seq}` }],
         alertas_disparadas: final.tipo === 'compra' ? D.alertas().items : [],
         saldo_caja_negocio: saldoNegocio,

@@ -8,7 +8,6 @@ import {
   Button,
   Card,
   ErrorState,
-  Footnote,
   Icon,
   List,
   ListRow,
@@ -183,7 +182,6 @@ export default function Cuentas() {
           <DebesBlock state={pedidos} headingRef={(el) => (headingRefs.current.debes = el)} />
         </div>
 
-        <Footnote />
       </div>
 
       {sheetFiado && <RecordatorioSheet fiado={sheetFiado} onClose={() => setSheetFiado(null)} />}

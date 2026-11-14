@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { useDemo } from '../../lib/useDemo.js'
-import { soles, weekdayDdmm, daysBetween, diferenciaSoles } from '../../lib/format.js'
+import { soles, daysBetween, diferenciaSoles } from '../../lib/format.js'
 import DemoMenu from '../../components/layout/DemoMenu.jsx'
 import {
   Card,
@@ -16,14 +16,13 @@ import {
   TraceInfo,
   Skeleton,
   ErrorState,
-  Footnote,
 } from '../../components/ui/index.jsx'
+import UltimosMovimientos from './UltimosMovimientos.jsx'
 import './Inicio.css'
 
-// No hay endpoint de empresa en el contrato todavía; nombre del dueño y del negocio van fijos para la demo.
+// No hay endpoint de empresa en el contrato todavía; el nombre del dueño va fijo para la demo.
 const NOMBRE_DUENIO = 'Pedro'
-const NOMBRE_NEGOCIO = 'Bodega Don Pedro'
-const DIAS_REQUERIDOS_DEFAULT = 14
+const DIAS_REQUERIDOS_DEFAULT = 30
 
 /** "2026-11" en hora de Lima */
 function periodoActual() {
@@ -49,15 +48,11 @@ export default function Inicio() {
       ? diasConDatos < diasRequeridos
       : forecast.data?.disponible === false || (!r && demo.escenario === 'nuevo')
 
-  const corte = r?.corte ?? forecast.data?.fecha_corte
-  const sub = `${NOMBRE_NEGOCIO}${corte ? ` · ${weekdayDdmm(corte).toLowerCase()}` : ''}`
-
   return (
     <div className="inicio">
       <header className="inicio__top">
         <div className="inicio__top-text">
           <h1 className="inicio__hola">Hola, {NOMBRE_DUENIO}</h1>
-          <p className="inicio__top-sub">{sub}</p>
         </div>
         <DemoMenu />
       </header>
@@ -67,12 +62,11 @@ export default function Inicio() {
         ) : resumen.error ? (
           <ErrorState error={resumen.error} onRetry={resumen.reload} />
         ) : esNuevo ? (
-          <InicioNuevo resumen={r} diasConDatos={diasConDatos ?? 0} diasRequeridos={diasRequeridos} />
+          <InicioNuevo resumen={r} diasConDatos={diasConDatos ?? 0} diasRequeridos={diasRequeridos} escenario={demo.escenario} />
         ) : (
           <InicioPedro resumen={r} forecast={forecast} alertas={alertas} />
         )}
       </div>
-      <Footnote />
     </div>
   )
 }
@@ -193,7 +187,7 @@ function VerTodo({ to }) {
 
 /* ---------------- Tarjeta de cuenta (única superficie de color) ---------------- */
 
-function CuentaNegocio({ valor, nota, children }) {
+function CuentaNegocio({ valor, children }) {
   const id = useId()
   return (
     <section className="inicio__cuenta" aria-labelledby={id}>
@@ -203,7 +197,6 @@ function CuentaNegocio({ valor, nota, children }) {
       <p className="inicio__cuenta-saldo">
         <Money size="hero" inverse value={valor} />
       </p>
-      {nota && <p className="inicio__cuenta-msg">{nota}</p>}
       {children}
     </section>
   )
@@ -354,63 +347,38 @@ function LoQueViene({ alertas, corte }) {
 
 /* ---------------- Día 3: recién empieza ---------------- */
 
-function InicioNuevo({ resumen, diasConDatos, diasRequeridos }) {
+function InicioNuevo({ resumen, diasConDatos, diasRequeridos, escenario }) {
   const navigate = useNavigate()
   const idProgreso = useId()
   const ind = resumen?.indicadores
-  const faltan = Math.max(diasRequeridos - diasConDatos, 0)
-  const ganancia = ind?.ganancia_neta
   const hechos = Math.min(diasConDatos, diasRequeridos)
 
   return (
     <div className="inicio__grid">
       <div className="inicio__main">
-        {ind && <CuentaNegocio valor={ind.saldo_caja_negocio.valor} nota="Según lo que anotaste" />}
+        {ind && <CuentaNegocio valor={ind.saldo_caja_negocio.valor} />}
 
         <Card className="inicio__progreso" aria-labelledby={idProgreso}>
           <h2 className="inicio__progreso-title" id={idProgreso}>
             Tus primeros días
           </h2>
           <p className="inicio__progreso-frase">
-            Necesito {diasRequeridos} días de ventas para avisarte antes de que te falte plata
+            Anota lo que vendes y lo que gastas durante {diasRequeridos} días. Con eso podré avisarte antes de que te falte plata.
           </p>
           <div className="inicio__progreso-barra">
-            <ProgressBar value={hechos} max={diasRequeridos} label="Días con ventas anotadas" />
+            <ProgressBar value={hechos} max={diasRequeridos} label="Días con transacciones anotadas" />
             <p className="inicio__progreso-txt">
               {hechos} de {diasTxt(diasRequeridos)}
             </p>
           </div>
           <Button size="lg" icon="mic" onClick={() => navigate('/chat')}>
-            Anotar una venta
+            Anotar una transacción
           </Button>
         </Card>
       </div>
 
       <div className="inicio__side">
-        {ind && (
-          <CardLista title="Hasta ahora">
-            <ListRow title={`Vendiste en ${diasTxt(diasConDatos)}`} amount={<Money value={ind.ingresos_mes.valor} />} />
-            <ListRow
-              title="Ganancia aproximada"
-              sub={
-                ganancia.rango
-                  ? `Entre ${soles(ganancia.rango[0])} y ${soles(ganancia.rango[1])}${
-                      ganancia.es_aproximada ? ': aún no conozco el costo de todos tus productos.' : ''
-                    }`
-                  : null
-              }
-              amount={<Money value={ganancia.valor} />}
-            />
-          </CardLista>
-        )}
-
-        <div className="inicio__proximos">
-          <Icon name="clock" size={20} />
-          <p>
-            Tus próximos 30 días aparecerán aquí en {diasTxt(faltan)}. Mientras, cuéntame tus pagos con fecha (“le debo
-            800 a Andina para el 30”) y te aviso antes de que venzan.
-          </p>
-        </div>
+        <UltimosMovimientos escenario={escenario} />
       </div>
     </div>
   )

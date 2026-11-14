@@ -45,7 +45,7 @@ export const resumenNuevo = {
   periodo: '2026-11',
   corte: CORTE,
   dias_con_datos: 3,
-  dias_requeridos_forecast: 14, // EXT
+  dias_requeridos_forecast: 30, // EXT
   indicadores: {
     saldo_caja_negocio: { valor: 1120.0, variacion_pct: null },
     ingresos_mes: { valor: 1870.0, variacion_pct: null },
@@ -131,7 +131,7 @@ export const forecastNuevo = () => ({
   horizonte_dias: 30,
   disponible: false, // EXT
   dias_con_datos: 3, // EXT
-  dias_requeridos: 14, // EXT
+  dias_requeridos: 30, // EXT
   saldo_actual: 1120.0,
   serie: [],
   meta: meta('forecast-lgbm-quantile', '0.3.1'),
@@ -240,3 +240,69 @@ export const salud = () => ({
 export const catalogo = {
   cerveza: { producto_id: 'PRD-0031', producto: 'Cerveza 620 ml', precio_unitario: 6.5 },
 }
+
+// ---------- Movimientos (GET /movimientos) ----------
+// [fecha_hora, tipo, monto, metodo_pago, canal, descripcion, contraparte, items?]
+const movsNuevo = [
+  ['2026-11-12T07:10', 'venta', 420, 'efectivo', 'voz', 'Ventas de la mañana', null],
+  ['2026-11-12T09:30', 'compra', 600, 'efectivo', 'texto', 'Gaseosas y cervezas', 'Distribuidora Andina'],
+  ['2026-11-12T13:05', 'venta', 210, 'billetera_digital', 'billetera_api', 'Ventas por billetera', null],
+  ['2026-11-12T19:40', 'venta', 310, 'efectivo', 'voz', 'Ventas de la tarde', null],
+  ['2026-11-13T08:00', 'gasto_negocio', 60, 'efectivo', 'texto', 'Bolsas y envases', 'Mercado Ceres'],
+  ['2026-11-13T11:20', 'venta', 250, 'efectivo', 'voz', 'Ventas de la mañana', null],
+  ['2026-11-13T15:45', 'compra', 480, 'efectivo', 'voz', 'Pan y leche', 'Panadería San Jorge'],
+  ['2026-11-13T20:10', 'venta', 180, 'billetera_digital', 'billetera_api', 'Ventas por billetera', null],
+  ['2026-11-14T07:30', 'venta', 200, 'efectivo', 'voz', 'Ventas de la mañana', null],
+  ['2026-11-14T09:00', 'pago_impuesto', 20, 'efectivo', 'texto', 'RUS de octubre', 'SUNAT'],
+  ['2026-11-14T10:42', 'venta', 13, 'efectivo', 'voz', '2 cervezas 620 ml', null,
+    [{ producto_id: 'PRD-0031', producto: 'Cerveza 620 ml', cantidad: 2, precio_unitario: 6.5, subtotal: 13 }]],
+  ['2026-11-14T12:15', 'gasto_negocio', 440, 'efectivo', 'texto', 'Luz del local', 'Luz del Sur'],
+  ['2026-11-14T13:40', 'venta', 287, 'billetera_digital', 'billetera_api', 'Ventas por billetera', null],
+]
+
+const movsPedro = [
+  ['2026-11-13T08:10', 'venta', 640, 'efectivo', 'voz', 'Ventas de la mañana', null],
+  ['2026-11-13T10:00', 'compra', 2400, 'credito', 'voz', 'Pedido para el 30/11', 'Distribuidora Andina'],
+  ['2026-11-13T12:30', 'cobro_fiado', 50, 'efectivo', 'voz', 'Abono de fiado', 'Sra. Carmen'],
+  ['2026-11-13T16:20', 'gasto_negocio', 35, 'efectivo', 'texto', 'Bolsas y envases', 'Mercado Ceres'],
+  ['2026-11-13T19:50', 'venta', 520, 'efectivo', 'voz', 'Ventas de la tarde', null],
+  ['2026-11-13T20:30', 'venta', 160, 'billetera_digital', 'billetera_api', 'Ventas por billetera', null],
+  ['2026-11-14T07:20', 'venta', 380, 'efectivo', 'voz', 'Ventas de la mañana', null],
+  ['2026-11-14T08:45', 'compra', 520, 'efectivo', 'texto', 'Pan, leche y huevos', 'Panadería San Jorge'],
+  ['2026-11-14T09:30', 'venta', 95, 'credito', 'foto', 'Fiado: arroz y aceite', 'Don Luis'],
+  ['2026-11-14T10:42', 'venta', 13, 'efectivo', 'voz', '2 cervezas 620 ml', null,
+    [{ producto_id: 'PRD-0031', producto: 'Cerveza 620 ml', cantidad: 2, precio_unitario: 6.5, subtotal: 13 }]],
+  ['2026-11-14T11:15', 'pago_impuesto', 20, 'efectivo', 'texto', 'RUS de octubre', 'SUNAT'],
+  ['2026-11-14T12:05', 'venta', 210, 'billetera_digital', 'billetera_api', 'Ventas por billetera', null],
+]
+
+const INGRESO = new Set(['venta', 'cobro_fiado', 'prestamo_recibido', 'otro_ingreso'])
+
+/** Construye la lista (más reciente primero) con saldo_post que termina en saldoFinal */
+function buildMovs(rows, saldoFinal, prefijo) {
+  const base = rows.map(([fh, tipo, monto, metodo_pago, canal, descripcion, contraparte, items], i) => ({
+    movimiento_id: `MOV-${prefijo}${String(i + 1).padStart(3, '0')}`,
+    fecha_hora: `${fh}:00-05:00`,
+    tipo,
+    categoria: null,
+    descripcion, // EXT: texto corto para la lista
+    items: items || [], // EXT
+    monto,
+    moneda: 'PEN',
+    metodo_pago,
+    contraparte,
+    canal,
+    confianza_extraccion: canal === 'voz' ? 0.92 : canal === 'foto' ? 0.8 : 1,
+    afecta_caja: metodo_pago !== 'credito',
+  }))
+  let saldo = saldoFinal
+  for (let i = base.length - 1; i >= 0; i--) {
+    base[i].saldo_post = saldo
+    const m = base[i]
+    if (m.afecta_caja) saldo += INGRESO.has(m.tipo) ? -m.monto : m.monto
+  }
+  return base.reverse()
+}
+
+export const movimientos = (escenario) =>
+  escenario === 'nuevo' ? buildMovs(movsNuevo, 1120, '0') : buildMovs(movsPedro, 2340, '1')

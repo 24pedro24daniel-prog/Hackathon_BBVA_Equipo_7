@@ -6,7 +6,6 @@ import { ddmm } from '../../lib/format.js'
 import {
   Card,
   ErrorState,
-  Footnote,
   List,
   ListRow,
   LoadingBlock,
@@ -85,7 +84,6 @@ export default function Progreso() {
             </p>
           </>
         )}
-        <Footnote />
       </div>
     </div>
   )

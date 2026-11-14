@@ -57,20 +57,24 @@ export default function Forecast() {
 }
 
 function ForecastEmpty({ data }) {
+  const navigate = useNavigate()
   const tiene = data?.dias_con_datos ?? 0
-  const requiere = data?.dias_requeridos ?? 14
+  const requiere = data?.dias_requeridos ?? 30
   return (
     <Card className="fc-empty" aria-labelledby="fc-empty-title">
       <h2 id="fc-empty-title" className="cc-card__title">
         Todavía estoy conociendo tu negocio
       </h2>
       <p className="fc-empty__text">
-        Para mostrarte cómo se mueve tu caja necesito al menos {requiere} días con tus ventas y gastos anotados.
+        Anota lo que vendes y lo que gastas durante {requiere} días. Con eso podré avisarte antes de que te falte plata.
       </p>
-      <ProgressBar value={Math.min(tiene, requiere)} max={requiere} label="Días con datos" />
+      <ProgressBar value={Math.min(tiene, requiere)} max={requiere} label="Días con transacciones anotadas" />
       <p className="cc-small cc-muted">
-        Llevas {tiene} de {requiere} días · Te faltan {Math.max(0, requiere - tiene)}. Anótalos en el chat.
+        {tiene} de {requiere} días
       </p>
+      <Button size="lg" icon="mic" onClick={() => navigate('/chat')}>
+        Anotar una transacción
+      </Button>
     </Card>
   )
 }

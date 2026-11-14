@@ -43,7 +43,7 @@
   --bubble-in: #ffffff;
 
   /* Tipografía: Libre Franklin ≈ Benton Sans; Source Serif 4 ≈ Tiempos Headline */
-  --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-display: var(--font-body); /* una sola familia en toda la app */
   --font-body: 'Libre Franklin', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-amount: 'Libre Franklin', system-ui, sans-serif;
   --display-weight: 600;
@@ -148,7 +148,7 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-/* Títulos editoriales: serif (≈ Tiempos de BBVA) */
+/* Títulos: misma familia que el texto, más peso */
 .serif {
   font-family: var(--font-display);
   font-weight: var(--display-weight);
