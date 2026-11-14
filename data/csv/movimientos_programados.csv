@@ -1,0 +1,60 @@
+programado_id,empresa_id,categoria_id,tipo,descripcion,monto,frecuencia,dia_semana,dia_mes,es_sueldo,fecha_inicio,fecha_fin,activo
+PRG-0001,EMP-0001,CAT-08,egreso,luz y agua del local,180.00,mensual,,16,false,2026-08-15,,true
+PRG-0002,EMP-0001,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-08-15,,true
+PRG-0003,EMP-0001,CAT-13,egreso,sueldo fijo del dueño (criterio bancario mínimo para vivir S/ 1350/mes),1350.00,mensual,,30,true,2026-08-15,,true
+PRG-0010,EMP-0003,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 950/mes),238.00,semanal,6,,true,2026-07-18,,true
+PRG-0011,EMP-0003,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0012,EMP-0004,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 1850/mes),463.00,semanal,6,,true,2026-07-18,,true
+PRG-0013,EMP-0004,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0014,EMP-0005,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 3050/mes),763.00,semanal,6,,true,2026-07-18,,true
+PRG-0015,EMP-0005,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0016,EMP-0006,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 1450/mes),363.00,semanal,6,,true,2026-07-18,,true
+PRG-0017,EMP-0006,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0018,EMP-0007,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 850/mes),213.00,semanal,6,,true,2026-07-18,,true
+PRG-0019,EMP-0007,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0020,EMP-0008,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 1850/mes),463.00,semanal,6,,true,2026-07-18,,true
+PRG-0021,EMP-0008,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0022,EMP-0009,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 1950/mes),488.00,semanal,6,,true,2026-07-18,,true
+PRG-0023,EMP-0009,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0024,EMP-0010,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 1850/mes),463.00,semanal,6,,true,2026-07-18,,true
+PRG-0025,EMP-0010,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0026,EMP-0011,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 950/mes),238.00,semanal,6,,true,2026-07-18,,true
+PRG-0027,EMP-0011,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0028,EMP-0012,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 1800/mes),450.00,semanal,6,,true,2026-07-18,,true
+PRG-0029,EMP-0012,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0030,EMP-0013,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 3000/mes),750.00,semanal,6,,true,2026-07-18,,true
+PRG-0031,EMP-0013,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0032,EMP-0014,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 1850/mes),463.00,semanal,6,,true,2026-07-18,,true
+PRG-0033,EMP-0014,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0034,EMP-0015,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 900/mes),225.00,semanal,6,,true,2026-07-18,,true
+PRG-0035,EMP-0015,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0036,EMP-0016,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 3000/mes),750.00,semanal,6,,true,2026-07-18,,true
+PRG-0037,EMP-0016,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0038,EMP-0017,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 2250/mes),563.00,semanal,6,,true,2026-07-18,,true
+PRG-0039,EMP-0017,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0040,EMP-0018,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 3050/mes),763.00,semanal,6,,true,2026-07-18,,true
+PRG-0041,EMP-0018,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0042,EMP-0019,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 950/mes),238.00,semanal,6,,true,2026-07-18,,true
+PRG-0043,EMP-0019,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0044,EMP-0020,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 3000/mes),750.00,semanal,6,,true,2026-07-18,,true
+PRG-0045,EMP-0020,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0046,EMP-0021,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 1950/mes),488.00,semanal,6,,true,2026-07-18,,true
+PRG-0047,EMP-0021,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0048,EMP-0022,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 1900/mes),475.00,semanal,6,,true,2026-07-18,,true
+PRG-0049,EMP-0022,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0050,EMP-0023,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 850/mes),213.00,semanal,6,,true,2026-07-18,,true
+PRG-0051,EMP-0023,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0052,EMP-0024,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 3200/mes),800.00,semanal,6,,true,2026-07-18,,true
+PRG-0053,EMP-0024,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0054,EMP-0025,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 3250/mes),813.00,semanal,6,,true,2026-07-18,,true
+PRG-0055,EMP-0025,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0056,EMP-0026,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 1900/mes),475.00,semanal,6,,true,2026-07-18,,true
+PRG-0057,EMP-0026,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0058,EMP-0027,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 850/mes),213.00,semanal,6,,true,2026-07-18,,true
+PRG-0059,EMP-0027,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0060,EMP-0028,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 2800/mes),700.00,semanal,6,,true,2026-07-18,,true
+PRG-0061,EMP-0028,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0062,EMP-0029,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 1500/mes),375.00,semanal,6,,true,2026-07-18,,true
+PRG-0063,EMP-0029,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true
+PRG-0064,EMP-0030,CAT-13,egreso,sueldo fijo mensual del dueño (mínimo para vivir S/ 2650/mes),663.00,semanal,6,,true,2026-07-18,,true
+PRG-0065,EMP-0030,CAT-09,egreso,alquiler del local,350.00,mensual,,28,false,2026-07-18,,true

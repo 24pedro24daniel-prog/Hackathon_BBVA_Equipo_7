@@ -1,0 +1,37 @@
+deuda_id,empresa_id,tipo,proveedor_id,acreedor_nombre,borrador_id,monto_recibido,monto_total_a_pagar,frecuencia_cuota,monto_cuota,fecha_inicio,fecha_vencimiento,fecha_pago_total,canal,notas
+PED-0010,EMP-0001,proveedor,PRV-0003,,,1600.00,1600.00,,,2026-09-10,2026-09-25,2026-09-24,voz,Pedido quincenal septiembre pagado a tiempo
+PED-0011,EMP-0001,proveedor,PRV-0004,,,1750.00,1750.00,,,2026-10-12,2026-10-27,2026-10-26,voz,Pedido quincenal octubre pagado a tiempo
+PED-0012,EMP-0001,proveedor,PRV-0003,,,2400.00,2400.00,,,2026-11-13,2026-11-30,,voz,"Sobrecompra pre-Campaña Navideña a Distribuidora Andina (panetones, bebidas y abarrotes)"
+PED-0100,EMP-0003,proveedor,PRV-0050,,,502.00,502.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+DEU-0101,EMP-0003,prestamo_informal,,Prestamista informal,,1000.00,1200.00,diaria,40.00,2026-11-01,2026-11-30,,voz,Préstamo informal diario 20% mensual en efectivo
+PED-0102,EMP-0004,proveedor,PRV-0052,,,992.00,992.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0103,EMP-0005,proveedor,PRV-0054,,,1626.00,1626.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0104,EMP-0006,proveedor,PRV-0056,,,771.00,771.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0105,EMP-0007,proveedor,PRV-0058,,,464.00,464.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0106,EMP-0008,proveedor,PRV-0060,,,998.00,998.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0107,EMP-0009,proveedor,PRV-0062,,,1027.00,1027.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+DEU-0108,EMP-0009,prestamo_informal,,Prestamista informal,,1000.00,1200.00,diaria,40.00,2026-11-01,2026-11-30,,voz,Préstamo informal diario 20% mensual en efectivo
+PED-0109,EMP-0010,proveedor,PRV-0064,,,998.00,998.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0110,EMP-0011,proveedor,PRV-0066,,,496.00,496.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0111,EMP-0012,proveedor,PRV-0068,,,957.00,957.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0112,EMP-0013,proveedor,PRV-0070,,,1600.00,1600.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0113,EMP-0014,proveedor,PRV-0072,,,979.00,979.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0114,EMP-0015,proveedor,PRV-0074,,,474.00,474.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+DEU-0115,EMP-0015,prestamo_informal,,Prestamista informal,,1000.00,1200.00,diaria,40.00,2026-11-01,2026-11-30,,voz,Préstamo informal diario 20% mensual en efectivo
+PED-0116,EMP-0016,proveedor,PRV-0076,,,1606.00,1606.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0117,EMP-0017,proveedor,PRV-0078,,,1200.00,1200.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0118,EMP-0018,proveedor,PRV-0080,,,1622.00,1622.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0119,EMP-0019,proveedor,PRV-0082,,,512.00,512.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0120,EMP-0020,proveedor,PRV-0084,,,1600.00,1600.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0121,EMP-0021,proveedor,PRV-0086,,,1050.00,1050.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+DEU-0122,EMP-0021,prestamo_informal,,Prestamista informal,,1000.00,1200.00,diaria,40.00,2026-11-01,2026-11-30,,voz,Préstamo informal diario 20% mensual en efectivo
+PED-0123,EMP-0022,proveedor,PRV-0088,,,1002.00,1002.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0124,EMP-0023,proveedor,PRV-0090,,,458.00,458.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0125,EMP-0024,proveedor,PRV-0092,,,1718.00,1718.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0126,EMP-0025,proveedor,PRV-0094,,,1738.00,1738.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0127,EMP-0026,proveedor,PRV-0096,,,1024.00,1024.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0128,EMP-0027,proveedor,PRV-0098,,,451.00,451.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+DEU-0129,EMP-0027,prestamo_informal,,Prestamista informal,,1000.00,1200.00,diaria,40.00,2026-11-01,2026-11-30,,voz,Préstamo informal diario 20% mensual en efectivo
+PED-0130,EMP-0028,proveedor,PRV-0100,,,1498.00,1498.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0131,EMP-0029,proveedor,PRV-0102,,,806.00,806.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
+PED-0132,EMP-0030,proveedor,PRV-0104,,,1402.00,1402.00,,,2026-11-10,2026-11-25,,voz,Pedido de mercadería pre-Campaña Navideña
