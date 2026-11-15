@@ -164,7 +164,7 @@ def test_sin_artefactos_queda_no_disponible(monkeypatch, tmp_path):
 
 
 def test_features_no_construibles_dejan_el_modelo_sin_integrar(monkeypatch, tmp_path):
-    base = tmp_path / "forecast"
+    base = tmp_path / "prediccion_ingreso_egreso"
     base.mkdir()
     for a in modelo_ml.ARCHIVOS_FORECAST:
         (base / a).write_bytes(b"no es un modelo")  # nunca se deserializa
