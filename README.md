@@ -62,6 +62,23 @@ Las referencias y el sustento del problema están documentados en [context.md](.
   - **Forecast diario (`LightGBM Quantile Regression`):** Notebook [`modelo_ingreso_egreso_lightgbm.ipynb`](./modelo/modelo_ingreso_egreso_lightgbm.ipynb) y artefactos `.joblib` en [`modelo/artifacts/forecast/`](./modelo/artifacts/forecast/) para predecir cuantiles `P10`, `P50` y `P90` de ingresos y egresos diarios (`MAE` de `S/ 31.75` en ingreso y `S/ 11.43` en egreso, superando al baseline naive en **+34.5%** y **+68.1%** con cobertura `P10–P90` de ~78%).
   - **Score pedagógico / riesgo (`Logistic Regression`):** Notebook [`credit_scoring_bodegas_logreg.ipynb`](./modelo/credit_scoring_bodegas_logreg.ipynb) y artefactos serializados en [`modelo/artifacts/credit_scoring/`](./modelo/artifacts/credit_scoring/) (`AUC test = 0.771`).
 
+### Arquitectura de servicios en AWS
+
+![TuCaserito · Arquitectura de servicios en AWS](./docs/arquitectura-servicios-aws.png)
+
+Flujo de una petición (los números corresponden al diagrama):
+
+1. El bodeguero entra desde su celular por **HTTPS**; **Route 53** resuelve el dominio y **CloudFront** atiende en el borde, protegido por **WAF** (reglas OWASP y *rate limit*) y **Shield** (DDoS).
+2. CloudFront reenvía al **Application Load Balancer** (certificado **ACM**) por un origen privado: el ALB solo acepta tráfico de CloudFront.
+3. El ALB sirve la web desde el **contenedor Front** (Nginx + React) en **Amazon ECS Fargate**, en una subred privada.
+4. El usuario **inicia sesión con Amazon Cognito** y recibe un **JWT**.
+5. Las llamadas a la API llegan con ese JWT al **contenedor Back** (FastAPI + Whisper), también en Fargate.
+6. Las fotos del cuaderno y los audios se guardan en **S3** privado (cifrado SSE-KMS, URLs prefirmadas de corta duración).
+7. La extracción de datos y la lectura de fotos usan **Amazon Bedrock** (LLM y visión).
+8. Los datos del negocio se guardan en **RDS PostgreSQL** Multi-AZ en una subred privada de datos, cifrado con **KMS**.
+
+El backend llega a S3, Bedrock y demás servicios por **VPC Endpoints** (PrivateLink / Gateway), sin IP pública ni NAT. Las credenciales viven en **Secrets Manager**, las imágenes de los contenedores en **ECR**, y la operación se audita con **CloudWatch**, **CloudTrail** y **GuardDuty**. Todo el tráfico va cifrado con TLS 1.2+ y cada tarea de ECS usa un rol IAM de mínimo privilegio.
+
 ## Estructura del repositorio
 
 | Ruta | Contenido |
@@ -75,6 +92,7 @@ Las referencias y el sustento del problema están documentados en [context.md](.
 | [`contract.md`](./contract.md) | Especificación completa de contratos de la API REST (`/api/v1`). |
 | [`diccionario_datos.md`](./diccionario_datos.md) / [`modelo_datos.dbml`](./modelo_datos.dbml) | Diccionario de las 25 entidades del modelo relacional (+ 2 tablas técnicas) y esquema DBML. |
 | [`docs/arquitectura.drawio`](./docs/arquitectura.drawio) | Diagrama de arquitectura del sistema. |
+| [`docs/arquitectura-servicios-aws.png`](./docs/arquitectura-servicios-aws.png) | Arquitectura de servicios en AWS (despliegue). |
 
 ## Instrucciones de ejecución (Local)
 
