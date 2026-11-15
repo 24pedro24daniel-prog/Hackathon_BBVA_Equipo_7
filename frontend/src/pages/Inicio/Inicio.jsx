@@ -56,7 +56,7 @@ export default function Inicio() {
     <div className="inicio">
       <header className="inicio__top">
         <div className="inicio__top-text">
-          <h1 className="inicio__hola">Hola, {NOMBRE_DUENIO}</h1>
+          <h1 className="inicio__hola">¡Hola, {NOMBRE_DUENIO}!</h1>
         </div>
         <DemoMenu />
       </header>

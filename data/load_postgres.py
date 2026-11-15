@@ -1,5 +1,5 @@
 """
-CajaClara — Cargador y Verificador en PostgreSQL (Python / psycopg v3 o psycopg2)
+TuCaserito — Cargador y Verificador en PostgreSQL (Python / psycopg v3 o psycopg2)
 Lee DATABASE_URL desde data/.env, ejecuta data/schema.sql y carga todos los CSVs
 de data/csv/*.csv en orden topológico.
 """

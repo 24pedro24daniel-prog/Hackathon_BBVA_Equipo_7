@@ -1,5 +1,5 @@
 /**
- * Marca de CajaClara: una caja abierta de la que sale la línea del pronóstico, subiendo.
+ * Marca de TuCaserito: una caja abierta de la que sale la línea del pronóstico, subiendo.
  * El cuadrado toma `currentColor` (por defecto Electric vía CSS); el trazo de la caja es blanco
  * y la línea, light blue. Decorativa: el nombre lo da el texto vecino.
  */

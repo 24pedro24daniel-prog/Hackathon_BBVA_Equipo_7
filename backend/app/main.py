@@ -1,4 +1,4 @@
-"""CajaClara API. Arranque: uvicorn app.main:app --port 8000 --reload
+"""TuCaserito API. Arranque: uvicorn app.main:app --port 8000 --reload
 
 Registra TODOS los routers desde el inicio (también los de Dev A): nadie vuelve a tocar este archivo.
 """
@@ -46,7 +46,7 @@ class RequestIdMiddleware:
 
 
 logging.basicConfig(level=settings.LOG_LEVEL)
-app = FastAPI(title="CajaClara API", version=settings.API_VERSION, docs_url="/docs", redoc_url=None)
+app = FastAPI(title="TuCaserito API", version=settings.API_VERSION, docs_url="/docs", redoc_url=None)
 
 app.add_middleware(
     CORSMiddleware,

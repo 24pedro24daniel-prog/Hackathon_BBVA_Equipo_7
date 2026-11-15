@@ -1,4 +1,4 @@
-// Cliente HTTP de CajaClara. Un único punto de entrada a la API (contract.md, base /api/v1).
+// Cliente HTTP de TuCaserito. Un único punto de entrada a la API (contract.md, base /api/v1).
 // Con VITE_USE_MOCK=true (por defecto) las llamadas se resuelven en src/mocks con los mismos JSON del contrato,
 // así el front funciona sin backend y conectar el backend real es solo cambiar la variable de entorno.
 

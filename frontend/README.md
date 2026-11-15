@@ -1,4 +1,4 @@
-# CajaClara — Frontend
+# TuCaserito — Frontend
 
 React 19 + Vite + react-router. Mobile-first (360 px). Implementa el mockup `mockup/CajaClara — Mockup MVP.pdf` y consume la API de `contract.md`.
 

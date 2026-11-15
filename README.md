@@ -1,16 +1,16 @@
-# CajaClara
+# TuCaserito
 
-CajaClara es un copiloto de orden y maduración financiera diseñado específicamente para **bodegueros de barrio con RUC 10 en Perú que operan 100% en efectivo (*cash*)** y llevan sus cuentas de forma manual en cuadernos físicos. Ayuda a digitalizar ventas, fiados y pagos a proveedores; separar el capital del negocio del **mínimo para vivir**; corregir errores al informar impuestos; y anticipar faltantes de caja antes de los vencimientos.
+TuCaserito es un copiloto de orden y maduración financiera diseñado específicamente para **bodegueros de barrio con RUC 10 en Perú que operan 100% en efectivo (*cash*)** y llevan sus cuentas de forma manual en cuadernos físicos. Ayuda a digitalizar ventas, fiados y pagos a proveedores; separar el capital del negocio del **mínimo para vivir**; corregir errores al informar impuestos; y anticipar faltantes de caja antes de los vencimientos.
 
 El producto combina una interfaz conversacional autenticada (inspirada en mensajería para registrar movimientos en segundos sin usar bots abiertos en WhatsApp por seguridad bancaria) con un dashboard operativo que muestra el arqueo de efectivo, obligaciones y proyecciones a 30 días. El caso de uso de la demo es Pedro, bodeguero ficticio RUC 10. Todos los nombres, movimientos y montos de demostración son sintéticos.
 
-*(Nota de identidad visual: CajaClara es una solución independiente con marca e interfaz propias; no utiliza logos, colores ni interfaces bancarias oficiales como si fuera un producto del banco.)*
+*(Nota de identidad visual: TuCaserito es una solución independiente con marca e interfaz propias; no utiliza logos, colores ni interfaces bancarias oficiales como si fuera un producto del banco.)*
 
 ## El problema
 
 Los bodegueros RUC 10 tradicionales cobran exclusivamente en efectivo y llevan sus cuentas en cuadernos de papel o de memoria, formando parte del núcleo de "No Clientes" invisibles para la banca comercial. Guardan todo el dinero en un solo cajón ("caja única"), mezclan los gastos del negocio con su subsistencia diaria y no tienen claro cuánto les deben ni cuándo vencen sus proveedores.
 
-En campañas estacionales fuertes —como la **campaña navideña**— suelen pedir mercadería de más sin prever sus vencimientos de caja. Además, aunque muchos **sí cumplen con pagar su impuesto básico (Nuevo RUS), lo informan o calculan mal** (confundiendo los tramos de cuota S/ 20 vs. S/ 50 cuando suben sus ventas o registrándolo mezclado con gastos personales). Cuando aparece un faltante, recurren a préstamos informales costosos ("gota a gota"). CajaClara ordena su información y previene crisis de liquidez sin alterar su rutina en mostrador.
+En campañas estacionales fuertes —como la **campaña navideña**— suelen pedir mercadería de más sin prever sus vencimientos de caja. Además, aunque muchos **sí cumplen con pagar su impuesto básico (Nuevo RUS), lo informan o calculan mal** (confundiendo los tramos de cuota S/ 20 vs. S/ 50 cuando suben sus ventas o registrándolo mezclado con gastos personales). Cuando aparece un faltante, recurren a préstamos informales costosos ("gota a gota"). TuCaserito ordena su información y previene crisis de liquidez sin alterar su rutina en mostrador.
 
 Las referencias y el sustento del problema están documentados en [context.md](./context.md). Las cifras externas deben presentarse junto con sus fuentes; las conversaciones del equipo son evidencia cualitativa y no deben exponerse como estadísticas generales.
 

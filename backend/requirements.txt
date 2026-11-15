@@ -1,4 +1,4 @@
-# CajaClara backend — versiones exactas (Python 3.12).
+# TuCaserito backend — versiones exactas (Python 3.12).
 # API
 fastapi==0.163.0
 uvicorn[standard]==0.54.0

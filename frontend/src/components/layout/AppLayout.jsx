@@ -25,7 +25,7 @@ export default function AppLayout() {
       <nav className="cc-nav" aria-label="Secciones">
         <div className="cc-nav__brand" aria-hidden="true">
           <LogoMark className="cc-nav__logo" size={36} />
-          <span className="cc-nav__name">CajaClara</span>
+          <span className="cc-nav__name">TuCaserito</span>
         </div>
         {tabs.map((t) => (
           <NavLink

@@ -50,7 +50,7 @@ def resetear(engine: Engine, con_seed: bool = True) -> int:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Recrea la BD de CajaClara y siembra la demo de Pedro.")
+    parser = argparse.ArgumentParser(description="Recrea la BD de TuCaserito y siembra la demo de Pedro.")
     parser.add_argument("--test", action="store_true", help="usar la BD de pruebas (POSTGRES_TEST_DB)")
     parser.add_argument("--sin-seed", action="store_true", help="crear las tablas sin datos")
     args = parser.parse_args()

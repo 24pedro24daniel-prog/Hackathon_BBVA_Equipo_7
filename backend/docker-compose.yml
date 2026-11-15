@@ -1,4 +1,4 @@
-# CajaClara backend: PostgreSQL + API.
+# TuCaserito backend: PostgreSQL + API.
 #   docker compose up -d                                   # BD + backend en http://localhost:8000/api/v1
 #   docker compose run --rm backend python -m app.db.reset  # recrea y siembra la demo de Pedro
 #   docker compose run --rm backend pytest -q               # tests (usan la BD cajaclara_test)

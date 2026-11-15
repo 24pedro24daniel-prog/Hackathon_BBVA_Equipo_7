@@ -4,7 +4,7 @@ EVF-002,voz,bendi 3 chelas bien heladas pero no se oye bien el monto,venta,efect
 EVF-003,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90",venta,efectivo,16.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
 EVF-004,voz,saqué 50 para la casa,retiro_personal,efectivo,50,,dicho_por_usuario,0.95,false,,false,true
 EVF-005,texto,agarré 80 soles de la caja para el almuerzo familiar,retiro_personal,efectivo,80,,dicho_por_usuario,0.9,false,,false,true
-EVF-006,voz,pagué el colegio de mi hijo con mi plata,,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-006,voz,pagué el colegio de mi hijo con mi plata,,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
 EVF-007,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50",venta,credito,9.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
 EVF-008,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz)",venta,credito,95,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
 EVF-009,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno,cobro_fiado,efectivo,50,,dicho_por_usuario,0.94,false,,false,true
@@ -19,7 +19,7 @@ EVF-017,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 2)
 EVF-018,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 2)",venta,efectivo,21.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
 EVF-019,voz,saqué 50 para la casa (muestra 2),retiro_personal,efectivo,55,,dicho_por_usuario,0.95,false,,false,true
 EVF-020,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 2),retiro_personal,efectivo,85,,dicho_por_usuario,0.9,false,,false,true
-EVF-021,voz,pagué el colegio de mi hijo con mi plata (muestra 2),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-021,voz,pagué el colegio de mi hijo con mi plata (muestra 2),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
 EVF-022,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 2)",venta,credito,14.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
 EVF-023,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 2)",venta,credito,100,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
 EVF-024,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 2),cobro_fiado,efectivo,55,,dicho_por_usuario,0.94,false,,false,true
@@ -34,7 +34,7 @@ EVF-032,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 3)
 EVF-033,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 3)",venta,efectivo,26.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
 EVF-034,voz,saqué 50 para la casa (muestra 3),retiro_personal,efectivo,60,,dicho_por_usuario,0.95,false,,false,true
 EVF-035,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 3),retiro_personal,efectivo,90,,dicho_por_usuario,0.9,false,,false,true
-EVF-036,voz,pagué el colegio de mi hijo con mi plata (muestra 3),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-036,voz,pagué el colegio de mi hijo con mi plata (muestra 3),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
 EVF-037,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 3)",venta,credito,19.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
 EVF-038,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 3)",venta,credito,105,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
 EVF-039,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 3),cobro_fiado,efectivo,60,,dicho_por_usuario,0.94,false,,false,true
@@ -49,7 +49,7 @@ EVF-047,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 4)
 EVF-048,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 4)",venta,efectivo,31.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
 EVF-049,voz,saqué 50 para la casa (muestra 4),retiro_personal,efectivo,65,,dicho_por_usuario,0.95,false,,false,true
 EVF-050,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 4),retiro_personal,efectivo,95,,dicho_por_usuario,0.9,false,,false,true
-EVF-051,voz,pagué el colegio de mi hijo con mi plata (muestra 4),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-051,voz,pagué el colegio de mi hijo con mi plata (muestra 4),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
 EVF-052,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 4)",venta,credito,24.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
 EVF-053,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 4)",venta,credito,110,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
 EVF-054,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 4),cobro_fiado,efectivo,65,,dicho_por_usuario,0.94,false,,false,true
@@ -64,7 +64,7 @@ EVF-062,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 5)
 EVF-063,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 5)",venta,efectivo,36.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
 EVF-064,voz,saqué 50 para la casa (muestra 5),retiro_personal,efectivo,70,,dicho_por_usuario,0.95,false,,false,true
 EVF-065,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 5),retiro_personal,efectivo,100,,dicho_por_usuario,0.9,false,,false,true
-EVF-066,voz,pagué el colegio de mi hijo con mi plata (muestra 5),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-066,voz,pagué el colegio de mi hijo con mi plata (muestra 5),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
 EVF-067,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 5)",venta,credito,29.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
 EVF-068,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 5)",venta,credito,115,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
 EVF-069,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 5),cobro_fiado,efectivo,70,,dicho_por_usuario,0.94,false,,false,true
@@ -79,7 +79,7 @@ EVF-077,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 6)
 EVF-078,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 6)",venta,efectivo,41.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
 EVF-079,voz,saqué 50 para la casa (muestra 6),retiro_personal,efectivo,75,,dicho_por_usuario,0.95,false,,false,true
 EVF-080,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 6),retiro_personal,efectivo,105,,dicho_por_usuario,0.9,false,,false,true
-EVF-081,voz,pagué el colegio de mi hijo con mi plata (muestra 6),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-081,voz,pagué el colegio de mi hijo con mi plata (muestra 6),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
 EVF-082,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 6)",venta,credito,34.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
 EVF-083,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 6)",venta,credito,120,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
 EVF-084,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 6),cobro_fiado,efectivo,75,,dicho_por_usuario,0.94,false,,false,true
@@ -94,7 +94,7 @@ EVF-092,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 7)
 EVF-093,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 7)",venta,efectivo,46.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
 EVF-094,voz,saqué 50 para la casa (muestra 7),retiro_personal,efectivo,80,,dicho_por_usuario,0.95,false,,false,true
 EVF-095,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 7),retiro_personal,efectivo,110,,dicho_por_usuario,0.9,false,,false,true
-EVF-096,voz,pagué el colegio de mi hijo con mi plata (muestra 7),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-096,voz,pagué el colegio de mi hijo con mi plata (muestra 7),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
 EVF-097,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 7)",venta,credito,39.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
 EVF-098,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 7)",venta,credito,125,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
 EVF-099,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 7),cobro_fiado,efectivo,80,,dicho_por_usuario,0.94,false,,false,true
@@ -109,7 +109,7 @@ EVF-107,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 8)
 EVF-108,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 8)",venta,efectivo,51.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
 EVF-109,voz,saqué 50 para la casa (muestra 8),retiro_personal,efectivo,85,,dicho_por_usuario,0.95,false,,false,true
 EVF-110,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 8),retiro_personal,efectivo,115,,dicho_por_usuario,0.9,false,,false,true
-EVF-111,voz,pagué el colegio de mi hijo con mi plata (muestra 8),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-111,voz,pagué el colegio de mi hijo con mi plata (muestra 8),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
 EVF-112,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 8)",venta,credito,44.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
 EVF-113,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 8)",venta,credito,130,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
 EVF-114,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 8),cobro_fiado,efectivo,85,,dicho_por_usuario,0.94,false,,false,true
@@ -124,7 +124,7 @@ EVF-122,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 9)
 EVF-123,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 9)",venta,efectivo,56.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
 EVF-124,voz,saqué 50 para la casa (muestra 9),retiro_personal,efectivo,90,,dicho_por_usuario,0.95,false,,false,true
 EVF-125,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 9),retiro_personal,efectivo,120,,dicho_por_usuario,0.9,false,,false,true
-EVF-126,voz,pagué el colegio de mi hijo con mi plata (muestra 9),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-126,voz,pagué el colegio de mi hijo con mi plata (muestra 9),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
 EVF-127,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 9)",venta,credito,49.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
 EVF-128,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 9)",venta,credito,135,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
 EVF-129,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 9),cobro_fiado,efectivo,90,,dicho_por_usuario,0.94,false,,false,true
@@ -139,7 +139,7 @@ EVF-137,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 10
 EVF-138,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 10)",venta,efectivo,61.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
 EVF-139,voz,saqué 50 para la casa (muestra 10),retiro_personal,efectivo,95,,dicho_por_usuario,0.95,false,,false,true
 EVF-140,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 10),retiro_personal,efectivo,125,,dicho_por_usuario,0.9,false,,false,true
-EVF-141,voz,pagué el colegio de mi hijo con mi plata (muestra 10),,,,,,0.89,true,CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-141,voz,pagué el colegio de mi hijo con mi plata (muestra 10),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
 EVF-142,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 10)",venta,credito,54.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
 EVF-143,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 10)",venta,credito,140,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
 EVF-144,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 10),cobro_fiado,efectivo,95,,dicho_por_usuario,0.94,false,,false,true

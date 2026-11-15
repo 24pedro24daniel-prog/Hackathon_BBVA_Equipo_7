@@ -1,10 +1,10 @@
-// CajaClara — Modelo de datos (v2)
+// TuCaserito — Modelo de datos (v2)
 // Visualizar en https://dbdiagram.io (pegar este archivo).
 // Diccionario de datos: diccionario_datos.md
 // Todos los datos son sintéticos. Montos en PEN con DECIMAL(12,2). Fechas con hora en timestamptz (America/Lima).
 // Campos calculados (saldo, monto pendiente, días de atraso, estados por vencer/vencido) NO se guardan: salen de vistas.
 
-Project CajaClara {
+Project TuCaserito {
   database_type: 'PostgreSQL'
   Note: 'Gestor financiero para bodegas y pymes no bancarizadas. Entidad central: empresas.'
 }

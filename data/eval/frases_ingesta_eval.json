@@ -85,7 +85,7 @@
     "origen_monto_esperado": null,
     "confianza_simulada": 0.89,
     "requiere_doble_confirmacion": true,
-    "pregunta_aclaratoria": "CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
+    "pregunta_aclaratoria": "TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
     "posible_duplicado": false,
     "dentro_alcance": false
   },
@@ -310,7 +310,7 @@
     "origen_monto_esperado": null,
     "confianza_simulada": 0.89,
     "requiere_doble_confirmacion": true,
-    "pregunta_aclaratoria": "CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
+    "pregunta_aclaratoria": "TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
     "posible_duplicado": false,
     "dentro_alcance": false
   },
@@ -535,7 +535,7 @@
     "origen_monto_esperado": null,
     "confianza_simulada": 0.89,
     "requiere_doble_confirmacion": true,
-    "pregunta_aclaratoria": "CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
+    "pregunta_aclaratoria": "TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
     "posible_duplicado": false,
     "dentro_alcance": false
   },
@@ -760,7 +760,7 @@
     "origen_monto_esperado": null,
     "confianza_simulada": 0.89,
     "requiere_doble_confirmacion": true,
-    "pregunta_aclaratoria": "CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
+    "pregunta_aclaratoria": "TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
     "posible_duplicado": false,
     "dentro_alcance": false
   },
@@ -985,7 +985,7 @@
     "origen_monto_esperado": null,
     "confianza_simulada": 0.89,
     "requiere_doble_confirmacion": true,
-    "pregunta_aclaratoria": "CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
+    "pregunta_aclaratoria": "TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
     "posible_duplicado": false,
     "dentro_alcance": false
   },
@@ -1210,7 +1210,7 @@
     "origen_monto_esperado": null,
     "confianza_simulada": 0.89,
     "requiere_doble_confirmacion": true,
-    "pregunta_aclaratoria": "CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
+    "pregunta_aclaratoria": "TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
     "posible_duplicado": false,
     "dentro_alcance": false
   },
@@ -1435,7 +1435,7 @@
     "origen_monto_esperado": null,
     "confianza_simulada": 0.89,
     "requiere_doble_confirmacion": true,
-    "pregunta_aclaratoria": "CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
+    "pregunta_aclaratoria": "TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
     "posible_duplicado": false,
     "dentro_alcance": false
   },
@@ -1660,7 +1660,7 @@
     "origen_monto_esperado": null,
     "confianza_simulada": 0.89,
     "requiere_doble_confirmacion": true,
-    "pregunta_aclaratoria": "CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
+    "pregunta_aclaratoria": "TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
     "posible_duplicado": false,
     "dentro_alcance": false
   },
@@ -1885,7 +1885,7 @@
     "origen_monto_esperado": null,
     "confianza_simulada": 0.89,
     "requiere_doble_confirmacion": true,
-    "pregunta_aclaratoria": "CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
+    "pregunta_aclaratoria": "TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
     "posible_duplicado": false,
     "dentro_alcance": false
   },
@@ -2110,7 +2110,7 @@
     "origen_monto_esperado": null,
     "confianza_simulada": 0.89,
     "requiere_doble_confirmacion": true,
-    "pregunta_aclaratoria": "CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
+    "pregunta_aclaratoria": "TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?",
     "posible_duplicado": false,
     "dentro_alcance": false
   },

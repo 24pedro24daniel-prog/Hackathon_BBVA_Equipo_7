@@ -1,4 +1,4 @@
-# CajaClara — Contexto del proyecto
+# TuCaserito — Contexto del proyecto
 
 > Gestor financiero para bodegas y pymes no bancarizadas.
 > Hackathon de Ingeniería BBVA "AI Financial Life" (14–15/11/2026).
@@ -67,7 +67,7 @@ Esto lo empuja a préstamos informales ("gota a gota") con intereses impagables,
 - **Para un negocio sin historial en el banco, la evaluación de un crédito de capital de trabajo sigue siendo manual: un funcionario visita el negocio y levanta su información financiera (aprox. 1 hora) y luego necesita un día adicional para elaborar el informe que sustenta la decisión.** Si el emprendedor tiene las finanzas personales y del negocio mezcladas, o gasta de más, eso juega en contra de su evaluación.
   Fuente: conversaciones del equipo con ejecutivos de negocio de BBVA (fuente primaria).
 
-- **Para clientes que ya cobran con canales del banco (POS, QR), existe precalificación digital basada en el volumen real de sus ventas.** Pero el banco solo ve lo que pasa por sus canales: las ventas en efectivo y los fiados de un bodeguero como Pedro le son invisibles. CajaClara genera justamente ese historial.
+- **Para clientes que ya cobran con canales del banco (POS, QR), existe precalificación digital basada en el volumen real de sus ventas.** Pero el banco solo ve lo que pasa por sus canales: las ventas en efectivo y los fiados de un bodeguero como Pedro le son invisibles. TuCaserito genera justamente ese historial.
   Fuente: BBVA Perú, página de Soluciones de Cobro.
   <https://www.bbva.pe/pymes/productos/cobros/soluciones-de-cobro.html>
 
@@ -81,7 +81,7 @@ Ayudar a bodegas y pymes no bancarizadas a ordenar su flujo de caja, anticipar f
 
 ### Alcance: solo las finanzas del negocio
 
-- **CajaClara no registra ni analiza los gastos personales o de la casa** (comida del hogar, colegio, salud, servicios de la vivienda, etc.). La aplicación gestiona únicamente la caja del negocio.
+- **TuCaserito no registra ni analiza los gastos personales o de la casa** (comida del hogar, colegio, salud, servicios de la vivienda, etc.). La aplicación gestiona únicamente la caja del negocio.
 - Lo único que se registra del lado personal es el **retiro personal**: la plata que Pedro saca de la caja del negocio para la casa ("saqué 50 para la casa"). Se trata como una salida de caja del negocio, sin detallar en qué se gasta después.
 - Así, los retiros personales sí alimentan el resumen (F2), la proyección y el "disponible para gastar" (F3), las alertas (F6) y el score (F8), pero no existe un módulo, categoría ni tabla para gastos del hogar.
 - Si Pedro intenta registrar un gasto de la casa pagado con plata de la casa (p. ej. "pagué el colegio de mi hijo"), el bot le explica que la app solo lleva el negocio y le pregunta si esa plata salió de la caja de la tienda; si es así, se anota como retiro personal.
@@ -120,7 +120,7 @@ Ayudar a bodegas y pymes no bancarizadas a ordenar su flujo de caja, anticipar f
 ### Beneficio por actor
 
 - **Para Pedro:** deja de quedarse sin caja, entiende su negocio y sale del círculo del préstamo informal.
-- **Para el banco:** llega a un segmento hoy no bancarizado con información confiable, evalúa más rápido y a menor costo, y otorga créditos más sanos y alineados a la capacidad real de pago. Además, CajaClara funciona como puerta de entrada que lleva nuevos clientes, ya ordenados, hacia los canales y productos existentes para personas naturales con negocio.
+- **Para el banco:** llega a un segmento hoy no bancarizado con información confiable, evalúa más rápido y a menor costo, y otorga créditos más sanos y alineados a la capacidad real de pago. Además, TuCaserito funciona como puerta de entrada que lleva nuevos clientes, ya ordenados, hacia los canales y productos existentes para personas naturales con negocio.
 
 ---
 
@@ -133,9 +133,9 @@ BBVA Perú ya ofrece el **Perfil Mi Negocio**: una sección dentro de la App BBV
 - **Complementos:** Cobro al Toque (el celular como punto de venta) y precalificación a préstamos según el volumen de ventas por canales del banco.
 - Fuentes: <https://www.bbva.pe/pymes/productos/canales/perfil-mi-negocio.html> · <https://www.bbva.pe/pymes/productos/financiamiento/prestamo-digital-negocio.html> · <https://www.bbva.pe/pymes/productos/cobros/soluciones-de-cobro.html>
 
-### Por qué CajaClara no compite, sino que complementa
+### Por qué TuCaserito no compite, sino que complementa
 
-| | Perfil Mi Negocio | CajaClara |
+| | Perfil Mi Negocio | TuCaserito |
 |---|---|---|
 | Usuario | PNN ya bancarizado y con RUC | Bodeguero informal, "no cliente", sin RUC ni cuenta de negocio |
 | Qué ve | Movimientos bancarios y ventas por POS/QR | Ventas en efectivo, fiados, pedidos a crédito a proveedores, retiros personales |
@@ -148,12 +148,12 @@ BBVA Perú ya ofrece el **Perfil Mi Negocio**: una sección dentro de la App BBV
 ### Recorrido propuesto
 
 1. **Estadio 1:** Pedro, informal, con cuaderno y efectivo.
-2. **Estadio 2 (CajaClara):** ordena su caja, separa la plata personal y anticipa faltantes.
-3. **Estadio 3 (roadmap):** se formaliza (RUC), abre una cuenta de negocio, usa los canales para PNN y, con su consentimiento, su historial de CajaClara apoya la evaluación de un crédito formal.
+2. **Estadio 2 (TuCaserito):** ordena su caja, separa la plata personal y anticipa faltantes.
+3. **Estadio 3 (roadmap):** se formaliza (RUC), abre una cuenta de negocio, usa los canales para PNN y, con su consentimiento, su historial de TuCaserito apoya la evaluación de un crédito formal.
 
 ### Reglas para el pitch
 
-- No presentar CajaClara como producto oficial ni usar marca, logos o pantallas del banco.
+- No presentar TuCaserito como producto oficial ni usar marca, logos o pantallas del banco.
 - Mencionar el Perfil Mi Negocio solo como destino natural del usuario; la integración queda como roadmap.
 
 ---

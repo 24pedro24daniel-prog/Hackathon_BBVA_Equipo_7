@@ -1,12 +1,12 @@
-# Análisis Comparativo de Librerías de Generación de Datos Sintéticos para CajaClara
+# Análisis Comparativo de Librerías de Generación de Datos Sintéticos para TuCaserito
 
 > Evaluación técnica de las 7 herramientas propuestas frente a la arquitectura de **25 tablas interconectadas** ([`modelo_datos.dbml`](../modelo_datos.dbml)), las restricciones `CHECK` ([`diccionario_datos.md`](../diccionario_datos.md)), las reglas anti-fuga de datos (`fecha_corte = 2026-11-14`) y el relato determinístico de **Bodega Don Pedro (`EMP-0001`)**.
 
 ---
 
-## 1. Matriz de Evaluación Técnica frente al Modelo de Datos de CajaClara
+## 1. Matriz de Evaluación Técnica frente al Modelo de Datos de TuCaserito
 
-| Librería / Repo | Categoría | Ventaja principal para CajaClara | Riesgo / Limitación en Hackathon (48 h) | Veredicto |
+| Librería / Repo | Categoría | Ventaja principal para TuCaserito | Riesgo / Limitación en Hackathon (48 h) | Veredicto |
 |---|---|---|---|---|
 | **[`joke2k/faker`](https://github.com/joke2k/faker) + `NumPy/Pandas` (`seed=42`)** | Motor central determinístico y entidades sin PII | Control quirúrgico al céntimo sobre `EMP-0001` (`saldo = S/ 2,340.00`, `ingresos_nov = S/ 8,540.00`, `egresos_nov = S/ 7,310.00`, déficit `-S/ 650.00` el `30/11`) y 100 % de cumplimiento de los 8 `CHECK` de `transacciones`. | Requiere programar las reglas de negocio explícitamente (ya implementadas en [`generate_synthetic_data.mjs`](./generate_synthetic_data.mjs)). | **ELEGIDA (Núcleo Central)** |
 | **[`sdv-dev/SDV`](https://github.com/sdv-dev/SDV)** (*Synthetic Data Vault*) | Síntesis estadística multi-tabla (`HMA`) | Excelente para documentar metadatos relacionales (`MultiTableMetadata`) y validar similitud estadística de distribuciones marginales. | **1)** HMA escala lento con >5 tablas y 25 tablas con FKs cruzadas (`borrador_id`, `fiado_id`, `deuda_id`, `impuesto_id`). **2)** Rompe restricciones condicionales complejas (`afecta_caja = (metodo_pago <> 'credito')` y `num_nonnulls <= 1`) si no se post-procesa. **3)** Necesita un dataset semilla previo para ajustar el sintetizador. | **USO PARCIAL (Solo esquema de metadatos, no como generador primario)** |
@@ -20,7 +20,7 @@
 
 ## 2. Por qué la combinación ganadora es **Motor Determinístico (`Faker + Semilla Fija`) + `nlpaug` + `Pandera/Pydantic`**
 
-En el modelo de CajaClara existen **tres requisitos duros** que ningún modelo generativo de caja negra (`SDV HMA`, `TimeGAN`) puede cumplir por sí solo sin romperse:
+En el modelo de TuCaserito existen **tres requisitos duros** que ningún modelo generativo de caja negra (`SDV HMA`, `TimeGAN`) puede cumplir por sí solo sin romperse:
 
 1. **Invariantes contables exactos entre tablas:**
    - `saldo_diario.saldo_cierre` **debe** ser exactamente igual a `empresas.saldo_inicial + Σ(ingresos que afectan caja) − Σ(egresos que afectan caja)` en `transacciones`.

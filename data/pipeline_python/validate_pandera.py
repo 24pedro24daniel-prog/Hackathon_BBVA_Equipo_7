@@ -1,5 +1,5 @@
 """
-CajaClara — Validador Formal de Contratos de Datos con Pandera + Pydantic (Calibrado MVP RUC 10 — 100% Efectivo)
+TuCaserito — Validador Formal de Contratos de Datos con Pandera + Pydantic (Calibrado MVP RUC 10 — 100% Efectivo)
 Audita todos los CSVs de data/csv/*.csv antes de entregarlos a ML/Backend:
   (a) 100% de empresas con rubro_id == 'RUB-01', tiene_ruc == True y regimen_tributario == 'nuevo_rus'
   (b) 0 transacciones con métodos de pago digitales (solo 'efectivo' y 'credito') y billeteras_digitales.csv vacío (0 filas)

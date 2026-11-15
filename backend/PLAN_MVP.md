@@ -1,4 +1,4 @@
-# CajaClara — Plan del backend (MVP) para 2 desarrolladores
+# TuCaserito — Plan del backend (MVP) para 2 desarrolladores
 
 > Alcance: solo el MVP (Estadio 2, [context.md](../context.md) §7). Stack: **FastAPI + SQLAlchemy 2 + PostgreSQL local**.
 > Contrato de referencia: [contract.md](../contract.md). Tablas: [modelo_datos.dbml](../modelo_datos.dbml) · [diccionario_datos.md](../diccionario_datos.md).

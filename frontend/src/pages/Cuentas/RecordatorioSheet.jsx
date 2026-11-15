@@ -29,7 +29,7 @@ async function copyText(text) {
   }
 }
 
-/** Hoja inferior con el mensaje sugerido. CajaClara no envía nada: Pedro copia o abre WhatsApp. */
+/** Hoja inferior con el mensaje sugerido. TuCaserito no envía nada: Pedro copia o abre WhatsApp. */
 export default function RecordatorioSheet({ fiado, onClose }) {
   const ref = useRef(null)
   const msgRef = useRef(null)
@@ -87,7 +87,7 @@ export default function RecordatorioSheet({ fiado, onClose }) {
                 {mensaje}
               </blockquote>
               <p className="cuentas-sheet__note">
-                CajaClara no lo envía por ti. Tú decides si lo mandas, cuándo y cómo. Puedes cambiarle las palabras.
+                TuCaserito no lo envía por ti. Tú decides si lo mandas, cuándo y cómo. Puedes cambiarle las palabras.
               </p>
             </div>
             <div className="cuentas-sheet__actions">

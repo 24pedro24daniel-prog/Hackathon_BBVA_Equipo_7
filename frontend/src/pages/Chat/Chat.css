@@ -1,4 +1,4 @@
-/* Chat simulado (estilo WhatsApp, con la identidad de CajaClara). Ocupa toda la altura de la columna principal:
+/* Chat simulado (estilo WhatsApp, con la identidad de TuCaserito). Ocupa toda la altura de la columna principal:
    header arriba, lista con scroll, compositor abajo. Nada es position:fixed, así que respeta el riel/barra
    lateral (≥768) del layout. La conversación se centra en una columna de --chat-max; el fondo ocupa todo el ancho.
    Tarjetas dentro del chat = comprobante (Nu): blancas, filas etiqueta/valor con divisores finos, estado como

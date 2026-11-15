@@ -1,5 +1,5 @@
 -- =============================================================================
--- CajaClara — Esquema PostgreSQL Completo (v2)
+-- TuCaserito — Esquema PostgreSQL Completo (v2)
 -- Basado en modelo_datos.dbml y diccionario_datos.md
 -- Todos los datos almacenados son sintéticos.
 -- =============================================================================

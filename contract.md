@@ -1,4 +1,4 @@
-# CajaClara — Contratos de API (v1)
+# TuCaserito — Contratos de API (v1)
 
 > Contratos para que cada parte del equipo trabaje en paralelo (backend, ML, GenAI, front y bot).
 > Implementación sugerida: FastAPI + pydantic. Todos los datos son sintéticos.

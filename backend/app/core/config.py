@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE: float = 0.0
     LLM_MAX_TOKENS: int = 800
     LLM_APP_URL: str = "http://localhost:5173"
-    LLM_APP_NAME: str = "CajaClara"
+    LLM_APP_NAME: str = "TuCaserito"
     # Trazabilidad de cada llamada al LLM/VLM (tabla llm_llamadas). Sin contenido: solo metadatos, tokens y costo.
     LLM_TRAZA_ACTIVA: bool = True
     LLM_TRAZA_GUARDAR_CONTENIDO: bool = True

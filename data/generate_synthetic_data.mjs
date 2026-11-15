@@ -1,5 +1,5 @@
 /**
- * CajaClara — Generador Determinístico de Datos Sintéticos Calibrado (MVP Bodegueros RUC 10 — 100% Efectivo)
+ * TuCaserito — Generador Determinístico de Datos Sintéticos Calibrado (MVP Bodegueros RUC 10 — 100% Efectivo)
  * Genera las 25 tablas del modelo_datos.dbml en archivos CSV (data/csv/*.csv)
  * y el dataset de evaluación de ingesta F1 (data/eval/frases_ingesta_eval.json y .csv).
  *
@@ -2076,7 +2076,7 @@ const frasesBase = [
     origen_monto: null,
     confianza_simulada: 0.89,
     requiere_doble_confirmacion: true,
-    pregunta_aclaratoria: 'CajaClara solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?',
+    pregunta_aclaratoria: 'TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?',
     posible_duplicado: false,
     dentro_alcance: false,
   },

@@ -193,7 +193,7 @@ PLANES = {
 }
 CON_LLM = {I.estado_caja, I.explicar_alerta, I.simular}
 
-_SISTEMA = """Eres el asistente de CajaClara para el dueño de una bodega en Perú. Te paso su pregunta y un BORRADOR \
+_SISTEMA = """Eres el asistente de TuCaserito para el dueño de una bodega en Perú. Te paso su pregunta y un BORRADOR \
 de respuesta hecho con sus datos reales. Reescríbelo en un tono cálido, claro y breve (máximo 3 oraciones, sin \
 listas). Usa SOLO las cifras que aparecen en el BORRADOR y escríbelas igual (por ejemplo «S/ 2 340»). No agregues \
 cifras, porcentajes, fechas ni cálculos nuevos. No recomiendes créditos, entidades ni inversiones. Responde solo \

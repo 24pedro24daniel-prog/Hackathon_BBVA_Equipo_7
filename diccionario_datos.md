@@ -1,4 +1,4 @@
-# CajaClara — Diccionario de datos (v2)
+# TuCaserito — Diccionario de datos (v2)
 
 > Esquema formal: [modelo_datos.dbml](modelo_datos.dbml) (se visualiza pegándolo en <https://dbdiagram.io>).
 > Todos los datos son **sintéticos**. Ningún nombre, teléfono, monto ni negocio corresponde a una persona real.
@@ -73,7 +73,7 @@ La pyme ficticia; entidad central. **Grano:** una empresa.
 | `saldo_inicial` | decimal(12,2) | no | Caja del negocio al empezar a registrar | `1800.00` | — |
 | `fecha_saldo_inicial` | date | no | Fecha de ese saldo | `2026-05-01` | — |
 | `minimo_operativo` | decimal(12,2) | no | Saldo mínimo para operar sin riesgo | `500.00` | feature |
-| `fecha_alta` | timestamptz | no | Alta en CajaClara | | — |
+| `fecha_alta` | timestamptz | no | Alta en TuCaserito | | — |
 
 > El sueldo fijo **no** está aquí: es un `movimientos_programados` con `es_sueldo = true`.
 

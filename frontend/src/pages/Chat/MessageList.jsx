@@ -97,7 +97,7 @@ export default function MessageList({ messages, typing, actions }) {
   }, [messages, typing])
 
   return (
-    <div className="chat-list" ref={ref} role="log" aria-live="polite" aria-label="Conversación con CajaClara">
+    <div className="chat-list" ref={ref} role="log" aria-live="polite" aria-label="Conversación con TuCaserito">
       <p className="chat-date">Hoy</p>
       {messages.map((m) => (
         <Message key={m.id} msg={m} a={actions} />

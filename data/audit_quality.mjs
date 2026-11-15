@@ -1,5 +1,5 @@
 /**
- * CajaClara — Auditor Automático de Calidad de Datos y Contratos (Estilo Pandera + Pydantic)
+ * TuCaserito — Auditor Automático de Calidad de Datos y Contratos (Estilo Pandera + Pydantic)
  * Verifica las 25 tablas en data/csv/*.csv y el set de ingesta en data/eval/frases_ingesta_eval.json:
  *   1. Público objetivo 100% Bodegas RUC 10 en Nuevo RUS (rubro_id='RUB-01', tiene_ruc=true, regimen_tributario='nuevo_rus')
  *   2. Operación 100% en Efectivo (metodo_pago solo 'efectivo' o 'credito'; billeteras_digitales.csv con 0 filas)

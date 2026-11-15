@@ -1,4 +1,4 @@
-# CajaClara — Dataset Sintético: Supuestos, Diseño y Justificación de Realismo (MVP Bodegueros RUC 10 — 100 % Efectivo)
+# TuCaserito — Dataset Sintético: Supuestos, Diseño y Justificación de Realismo (MVP Bodegueros RUC 10 — 100 % Efectivo)
 
 > **Entregable:** Datos sintéticos y evidencia (15 % de la evaluación del Hackathon BBVA *"AI Financial Life"*).
 > **Esquema formal:** [`modelo_datos.dbml`](../modelo_datos.dbml) · **Diccionario:** [`diccionario_datos.md`](../diccionario_datos.md) · **DDL y Vistas:** [`data/schema.sql`](./schema.sql) · **Generador determinístico (`seed = 42`):** [`data/generate_synthetic_data.mjs`](./generate_synthetic_data.mjs) · **Reporte de Auditoría:** [`data/AUDITORIA_CALIDAD_DATOS.md`](./AUDITORIA_CALIDAD_DATOS.md).
