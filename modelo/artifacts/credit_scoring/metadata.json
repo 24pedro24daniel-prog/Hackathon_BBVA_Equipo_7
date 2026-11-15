@@ -1,0 +1,61 @@
+{
+  "tipo_modelo": "LogisticRegression (scikit-learn)",
+  "columnas_en_orden": [
+    "antiguedad_meses",
+    "ingreso_mensual_prom",
+    "pct_dias_con_venta",
+    "cv_ventas",
+    "pct_pagos_a_tiempo",
+    "dias_mora_promedio",
+    "pct_ventas_registradas",
+    "pct_fiado_sobre_ventas",
+    "pct_fiado_cobrado_a_tiempo",
+    "n_alertas_quiebre_stock",
+    "tiene_ruc",
+    "usa_billetera_digital",
+    "zona_rural",
+    "zona_urbano",
+    "rubro_bebidas",
+    "rubro_mixto",
+    "rubro_panaderia"
+  ],
+  "features_numericas": [
+    "antiguedad_meses",
+    "ingreso_mensual_prom",
+    "pct_dias_con_venta",
+    "cv_ventas",
+    "pct_pagos_a_tiempo",
+    "dias_mora_promedio",
+    "pct_ventas_registradas",
+    "pct_fiado_sobre_ventas",
+    "pct_fiado_cobrado_a_tiempo",
+    "n_alertas_quiebre_stock"
+  ],
+  "features_binarias": [
+    "tiene_ruc",
+    "usa_billetera_digital"
+  ],
+  "features_categoricas_originales": [
+    "zona",
+    "rubro"
+  ],
+  "categorias_zona": [
+    "periurbano",
+    "rural",
+    "urbano"
+  ],
+  "categorias_rubro": [
+    "abarrotes",
+    "bebidas",
+    "mixto",
+    "panaderia"
+  ],
+  "auc_test": 0.771,
+  "formula_score": "score = round(modelo.predict_proba(scaler.transform(X))[:, 1] * 100)",
+  "rangos_categoria": {
+    "Rojo (Poor)": "0-39",
+    "Amarillo (Regular)": "40-69",
+    "Verde (Good)": "70-100"
+  },
+  "notas": "Para scorear una bodega nueva: construir X con pd.get_dummies igual que aqui (mismas columnas_en_orden, rellenando con 0 las categorias ausentes), aplicar scaler.transform, luego modelo.predict_proba."
+}

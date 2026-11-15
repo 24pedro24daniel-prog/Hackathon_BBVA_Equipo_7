@@ -1,0 +1,61 @@
+# Modelos entrenados (artefactos para consumo por el backend)
+
+Formato: `.joblib` (serialización estándar de scikit-learn/LightGBM en Python).
+**No son `.pt`** — ese formato es de PyTorch y no aplica aquí; `joblib` es el equivalente correcto
+para modelos de scikit-learn y LightGBM.
+
+## `forecast/` — Predicción de ingreso y egreso diario (LightGBM)
+
+Generado por: `modelo/modelo_ingreso_egreso_lightgbm.ipynb`
+
+| Archivo | Contenido |
+|---|---|
+| `ingreso_p10.joblib`, `ingreso_p50.joblib`, `ingreso_p90.joblib` | `LGBMRegressor` para ingreso, cuantiles 10/50/90 |
+| `egreso_p10.joblib`, `egreso_p50.joblib`, `egreso_p90.joblib` | `LGBMRegressor` para egreso, cuantiles 10/50/90 |
+| `metadata.json` | Orden exacto de features, columnas categóricas (`rubro`, `zona`) y sus categorías válidas |
+
+**Cómo consumir:**
+```python
+import joblib, json
+import pandas as pd
+
+with open("metadata.json") as f:
+    meta = json.load(f)
+
+modelo_p50 = joblib.load("ingreso_p50.joblib")
+
+# X debe tener las columnas de meta["features_en_orden"], en ese orden,
+# con 'rubro' y 'zona' como pandas Categorical usando meta["categorias_rubro"] / meta["categorias_zona"]
+pred = modelo_p50.predict(X)
+```
+
+## `credit_scoring/` — Score de salud financiera (Regresión Logística)
+
+Generado por: `modelo/credit_scoring_bodegas_logreg.ipynb`
+
+| Archivo | Contenido |
+|---|---|
+| `logreg_model.joblib` | `LogisticRegression` entrenado (AUC test = 0.771) |
+| `scaler.joblib` | `StandardScaler` ajustado — **debe aplicarse antes de predecir** |
+| `metadata.json` | Orden de columnas post one-hot encoding, rangos del score y fórmula |
+
+**Cómo consumir:**
+```python
+import joblib, json
+
+with open("metadata.json") as f:
+    meta = json.load(f)
+
+modelo = joblib.load("logreg_model.joblib")
+scaler = joblib.load("scaler.joblib")
+
+# X debe tener las columnas de meta["columnas_en_orden"] (generadas con pd.get_dummies
+# igual que en el notebook; rellenar con 0 las categorías de zona/rubro ausentes)
+proba = modelo.predict_proba(scaler.transform(X))[:, 1]
+score = round(proba[0] * 100)  # 0-100, ver meta["rangos_categoria"]
+```
+
+## Regenerar los artefactos
+
+Ambos notebooks son reproducibles (seed fijo). Basta con correrlos de nuevo (kernel "Python 3.15 (BBVA)")
+para regenerar estos mismos archivos con los mismos resultados.
