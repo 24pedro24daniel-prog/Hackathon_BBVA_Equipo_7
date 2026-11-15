@@ -121,7 +121,7 @@ function MovimientoItem({ m, abierto, onToggle }) {
           </span>
         </span>
         <span className="movs__monto">
-          <Money value={ingreso ? m.monto : -m.monto} sign tone={ingreso ? 'pos' : 'neutral'} />
+          <Money value={ingreso ? m.monto : -m.monto} tone={ingreso ? 'pos' : 'neg'} />
         </span>
         <Icon name="chevronDown" size={20} className="movs__chev" />
       </button>

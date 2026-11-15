@@ -65,14 +65,14 @@ function ForecastEmpty({ data }) {
         Todavía estoy conociendo tu negocio
       </h2>
       <p className="fc-empty__text">
-        Anota lo que vendes y lo que gastas durante {requiere} días. Con eso podré avisarte antes de que te falte plata.
+        Registra tus ventas y gastos durante {requiere} días. Con ese historial podremos anticiparte posibles faltantes de caja.
       </p>
       <ProgressBar value={Math.min(tiene, requiere)} max={requiere} label="Días con transacciones anotadas" />
       <p className="cc-small cc-muted">
         {tiene} de {requiere} días
       </p>
       <Button size="lg" icon="mic" onClick={() => navigate('/chat')}>
-        Anotar una transacción
+        Registrar transacción
       </Button>
     </Card>
   )

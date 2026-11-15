@@ -124,7 +124,7 @@ export const forecastPedro = () => ({
   disponible_para_gastar: {
     valor: 0.0,
     formula: 'saldo_actual + cobros_esperados − pagos_comprometidos_hasta_proximo_vencimiento − minimo_operativo − reserva_impuestos',
-    // pagos_comprometidos: Andina 2 400 + RUS 20 + pedidos chicos que vencen antes (180 + 140 + 95 + 120)
+    // pagos_comprometidos: Andina 2,400 + RUS 20 + pedidos chicos que vencen antes (180 + 140 + 95 + 120)
     componentes: { saldo_actual: 2340.0, cobros_esperados: 190.0, pagos_comprometidos: 2955.0, minimo_operativo: 800.0, reserva_impuestos: 20.0 },
     mensaje: 'Hoy no hagas gastos extra: arriesgas el pago del 30/11.',
   },
@@ -202,7 +202,7 @@ export const forecastSano = () => ({
   disponible_para_gastar: {
     valor: 180.0,
     formula: 'saldo_actual + cobros_esperados − pagos_comprometidos_hasta_proximo_vencimiento − minimo_operativo − reserva_impuestos',
-    // pagos_comprometidos: Andina 2 400 + Panadería 100 + luz y agua 180
+    // pagos_comprometidos: Andina 2,400 + Panadería 100 + luz y agua 180
     componentes: { saldo_actual: SALDO_SANO, cobros_esperados: 60.0, pagos_comprometidos: 2680.0, minimo_operativo: 800.0, reserva_impuestos: 20.0 },
     mensaje: 'Puedes gastar hasta S/ 180 hoy y igual pagas a Andina el 30/11.',
   },
@@ -366,7 +366,7 @@ export const alertas = () => ({
       nivel_riesgo: 'alto',
       titulo: 'El 30/11 te faltarían S/ 650 para pagar a Andina',
       titulo_corto: 'El 30/11 no te alcanzará', // EXT (chat)
-      insight: 'Para pagar S/ 2 400 a Distribuidora Andina te faltarían S/ 650.',
+      insight: 'Para pagar S/ 2,400 a Distribuidora Andina te faltarían S/ 650.',
       resumen_causas: 'vendiste menos, pedido grande y fiados sin cobrar.', // EXT
       causas: [
         { descripcion: 'Vendiste menos que el mes pasado', monto: 560.0 },
@@ -404,7 +404,7 @@ function armarFactores(valores) {
 // Pedro: 96·0.25 + 45·0.25 + 85·0.2 + 60·0.15 + 65·0.15 = 71
 const subsPedro = armarFactores({
   regularidad_ventas: { valor: 96, detalle: 'Vendiste 88 de 92 días', destacado: true },
-  pago_proveedores: { valor: 45, detalle: '1 pago atrasado a Avícola La Granja y S/ 2 400 por pagar a Andina', destacado: true },
+  pago_proveedores: { valor: 45, detalle: '1 pago atrasado a Avícola La Granja y S/ 2,400 por pagar a Andina', destacado: true },
   registro_ventas: { valor: 85, detalle: 'Anotas unos 85 de cada 100 soles que vendes' },
   fiado_cobro: { valor: 60, detalle: 'Fías 5 de cada 100 soles que vendes; 2 fiados ya vencieron', destacado: true },
   antiguedad: { valor: 65, detalle: '3 años con la bodega · 92 días anotando aquí' },

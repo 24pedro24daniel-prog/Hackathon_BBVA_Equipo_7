@@ -40,10 +40,10 @@
   align-items: center;
 }
 .progreso-scale__seg { display: block; height: 6px; }
-.progreso-scale__seg--1 { border-radius: 3px 0 0 3px; background: color-mix(in srgb, var(--danger) 35%, var(--surface)); }
-.progreso-scale__seg--2 { background: color-mix(in srgb, var(--warning) 35%, var(--surface)); }
-.progreso-scale__seg--3 { background: var(--brand-band); }
-.progreso-scale__seg--4 { border-radius: 0 3px 3px 0; background: color-mix(in srgb, var(--ok) 35%, var(--surface)); }
+.progreso-scale__seg--1 { border-radius: 3px 0 0 3px; background: var(--danger); }
+.progreso-scale__seg--2 { background: var(--warning); }
+.progreso-scale__seg--3 { background: var(--brand); }
+.progreso-scale__seg--4 { border-radius: 0 3px 3px 0; background: var(--ok); }
 .progreso-scale__marker {
   position: absolute;
   top: 0;
@@ -106,7 +106,7 @@
 .progreso-chart__bar {
   width: 12px;
   height: calc(var(--h) * 0.96px);
-  background: var(--brand-band);
+  background: var(--accent);
   border-radius: 4px 4px 0 0;
 }
 .progreso-chart__col--now .progreso-chart__bar { background: var(--brand); }

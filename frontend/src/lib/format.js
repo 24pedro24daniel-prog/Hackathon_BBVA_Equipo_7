@@ -3,8 +3,8 @@
 const TZ = 'America/Lima'
 
 function groupThousands(intStr) {
-  // Espacio fino no separable como separador de miles: "2 340"
-  return intStr.replace(/\B(?=(\d{3})+(?!\d))/g, '\u202F')
+  // Coma como separador de miles: "2,340"
+  return intStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
 /**

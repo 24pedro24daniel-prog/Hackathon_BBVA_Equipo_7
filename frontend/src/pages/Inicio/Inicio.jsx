@@ -129,7 +129,7 @@ function CuentaNegocio({ valor, children }) {
   return (
     <section className="inicio__cuenta" aria-labelledby={id}>
       <h2 className="inicio__cuenta-label" id={id}>
-        Caja del negocio
+        Saldo del negocio
       </h2>
       <p className="inicio__cuenta-saldo">
         <Money size="hero" inverse value={valor} />
@@ -353,7 +353,7 @@ function InicioNuevo({ resumen, diasConDatos, diasRequeridos, escenario }) {
             Tus primeros días
           </h2>
           <p className="inicio__progreso-frase">
-            Anota lo que vendes y lo que gastas durante {diasRequeridos} días. Con eso podré avisarte antes de que te falte plata.
+            Registra tus ventas y gastos durante {diasRequeridos} días. Con ese historial podremos anticiparte posibles faltantes de caja.
           </p>
           <div className="inicio__progreso-barra">
             <ProgressBar value={hechos} max={diasRequeridos} label="Días con transacciones anotadas" />
@@ -361,7 +361,7 @@ function InicioNuevo({ resumen, diasConDatos, diasRequeridos, escenario }) {
               {hechos} de {diasTxt(diasRequeridos)}
             </p>
           </div>
-          <AnotarVenta label="Anotar una transacción" />
+          <AnotarVenta label="Registrar transacción" />
         </Card>
       </div>
 
