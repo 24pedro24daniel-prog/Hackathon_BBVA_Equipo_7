@@ -63,6 +63,7 @@ El mockup necesita algunos campos que `contract.md` no define. Los mocks los inc
 | `GET /forecast`, `GET /fiados`, `POST /simular` | `fundamento`, `limites`, `confianza` | "¿De dónde sale este número?" |
 | `GET /fiados` | `items[].detalle` | "panes, leche" |
 | `GET /pedidos` | `impuestos.nombre` | "RUS de noviembre" |
+| `GET /pedidos` | `impuestos.impuesto_id` | Identifica el impuesto al eliminarlo |
 | `GET /alertas` | `dias_para_evento`, `titulo_corto`, `resumen_causas` | Tarjeta de alerta del Inicio y del chat |
 | `GET /salud` | `etapas[]`, `subindicadores[].destacado`, `metas_activas[]` | Pantalla Progreso |
 | `POST /ingesta/interpretar` | `opciones_aclaracion[] {valor, texto}` | Botones de respuesta rápida (30/11 · 30/12) |
@@ -70,3 +71,12 @@ El mockup necesita algunos campos que `contract.md` no define. Los mocks los inc
 | `POST /asistente/mensajes` | `tabla[]`, `ejemplo_prestamo_informal`, `respuesta_post`, `acciones[]` | Modo básico, costo del préstamo informal, botones |
 
 Todos los datos son sintéticos.
+
+### Eliminar cobros y pagos en la demo
+
+En `/cuentas`, cada fiado, deuda de proveedor e impuesto tiene un botón **Eliminar**. La demo implementa
+`POST /empresas/{empresa_id}/cuentas/anular` con `{ tipo: "fiado" | "pedido" | "impuesto", id }`.
+Conserva el registro con `anulada: true`, lo excluye de los pendientes y actualiza sus totales sin mover la caja
+ni registrar un cobro o pago. Las anulaciones se mantienen al navegar durante la sesión y se separan por
+escenario; al recargar se reinician los mocks. Este endpoint es una extensión de demo pendiente de implementar
+en el backend real.

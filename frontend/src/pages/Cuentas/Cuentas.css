@@ -60,16 +60,8 @@
   padding: 0 16px 14px 68px;
   margin-top: -4px;
 }
-/* "Recordar": píldora secundaria pequeña; el área táctil sigue siendo de 44px */
-.cuentas-recordar.cc-btn {
-  position: relative;
-  min-height: 36px;
-  padding: 6px 16px;
-  font-size: 14px;
-}
-.cuentas-recordar.cc-btn::after { content: ''; position: absolute; inset: -4px 0; }
-/* "Ver opciones →": enlace alineado con el texto de la fila */
-.cuentas-link.cc-btn { margin: -6px 0 -6px -4px; padding-inline: 4px; font-size: 15px; }
+.cuentas-eliminar.cc-btn { color: var(--danger); padding-inline: 4px; font-size: 15px; }
+.cuentas-error-eliminar { grid-column: 1 / -1; color: var(--danger); }
 
 /* Vacíos: una frase en gris y un botón */
 .cuentas-empty {
