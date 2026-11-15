@@ -1,5 +1,6 @@
 {
   "tipo_modelo": "LightGBM quantile regression",
+  "modelo_version": "lgbm_cuantiles-1.0",
   "targets": [
     "ingreso",
     "egreso"
