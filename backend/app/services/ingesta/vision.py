@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from app.core.config import settings
 from app.core.reloj import hoy
-from app.services.ingesta import llm_client
+from app.services.ingesta import llm_client, traza_llm
 from app.services.ingesta.texto import normalizar
 
 log = logging.getLogger("cajaclara.vision")
@@ -227,7 +227,8 @@ def _sistema(dia: date, clientes: list[str]) -> str:
     return _SISTEMA.format(hoy=dia.isoformat(), dia=_DIAS_ES[dia.weekday()], conocidos=conocidos)
 
 
-def leer(datos: bytes, tipo: str, *, clientes: list[str] | None = None) -> LecturaVisual:
+def leer(datos: bytes, tipo: str, *, clientes: list[str] | None = None,
+         traza: traza_llm.TrazaLLM | None = None) -> LecturaVisual:  # fmt: skip
     """Manda la foto al VLM y devuelve los fiados normalizados.
 
     Lanza LLMNoDisponible (sin key, timeout, error HTTP) o SalidaInvalida (sin tool call / argumentos inválidos).
@@ -246,14 +247,21 @@ def leer(datos: bytes, tipo: str, *, clientes: list[str] | None = None) -> Lectu
         model=settings.VLM_MODEL,
         max_tokens=settings.VLM_MAX_TOKENS,
         timeout_s=settings.VLM_TIMEOUT_S,
+        traza=traza,
     )
     llamadas = mensaje.get("tool_calls") or []
     if not llamadas:
+        if traza:
+            traza.marcar("rechazada_validacion")
         raise SalidaInvalida("el VLM no llamó a la función")
     argumentos = llamadas[0].get("function", {}).get("arguments")
     try:
         datos_tool = json.loads(argumentos) if isinstance(argumentos, str) else argumentos
         salida = SalidaVLM.model_validate(datos_tool)
     except (json.JSONDecodeError, TypeError, ValidationError) as exc:
+        if traza:
+            traza.marcar("rechazada_validacion")
         raise SalidaInvalida(f"argumentos inválidos: {exc}") from exc
+    if traza:
+        traza.marcar("aceptada")
     return normalizar_salida(salida, dia)

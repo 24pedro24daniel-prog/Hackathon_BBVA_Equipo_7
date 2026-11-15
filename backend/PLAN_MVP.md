@@ -64,7 +64,7 @@ backend/
 │   │   └── reloj.py                  hoy() / ahora() con FECHA_DEMO y zona America/Lima
 │   ├── db/                           F0 (A) — compartido, se congela tras F0
 │   │   ├── base.py, session.py       engine, SessionLocal, get_db
-│   │   ├── models.py                 las 25 tablas del DBML + tabla técnica `idempotency_keys`
+│   │   ├── models.py                 las 25 tablas del DBML + tablas técnicas `idempotency_keys` y `llm_llamadas` (trazabilidad del LLM)
 │   │   ├── reset.py                  drop + create_all + seed
 │   │   └── seed_demo.py              dataset de Pedro (EMP-0001), ver §5
 │   ├── schemas/
@@ -73,6 +73,7 @@ backend/
 │   │   ├── movimientos.py            A
 │   │   ├── asistente.py              A
 │   │   ├── salud.py                  A
+│   │   ├── llm_trazas.py             A  (observabilidad del LLM)
 │   │   ├── resumen.py                B
 │   │   ├── forecast.py               B
 │   │   ├── cuentas.py                B  (fiados, pedidos, chequeo, recordatorio)
@@ -87,6 +88,7 @@ backend/
 │   │   ├── movimientos.py            A   GET/POST /empresas/{id}/movimientos
 │   │   ├── asistente.py              A   POST /empresas/{id}/asistente/mensajes
 │   │   ├── salud.py                  A   GET /salud · POST /metas
+│   │   ├── llm_trazas.py             A   GET /empresas/{id}/llm/llamadas · /llm/resumen (interno; contract.md §11)
 │   │   ├── resumen.py                B   GET /resumen
 │   │   ├── forecast.py               B   GET /forecast · POST /forecast/ajustes
 │   │   ├── fiados.py                 B   GET /fiados · POST /fiados/{id}/recordatorio
@@ -99,7 +101,9 @@ backend/
 │       ├── ingesta/                  A
 │       │   ├── transcriptor.py       faster-whisper local (audio → texto); acepta file://, demo:// y r2://
 │       │   ├── almacenamiento.py     Cloudflare R2 (boto3, S3-compatible): presignar_subida, descargar/archivo_temporal (solo r2://empresas/{empresa_id}/…, tipo y tamaño verificados con HEAD)
-│       │   ├── llm_client.py         cliente mínimo de OpenRouter (httpx, timeouts, LLMNoDisponible)
+│       │   ├── llm_client.py         cliente mínimo de OpenRouter (httpx, timeouts, LLMNoDisponible); con `traza` registra cada llamada
+│       │   ├── traza_llm.py          trazabilidad: escribe/enlaza filas de `llm_llamadas` (tokens, costo, latencia, estado; imágenes solo como huella)
+│       │   ├── llm_consultas.py      listado con cursor y resumen (día/origen) de `llm_llamadas`
 │       │   ├── extractor.py          LLM (OpenRouter) con function calling → MovimientoPropuesto; fallback por reglas/regex
 │       │   ├── catalogo.py           monto por catálogo + match de alias (productos, clientes, proveedores)
 │       │   ├── registrador.py        ★ INTERFAZ A: escribe transacciones + tablas satélite

@@ -30,7 +30,7 @@ from app.services import alertas as motor_alertas
 from app.services import finanzas
 from app.services.ingesta import catalogo as cat_mod
 from app.services.ingesta import cuaderno as cuaderno_mod
-from app.services.ingesta import extractor, idempotencia, registrador, transcriptor
+from app.services.ingesta import extractor, idempotencia, registrador, transcriptor, traza_llm
 from app.services.ingesta.texto import fecha_corta, soles
 
 log = logging.getLogger("cajaclara.ingesta")
@@ -110,6 +110,7 @@ def interpretar(db, req: InterpretarRequest) -> dict:
         fallback_usado=ext.fallback_usado or fallback_voz, creado_en=ahora(),
     )  # fmt: skip
     db.add(borrador)
+    traza_llm.enlazar(db, ext.llamada_id, "borrador", borrador.borrador_id)
     db.commit()
 
     modelo = f"{_modelo_whisper()} + {ext.modelo}" if uso_whisper else ext.modelo
@@ -320,6 +321,7 @@ def leer_cuaderno(db, empresa_id: str, media_url: str) -> dict:
         fallback_usado=lectura.fallback_usado, creado_en=ahora(),
     )  # fmt: skip
     db.add(borrador)
+    traza_llm.enlazar(db, lectura.llamada_id, "borrador", borrador.borrador_id)
     db.commit()
     return {
         "borrador_id": borrador.borrador_id,

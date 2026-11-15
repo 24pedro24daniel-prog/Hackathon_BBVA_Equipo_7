@@ -14,8 +14,8 @@ from app.schemas.common import Canal, Frecuencia, MetodoPago, TipoDeuda, TipoFlu
 AHORA = datetime.fromisoformat("2026-11-14T10:42:00-05:00")
 
 
-def test_metadata_tiene_las_25_tablas_mas_idempotencia():
-    assert set(Base.metadata.tables) == set(m.TABLAS_DBML) | {"idempotency_keys"}
+def test_metadata_tiene_las_25_tablas_mas_las_tecnicas():
+    assert set(Base.metadata.tables) == set(m.TABLAS_DBML) | {"idempotency_keys", "llm_llamadas"}
     assert len(m.TABLAS_DBML) == 25
 
 

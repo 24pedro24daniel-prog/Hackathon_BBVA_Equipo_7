@@ -707,3 +707,67 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
 
 ### Mock para trabajar en paralelo
 Hasta que los modelos estén listos, el backend publica respuestas fijas con estos mismos JSON (datos de Pedro: saldo S/ 2 340, déficit −S/ 650 el 30/11, pedido S/ 2 400 a Distribuidora Andina, fiados S/ 310). El front y el bot consumen el mock desde el primer momento.
+
+---
+
+## 11. Observabilidad del LLM (interna)
+
+> Uso interno del equipo (costos, latencia, calidad de la salida del modelo). **No forma parte de las pantallas del producto**; llevan `X-API-Key` como el resto. Cada llamada al LLM/VLM (extractor, asistente, cuaderno) deja una fila en la tabla técnica `llm_llamadas`, también si falla. Parámetros: `LLM_TRAZA_ACTIVA`, `LLM_TRAZA_GUARDAR_CONTENIDO`.
+
+### 11.1 `GET /empresas/{empresa_id}/llm/llamadas`
+Query: `origen` (`extractor | asistente | vision`), `estado` (`ok | timeout | http_error | red | respuesta_invalida | sin_configurar`), `desde`, `hasta` (fechas, zona America/Lima), `limit`, `cursor`, `incluir_contenido` (`true` agrega `request` y `respuesta`; por defecto no). Orden: más reciente primero.
+
+```json
+{
+  "items": [
+    {
+      "llamada_id": "LLM-000012",
+      "origen": "extractor",
+      "referencia_tipo": "borrador",
+      "referencia_id": "BOR-0042",
+      "prompt_version": "extractor-v3",
+      "proveedor": "openrouter",
+      "modelo_solicitado": "openai/gpt-4o-mini",
+      "modelo_respondido": "openai/gpt-4o-mini-2024-07-18",
+      "generation_id": "gen-1731600000-abc",
+      "estado": "ok",
+      "http_status": 200,
+      "error": null,
+      "resultado_uso": "aceptada",
+      "prompt_tokens": 1480,
+      "completion_tokens": 60,
+      "total_tokens": 1540,
+      "costo_usd": 0.00026,
+      "latencia_ms": 1280,
+      "creado_en": "2026-11-14T10:42:05-05:00"
+    }
+  ],
+  "next_cursor": null,
+  "meta": { "request_id": "req_8f3a1c", "generado_en": "2026-11-14T10:42:06-05:00", "fallback_usado": false, "latencia_ms": 12 }
+}
+```
+- `resultado_uso`: `aceptada | rechazada_validacion` (la salida no pasó el esquema) `| rechazada_verificador` (el verificador de cifras del asistente la rechazó) `| null` (la llamada falló o aún no se resolvió).
+- `referencia_id` es el borrador (`extractor`, `vision`) o el mensaje del asistente (`asistente`).
+- Las imágenes nunca se guardan: en `request` aparecen como `{"imagen": {"sha256", "bytes", "mime"}}`.
+
+### 11.2 `GET /empresas/{empresa_id}/llm/resumen`
+Query: `desde`, `hasta` (opcionales). `pct_fallback` = % de llamadas cuya salida no se usó (`estado ≠ ok` o rechazada por validación/verificador). Latencias p50/p95 en ms sobre las llamadas que llegaron a salir a la red.
+
+```json
+{
+  "desde": null,
+  "hasta": null,
+  "totales": {
+    "llamadas": 12, "ok": 11, "errores": 1, "pct_fallback": 16.7,
+    "prompt_tokens": 14800, "completion_tokens": 700, "costo_usd": 0.0031,
+    "latencia_p50_ms": 1100, "latencia_p95_ms": 2300
+  },
+  "por_dia": [ { "fecha": "2026-11-14", "llamadas": 12, "ok": 11, "errores": 1, "pct_fallback": 16.7,
+                 "prompt_tokens": 14800, "completion_tokens": 700, "costo_usd": 0.0031,
+                 "latencia_p50_ms": 1100, "latencia_p95_ms": 2300 } ],
+  "por_origen": [ { "origen": "extractor", "llamadas": 8, "ok": 8, "errores": 0, "pct_fallback": 0.0,
+                    "prompt_tokens": 9000, "completion_tokens": 400, "costo_usd": 0.0019,
+                    "latencia_p50_ms": 1000, "latencia_p95_ms": 1800 } ],
+  "meta": { "request_id": "req_8f3a1c", "generado_en": "2026-11-14T10:42:06-05:00", "fallback_usado": false, "latencia_ms": 15 }
+}
+```

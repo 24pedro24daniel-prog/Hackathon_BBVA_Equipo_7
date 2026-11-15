@@ -10,9 +10,17 @@ from pathlib import Path
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy.engine import URL
+from sqlalchemy.engine import URL, make_url
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
+
+
+def es_misma_bd(a: str | None, b: str | None) -> bool:
+    """Mismo host, puerto y base (ignora driver, usuario y parámetros)."""
+    if not a or not b:
+        return False
+    ua, ub = make_url(a), make_url(b)
+    return (ua.host, ua.port or 5432, ua.database) == (ub.host, ub.port or 5432, ub.database)
 
 
 class Settings(BaseSettings):
@@ -42,6 +50,8 @@ class Settings(BaseSettings):
     # Override completo opcional (p. ej. una BD remota). Si viene, se ignoran las partes.
     DATABASE_URL: str | None = None
     TEST_DATABASE_URL: str | None = None
+    # BD de producción (Render). Vive en .env y solo se usa con APP_ENV=produccion; local, docker y tests nunca la tocan.
+    DATABASE_URL_PRODUCCION: SecretStr = SecretStr("")
 
     # Credenciales de la API
     API_KEY: SecretStr = SecretStr("")
@@ -57,6 +67,9 @@ class Settings(BaseSettings):
     LLM_MAX_TOKENS: int = 800
     LLM_APP_URL: str = "http://localhost:5173"
     LLM_APP_NAME: str = "CajaClara"
+    # Trazabilidad de cada llamada al LLM/VLM (tabla llm_llamadas). Sin contenido: solo metadatos, tokens y costo.
+    LLM_TRAZA_ACTIVA: bool = True
+    LLM_TRAZA_GUARDAR_CONTENIDO: bool = True
     # Visión (foto del cuaderno de fiados): mismo OpenRouter y misma OPENROUTER_API_KEY, otro modelo con imágenes.
     VLM_MODEL: str = "openai/gpt-4o-mini"
     VLM_TIMEOUT_S: float = Field(default=30.0, gt=0)
@@ -104,12 +117,36 @@ class Settings(BaseSettings):
         ).render_as_string(hide_password=False)
 
     @property
+    def es_produccion(self) -> bool:
+        return self.APP_ENV.strip().lower() in ("produccion", "production", "prod")
+
+    @property
+    def url_produccion(self) -> str | None:
+        """DATABASE_URL_PRODUCCION normalizada: driver psycopg y SSL obligatorio (Render lo exige desde fuera)."""
+        crudo = self.DATABASE_URL_PRODUCCION.get_secret_value().strip()
+        if not crudo:
+            return None
+        url = make_url(crudo).set(drivername="postgresql+psycopg")
+        if "sslmode" not in url.query:
+            url = url.update_query_dict({"sslmode": "require"})
+        return url.render_as_string(hide_password=False)
+
+    @property
     def database_url(self) -> str:
-        return self.DATABASE_URL or self._url(self.POSTGRES_DB)
+        if self.DATABASE_URL:
+            return self.DATABASE_URL
+        if self.es_produccion:
+            if not self.url_produccion:
+                raise RuntimeError("APP_ENV=produccion pero DATABASE_URL_PRODUCCION está vacía en .env")
+            return self.url_produccion
+        return self._url(self.POSTGRES_DB)
 
     @property
     def test_database_url(self) -> str:
-        return self.TEST_DATABASE_URL or self._url(self.POSTGRES_TEST_DB)
+        url = self.TEST_DATABASE_URL or self._url(self.POSTGRES_TEST_DB)
+        if self.es_produccion or es_misma_bd(url, self.url_produccion):
+            raise RuntimeError("Los tests nunca corren contra la BD de producción")
+        return url
 
     @property
     def r2_configurado(self) -> bool:
