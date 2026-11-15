@@ -220,7 +220,7 @@ async function handle(method, path, { query, body }) {
         con_acciones: { saldo_minimo: con, fecha: '2026-11-30', estado_caja: estadoCaja(con) },
         mejora: con - base,
         serie_con_acciones: [{ fecha: '2026-11-30', p50: con }],
-        fundamento: 'Simulación con tus ventas de los últimos 3 meses.', // EXT
+        fundamento: 'Cálculo con tus ventas de los últimos 3 meses.', // EXT
         limites: 'Tú decides; nada se ejecuta solo. Pagar en partes depende de que Andina acepte.', // EXT
         confianza: 'media', // EXT
         meta: D.meta('simulador-deterministico', '0.1.0'),

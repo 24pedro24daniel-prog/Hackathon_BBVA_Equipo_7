@@ -104,7 +104,7 @@ def _comparacion_pares(db: Session, empresa: m.Empresa, desde: date, hasta: date
     rubro = db.get(m.Rubro, empresa.rubro_id)
     return ComparacionPares(metrica=METRICA_PARES, valor_empresa=round(propio, 2), mediana_pares=round(median(valores), 2),
                             grupo_pares=f"{rubro.nombre if rubro else 'mismo rubro'} · {empresa.zona}",
-                            n_pares=len(valores), nota="Comparación anónima con datos sintéticos."), None  # fmt: skip
+                            n_pares=len(valores), nota="Comparación anónima con negocios parecidos."), None  # fmt: skip
 
 
 def analisis(db: Session, empresa_id: str, agrupar_por: str = "categoria", tipo: str = "egreso", *,

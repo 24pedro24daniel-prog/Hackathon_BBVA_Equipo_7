@@ -82,7 +82,7 @@ export function OptionsCard({ msg, onRegistrar }) {
         ))}
       <div className="chat-actions chat-actions--stack">
         <Link to="/simulador" className="cc-btn cc-btn--primary cc-btn--block">
-          Probar en el simulador
+          Probar opciones
         </Link>
         {!yaRegistrado && (
           <Button variant="ghost" block onClick={onRegistrar} disabled={status !== 'pending'}>

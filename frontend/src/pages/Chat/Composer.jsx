@@ -12,9 +12,9 @@ function VoicePicker({ id, onPick, onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
-    <div className="chat-picker" id={id} role="dialog" aria-label="Elegir nota de voz de prueba">
+    <div className="chat-picker" id={id} role="dialog" aria-label="Elegir nota de voz">
       <div className="chat-picker__head">
-        <p>Notas de voz de prueba</p>
+        <p>Notas de voz</p>
         <button type="button" className="chat-iconbtn chat-iconbtn--plain chat-iconbtn--sm" onClick={onClose} aria-label="Cerrar">
           <Icon name="close" size={18} />
         </button>

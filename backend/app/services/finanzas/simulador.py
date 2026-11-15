@@ -205,7 +205,7 @@ def simular(db: Session, empresa_id: str, acciones: list[Accion], fecha_corte: d
         con_acciones=ResultadoSaldo(saldo_minimo=con.p50, fecha=con.fecha, estado_caja=proy.estado_caja(con.p50)),
         mejora=con.p50 - sin.p50,
         serie_con_acciones=[PuntoSimulado(fecha=p.fecha, p50=p.p50) for p in puntos],
-        fundamento=(f"Simulación sobre tu proyección (ventas y gastos de las últimas 4 semanas y tus pagos con fecha): "
+        fundamento=(f"Cálculo sobre tu proyección (ventas y gastos de las últimas 4 semanas y tus pagos con fecha): "
                     f"se compara el saldo más bajo hasta el {fecha_corta(fin_con)}."),
         limites=limites, confianza=fc.confianza(proy), ventana_hasta=fin_con, notas=list(dict.fromkeys(esc.notas)),
         meta=meta_b(MODELO, VERSION, fallback=True,

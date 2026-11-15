@@ -11,7 +11,7 @@ export default function ChatHeader({ flujo }) {
       </button>
       <div className="chat-header__text">
         <h1 className="chat-header__title">TuCaserito</h1>
-        <p className="chat-header__sub">{flujo} · chat simulado</p>
+        <p className="chat-header__sub">{flujo}</p>
       </div>
       <span aria-hidden="true" />
     </header>

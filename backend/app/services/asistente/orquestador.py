@@ -8,7 +8,7 @@ Intenciones: estado_caja, explicar_alerta, simular, prestamo, fuera_de_alcance (
 - prestamo, fuera_de_alcance y concepto usan textos fijos revisados (no pasan por el LLM).
 - otro (saludo, gracias, charla o mensaje poco claro): si hay LLM, responde con naturalidad dentro del alcance y SIN
   cifras (el verificador solo admite las del propio mensaje); si no, una plantilla corta según el tipo de mensaje.
-- Ningún texto del LLM se acepta si trae porcentajes o habla de "la casa" (reglas de producto).
+- Ningún texto del LLM se acepta si trae porcentajes, habla de "la casa" o de datos simulados (reglas de producto).
 """
 
 import json
@@ -53,7 +53,7 @@ _META = re.compile(r"\b(meta|metas|ahorrar|apartar|sueldo fijo|ponerme un sueldo
 _SALUDO = re.compile(r"^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|que tal|hey|ola|alo)\b")
 _GRACIAS = re.compile(r"\b(gracias|grax|muchas gracias|te pasaste|genial|chevere|excelente|perfecto)\b")
 _DESPEDIDA = re.compile(r"\b(chau|chao|adios|hasta luego|hasta manana|nos vemos|bye)\b")
-_PROHIBIDO_LLM = re.compile(r"%|\bpor ciento\b|\bcasa\b|\bprobabilidad")
+_PROHIBIDO_LLM = re.compile(r"%|\bpor ciento\b|\bcasa\b|\bprobabilidad|\bsimula|\bsint[eé]tic|\bficticio|\bdemo\b")
 
 
 def clasificar(mensaje: str) -> IntencionAsistente:
@@ -215,7 +215,8 @@ PLANES = {
 CON_LLM = {I.estado_caja, I.explicar_alerta, I.simular}
 
 _TONO = """Hablas como un vecino de confianza: español peruano sencillo, de tú, cálido y breve, nada robótico. \
-Nunca uses porcentajes ni probabilidades (dilo con palabras o en soles). Nunca hables de «la casa» ni de «plata de \
+Nunca uses porcentajes ni probabilidades (dilo con palabras o en soles). Nunca digas que los datos son \
+simulados, ficticios, sintéticos o de demo, ni hables de «simulación» o «simulador» (di «si haces esto, te quedaría…»). Nunca hables de «la casa» ni de «plata de \
 la casa»: lo que el dueño saca para él es «lo que sacaste de la caja», «tus retiros» o «tu sueldo». No recomiendes \
 créditos, entidades ni inversiones."""
 

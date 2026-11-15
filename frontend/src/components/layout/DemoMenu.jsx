@@ -41,7 +41,7 @@ export default function DemoMenu() {
           )}
           {opt(demo.tecnico ? 'Detalles técnicos: visibles ✓' : 'Ver detalles técnicos', demo.tecnico, () => setDemo({ tecnico: !demo.tecnico }))}
           {USE_MOCK &&
-            opt(demo.fallback ? 'Asistente: modo básico ✓' : 'Simular asistente caído', demo.fallback, () => setDemo({ fallback: !demo.fallback }))}
+            opt(demo.fallback ? 'Asistente: modo básico ✓' : 'Asistente sin conexión', demo.fallback, () => setDemo({ fallback: !demo.fallback }))}
         </div>
       )}
     </div>

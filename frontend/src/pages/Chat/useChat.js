@@ -256,7 +256,7 @@ export function useChat({ demo, intent } = {}) {
     if (accion.tipo === 'hablar_humano') {
       me('text', { text: accion.texto || 'Hablar con una persona' })
       bot('text', {
-        text: 'Listo, le paso tu consulta a una persona del equipo y te escribe por aquí.\n(En esta demo no se envía nada.)',
+        text: 'Listo, le paso tu consulta a una persona del equipo y te escribe por aquí.',
       })
     }
   }

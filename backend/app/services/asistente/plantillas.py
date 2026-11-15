@@ -137,7 +137,7 @@ def simular(simulacion: dict, descripcion: str, con_partes: bool) -> Borrador:
     if con_partes:
         texto += " Pagar en partes depende de que el proveedor acepte."
     b.texto = texto.strip()
-    b.extras["acciones"] = [{"tipo": "abrir_simulador", "texto": "Ver en el simulador"}]
+    b.extras["acciones"] = [{"tipo": "abrir_simulador", "texto": "Probar opciones"}]
     return b
 
 

@@ -84,11 +84,11 @@ function InicioCargando() {
 }
 
 /** Botón principal de la pantalla: anotar por el chat (voz o texto). */
-function AnotarVenta({ label = 'Anotar una venta' }) {
+function RegistrarTransaccion() {
   const navigate = useNavigate()
   return (
     <Button size="lg" icon="mic" className="inicio__anotar" onClick={() => navigate('/chat')}>
-      {label}
+      Registrar transacción
     </Button>
   )
 }
@@ -102,7 +102,7 @@ function InicioCompleto({ resumen, forecast, alertas }) {
         <CuentaNegocio valor={resumen.indicadores.saldo_caja_negocio.valor}>
           <DisponibleHoy forecast={forecast} />
         </CuentaNegocio>
-        <AnotarVenta />
+        <RegistrarTransaccion />
         <LoQueViene forecast={forecast} alertas={alertas} corte={resumen.corte} />
         <DisponibleTrace forecast={forecast} />
       </div>
@@ -353,7 +353,7 @@ function InicioNuevo({ resumen, diasConDatos, diasRequeridos }) {
               {hechos} de {diasTxt(diasRequeridos)}
             </p>
           </div>
-          <AnotarVenta label="Registrar transacción" />
+          <RegistrarTransaccion />
         </Card>
       </div>
 
