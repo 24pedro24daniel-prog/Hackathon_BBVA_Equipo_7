@@ -106,14 +106,13 @@ pytest -q                                               # o con el venv
 - La API key de los tests es fija (`tests/conftest.py`); nunca se usan las credenciales de `.env`.
 - Convención: `tests/test_a_*.py` (Dev A: BD, seed, ingesta) y `tests/test_b_*.py` (Dev B: core, routers, motores).
 
-## Estado (Fase 0)
+## Estado
 
-- Los endpoints de B usan los datos del mock de Pedro (`app/mocks/`) mientras B termina sus motores, para que el
-  front pueda usar `VITE_USE_MOCK=false`. Los routers de Dev A ya usan la BD real (ver abajo).
+- Todos los endpoints calculan sobre la BD (ya no hay mocks en el backend).
 - BD real: las 25 tablas del DBML (`app/db/models.py`) y el seed de la demo (`app/db/seed_demo.py`). El seed cuadra
   con la historia: caja S/ 2 340 al 14/11, pedido PED-0012 de S/ 2 400 a Distribuidora Andina que vence el 30/11,
   fiados pendientes S/ 310 y retiros +S/ 700 sobre lo usual; la proyección de referencia documentada en el
-  módulo da −S/ 650 el 30/11.
+  módulo da −S/ 650.00 exacto el 30/11.
 - `/health` consulta la BD de verdad.
 - Interfaces congeladas entre devs: `app/services/finanzas/__init__.py` y `app/services/alertas/__init__.py` (B);
   `app/services/ingesta/registrador.py` (A).
@@ -137,4 +136,59 @@ pytest -q                                               # o con el venv
   tras agregar fotos nuevas hay que reconstruir la imagen: `docker compose build backend`).
 - Evaluación del extractor: `docker compose run --rm backend python -m tests.eval_extractor` (offline, reglas);
   `--llm` agrega la ruta LLM (1 llamada a OpenRouter por frase).
+
+### Dev B (motores financieros) — con BD real
+
+`/resumen`, `/forecast`, `/forecast/ajustes`, `/fiados`, `/fiados/{id}/recordatorio`, `/pedidos`, `/pedidos/chequeo`,
+`/simular`, `/analisis`, `/alertas`, `/alertas/{id}/accion`, `/alertas/evaluar`, `/preferencias-alertas` y `/health`
+(componentes `forecast` y `riesgo_atraso`). Código en `app/services/finanzas/` y `app/services/alertas/`; detalle de cada
+regla en el docstring de su módulo y en `../contract.md`.
+
+- **A fecha de corte:** todo se calcula al responder con lo registrado (`creado_en`) y ocurrido (`fecha_hora`) antes del
+  fin del día de corte en Lima, sin lo anulado; lo fiado o pedido a crédito no mueve caja. Nada calculado se guarda;
+  solo B escribe `alertas`, `forecast_ajustes` y `preferencias_alertas`.
+- **Forecast:** baseline naive estacional (mismo día de la semana, últimas 4 semanas) + pagos con fecha (deudas y cuotas,
+  luz/sueldo programados, impuestos) + ajustes manuales; banda p10/p90 por residuos. Los fiados ponderados por su
+  probabilidad de pago van a `cobros_esperados`, a la banda optimista y a "Lo que viene", **no** a la línea esperada:
+  cobrar a tiempo es incierto y es la palanca "cobrar fiados" del simulador (si entraran, el 30/11 de Pedro pasaría de
+  −650 a ≈ −485).
+- **Alertas:** `GET /alertas` evalúa las 4 reglas antes de listar (sin duplicar). Máx. 2 notificadas al día y horario
+  silencioso: las que no se notifican se guardan con `enviada_en = null` (corre la demo fuera de 21:00–07:00 si quieres
+  verlas como enviadas).
+
+### Modelos de ML (equipo de datos)
+
+Los artefactos viven fuera del contexto del build, en `../modelo/artifacts/` (`forecast/` LightGBM por cuantiles,
+`credit_scoring/` regresión logística). `docker-compose.yml` los monta **solo lectura** en `/app/ml/artifacts` y fija
+`ML_ARTIFACTS_DIR=/app/ml/artifacts`; fuera de docker `ML_ARTIFACTS_DIR` vacío (en `parametros.env`) resuelve a
+`../modelo/artifacts`.
+
+- Regla: un modelo se integra solo si sus artefactos cargan y **todos** sus features se pueden construir desde la BD
+  sin inventar valores. `app/services/finanzas/modelo_ml.py` lo verifica leyendo solo `metadata.json` (sin dependencias
+  de ML, cacheado) y `/health` lo reporta (`forecast.estado = "baseline"`, `forecast.ml.motivo`).
+- **Forecast LightGBM: no integrable hoy.** Los 6 `.joblib` sí deserializan (probado aparte con lightgbm 4.7.0 /
+  scikit-learn 1.9.1, sin warnings; la imagen slim necesitaría además `libgomp1`), pero 4 de sus 27 features no existen
+  en la BD: `rubro` (el modelo espera abarrotes/bebidas/mixto/panaderia; la BD tiene bodega/restaurante/…), `zona`
+  (urbano/periurbano/rural vs. texto libre "SJL"), `usa_fiado` y `usa_billetera_digital` (banderas fijas del simulador
+  del notebook). Por eso no se agregaron `lightgbm`/`scikit-learn`/`pandas` a `requirements.txt` y el forecast responde
+  con el baseline (`meta.fallback_usado = true`, `meta.fallback_motivo`). Para integrarlo hace falta que datos defina
+  esos 4 features para una bodega real (o reentrene sin ellos) y documente qué tipos de movimiento cuentan como
+  `ingreso`/`egreso`.
+- **Riesgo de atraso:** no hay clasificador en `modelo/artifacts/`; se usa la tasa histórica de atraso del cliente.
+- **Credit scoring** (`credit_scoring/`): es de Dev A (score de salud); B no lo integra.
+
+### Backtest del forecast (B14)
+
+```bash
+docker compose run --rm backend python -m tests.eval_forecast              # BD de desarrollo, solo lectura
+docker compose run --rm backend python -m tests.eval_forecast --test --json --horizonte 7
+```
+
+Para cada día de corte con ≥ 4 semanas de historia proyecta con lo que se sabía ese día y compara con lo que pasó:
+MAE / MAPE / sesgo / cobertura p10–p90 del saldo por horizonte (vs persistencia), MAE del flujo diario (vs "igual que
+ayer") y precision / recall de `faltante_caja` contra `saldo_diario.deficit_14d` (etiqueta solo para evaluar, nunca
+feature). Con el seed de Pedro (49 cortes, horizonte 14): MAE del saldo 87 a 1 día y ≈ 233 a 14 días (persistencia
+155 / 267), cobertura p10–p90 0.57–0.82, sesgo positivo ≈ +200 a 7–14 días (los pedidos de Andina que aún no se habían
+hecho al corte no se pueden prever) y MAE del flujo diario 45 vs 172 de "igual que ayer". La historia sintética no
+tiene días con déficit a 14 días, así que el recall del faltante no es medible (0 falsas alarmas en 49 cortes).
 

@@ -38,6 +38,7 @@ services:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
       WHISPER_CACHE_DIR: /models/whisper
+      ML_ARTIFACTS_DIR: /app/ml/artifacts
     depends_on:
       db:
         condition: service_healthy
@@ -48,6 +49,8 @@ services:
       # Código montado para desarrollo: los cambios se ven con `docker compose restart backend`
       - ./app:/app/app
       - ./tests:/app/tests
+      # Artefactos de ML del equipo de datos (fuera del contexto del build): solo lectura
+      - ../modelo/artifacts:/app/ml/artifacts:ro
     restart: unless-stopped
 
 volumes:

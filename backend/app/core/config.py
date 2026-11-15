@@ -96,11 +96,22 @@ class Settings(BaseSettings):
     MEDIA_TIPOS_IMAGEN: str = "image/jpeg,image/png,image/webp"
     # Asistente: el LLM solo redacta con las cifras de las herramientas; desactivable para responder con plantillas.
     ASISTENTE_USAR_LLM: bool = True
+    # Artefactos de los modelos de ML del equipo de datos (solo lectura). Vacío = ../modelo/artifacts (fuera de docker);
+    # en docker compose se monta en /app/ml/artifacts.
+    ML_ARTIFACTS_DIR: str | None = None
 
-    @field_validator("FECHA_DEMO", "DATABASE_URL", "TEST_DATABASE_URL", "WHISPER_CACHE_DIR", mode="before")
+    @field_validator("FECHA_DEMO", "DATABASE_URL", "TEST_DATABASE_URL", "WHISPER_CACHE_DIR", "ML_ARTIFACTS_DIR",
+                     mode="before")  # fmt: skip
     @classmethod
     def _vacio_es_none(cls, v):
         return None if isinstance(v, str) and not v.strip() else v
+
+    @property
+    def ml_artifacts_dir(self) -> Path:
+        if self.ML_ARTIFACTS_DIR:
+            ruta = Path(self.ML_ARTIFACTS_DIR)
+            return ruta if ruta.is_absolute() else (BACKEND_DIR / ruta).resolve()
+        return (BACKEND_DIR.parent / "modelo" / "artifacts").resolve()
 
     @property
     def cors_origins(self) -> list[str]:
