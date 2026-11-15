@@ -68,17 +68,19 @@ se cargan aparte (`React.lazy`), así que quien solo abre la landing o el login 
 - **Guiones de demo** (`?demo=registro|fiados…`) siguen usando las notas y la foto de prueba (`demo://`). Con `VITE_USE_MOCK=true`
   la subida se simula y un audio grabado se "transcribe" siempre como "vendí dos cervezas".
 - **CORS del bucket R2**: el `PUT` sale del navegador, así que el bucket debe permitir los orígenes del front. En el panel de
-  Cloudflare: **R2 Object Storage → bucket → Settings → CORS Policy → Add CORS policy / Edit** y agrega (sin borrar reglas
-  existentes) esta regla al arreglo:
+  Cloudflare: **R2 Object Storage → bucket → Settings → CORS Policy → Edit**. La política del bucket (una sola regla, con la URL de
+  respaldo `tucaserito.vercel.app`) es:
 
   ```json
-  {
-    "AllowedOrigins": ["http://localhost:5173", "https://cclara.site", "https://www.cclara.site"],
-    "AllowedMethods": ["PUT", "GET"],
-    "AllowedHeaders": ["Content-Type"],
-    "ExposeHeaders": ["ETag"],
-    "MaxAgeSeconds": 3600
-  }
+  [
+    {
+      "AllowedOrigins": ["http://localhost:3000", "http://localhost:5173", "https://cclara.site", "https://www.cclara.site", "https://tucaserito.vercel.app"],
+      "AllowedMethods": ["GET", "HEAD", "PUT"],
+      "AllowedHeaders": ["*"],
+      "ExposeHeaders": ["ETag"],
+      "MaxAgeSeconds": 3600
+    }
+  ]
   ```
 
   Para comprobarlo, pide una `upload_url` con `POST /media/subidas` y lanza un preflight:
@@ -138,7 +140,7 @@ rewrite de SPA y los headers de seguridad; el backend sigue en Render.
 | | |
 |---|---|
 | Proyecto | `tucaserito` (equipo `sebastian-salirrosas-projects`), framework Vite, `npm ci` → `npm run build` → `dist`, Node 24.x |
-| Producción | `https://www.cclara.site` (principal). `https://cclara.site` redirige (308) a `www`. `https://tucaserito.vercel.app` sirve lo mismo, pero el backend no le da CORS: el login solo funciona desde `cclara.site`/`www.cclara.site` |
+| Producción | `https://www.cclara.site` (principal). `https://cclara.site` redirige (308) a `www`. `https://tucaserito.vercel.app` sirve lo mismo, sin redirigir, y es la URL de respaldo (ver «Si una red bloquea cclara.site»): para que funcione, debe estar en `CORS_ORIGINS` del backend y en la regla CORS de R2 |
 | Variables (Production y Preview) | `VITE_API_BASE=https://cajaclara-backend-ulah.onrender.com/api/v1`, `VITE_USE_MOCK=false`. Ninguna clave |
 | DNS (en el proveedor del dominio, nameservers `dns-parking.com`) | `A  @  76.76.21.21` y `CNAME  www  cname.vercel-dns.com`. Verificados, con certificado de Let's Encrypt |
 
@@ -172,9 +174,28 @@ Qué hace `vercel.json`:
     (`getUserMedia` + `MediaRecorder`, permitido por `Permissions-Policy: microphone=(self), camera=(self)`).
   - `frame-ancestors 'none'`, `frame-src 'none'`, `object-src 'none'`, `worker-src 'none'`, `base-uri 'self'`, `form-action 'self'`,
     `upgrade-insecure-requests`.
-- **CORS** (lado backend): el backend debe aceptar `https://cclara.site` y `https://www.cclara.site` (sin barra final) con los headers
-  `Authorization`, `Content-Type` e `Idempotency-Key`, y exponer `Retry-After`. Un deploy de *preview* de Vercel (`*.vercel.app`) no
-  está en esa lista: para probarlo contra el backend real hay que agregar su origen en el backend.
+- **CORS** (lado backend): el backend debe aceptar `https://cclara.site`, `https://www.cclara.site` y `https://tucaserito.vercel.app`
+  (sin barra final) con los headers `Authorization`, `Content-Type` e `Idempotency-Key`, y exponer `Retry-After`. Los deploys de
+  *preview* de Vercel (otras URL `*.vercel.app`) no están en esa lista: para probarlos contra el backend real hay que agregar su origen.
+
+### Si una red bloquea cclara.site
+
+`cclara.site` es un dominio recién registrado (14/11/2026) y con TLD `.site`. Los firewalls de universidades y empresas (FortiGate,
+Palo Alto, Sophos, Umbrella…) suelen bloquear los dominios nuevos o de TLD "de riesgo", y en HTTPS el bloqueo se ve como
+`NET::ERR_CERT_AUTHORITY_INVALID`: el firewall responde con su propio certificado. Nuestro certificado sí es válido (Let's Encrypt
+`YR1` → `Root YR` → `ISRG Root X1`, cadena completa).
+
+1. **Usar la URL de respaldo: `https://tucaserito.vercel.app`.** Es la misma app y el mismo build, sobre un dominio antiguo con
+   certificado de Google Trust Services. Las sesiones no se comparten entre dominios: hay que volver a entrar con la demo.
+   Antes, el origen tiene que estar permitido en `CORS_ORIGINS` (panel de Render) y en la regla CORS de R2 (arriba).
+2. **Confirmar la causa** (1 minuto): en el aviso de Chrome, clic en «No seguro» → «El certificado no es válido» → «Emitido por».
+   - Si **no** es Let's Encrypt (dice FortiGate, Fortinet, Sophos, Palo Alto, Cisco, el nombre de la institución…), es la red.
+   - Si es Let's Encrypt `YR1`, falla el equipo (almacén de certificados viejo): actualiza Chrome y el sistema.
+   - Controles: `https://get.site` (`.site` antiguo) y `https://nic.site` (`.site` antiguo con nuestra misma cadena de Let's Encrypt).
+     Si abren y `cclara.site` no, la red bloquea dominios nuevos; si `.site` no abre en ningún caso, bloquea el TLD.
+3. **No** pulses «Continuar de todos modos» ni instales un certificado que ofrezca la red. Otra salida rápida es compartir los datos
+   del celular. Para que el firewall deje pasar `cclara.site`, la red debe ponerlo en su lista de permitidos; si no, el dominio deja
+   de contar como "nuevo" a los ~30 días.
 
 ## Estructura
 

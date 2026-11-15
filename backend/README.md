@@ -58,7 +58,7 @@ confianza (Render: `CF-Connecting-IP`, que Cloudflare sobreescribe).
 
 ### Despliegue en Render (panel > Environment)
 
-`render.yaml` ya fija `APP_ENV`, `PORT`, `WHISPER_MODEL`, `CORS_ORIGINS=http://localhost:5173,https://cclara.site,https://www.cclara.site`,
+`render.yaml` ya fija `APP_ENV`, `PORT`, `WHISPER_MODEL`, `CORS_ORIGINS=http://localhost:5173,https://cclara.site,https://www.cclara.site,https://tucaserito.vercel.app`,
 `IP_CLIENTE_CABECERA=CF-Connecting-IP` y `FORECAST_MOTOR`. En el panel se llenan (mismos valores que `backend/.env`):
 `DATABASE_URL_PRODUCCION`, `API_KEY`, `OPENROUTER_API_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` y las **nuevas**
 `AUTH_SECRET` y `AUTH_CREDENCIALES`. Sin ellas `POST /auth/login` responde `503` (el resto de la API sigue con

@@ -30,10 +30,11 @@ services:
       # Local sigue con "small" (parametros.env); en Render "base" para entrar en los 512 MB del plan free
       - key: WHISPER_MODEL
         value: base
-      # Orígenes permitidos (separados por coma, sin barra final): el dev server local y el front en Vercel (cclara.site).
+      # Orígenes permitidos (separados por coma, sin barra final): el dev server local, el front en Vercel (cclara.site) y
+      # la URL de respaldo tucaserito.vercel.app (para redes que bloquean cclara.site: ver frontend/README.md).
       # Sin cookies: el front manda Authorization: Bearer (contract.md §12).
       - key: CORS_ORIGINS
-        value: http://localhost:5173,https://cclara.site,https://www.cclara.site
+        value: http://localhost:5173,https://cclara.site,https://www.cclara.site,https://tucaserito.vercel.app
       # IP real del cliente para el límite de intentos de login: Cloudflare (delante de Render) pone y sobreescribe
       # CF-Connecting-IP; X-Forwarded-For no sirve (Render agrega a lo que mande el cliente).
       - key: IP_CLIENTE_CABECERA
