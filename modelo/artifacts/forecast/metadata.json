@@ -1,0 +1,57 @@
+{
+  "tipo_modelo": "LightGBM quantile regression",
+  "targets": [
+    "ingreso",
+    "egreso"
+  ],
+  "quantiles": [
+    0.1,
+    0.5,
+    0.9
+  ],
+  "features_en_orden": [
+    "rubro",
+    "zona",
+    "usa_fiado",
+    "usa_billetera_digital",
+    "ingreso_lag1",
+    "ingreso_lag7",
+    "ingreso_lag14",
+    "ingreso_media7",
+    "ingreso_std7",
+    "ingreso_media14",
+    "ingreso_std14",
+    "ingreso_media30",
+    "ingreso_std30",
+    "egreso_lag1",
+    "egreso_lag7",
+    "egreso_lag14",
+    "egreso_media7",
+    "egreso_std7",
+    "egreso_media14",
+    "egreso_std14",
+    "egreso_media30",
+    "egreso_std30",
+    "dow",
+    "dom",
+    "es_finde",
+    "es_quincena_o_finmes",
+    "mes"
+  ],
+  "features_categoricas": [
+    "rubro",
+    "zona"
+  ],
+  "categorias_rubro": [
+    "abarrotes",
+    "bebidas",
+    "mixto",
+    "panaderia"
+  ],
+  "categorias_zona": [
+    "periurbano",
+    "rural",
+    "urbano"
+  ],
+  "notas": "Cada archivo <target>_p<quantil>.joblib es un LGBMRegressor. Para predecir, construir X con las columnas de features_en_orden en ese orden exacto, con 'rubro' y 'zona' como pandas Categorical usando las categorias listadas aqui."
+}
