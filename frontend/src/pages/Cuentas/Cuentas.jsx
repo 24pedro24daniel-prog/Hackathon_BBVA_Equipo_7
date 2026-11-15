@@ -17,7 +17,6 @@ import {
   Skeleton,
   Status,
 } from '../../components/ui/index.jsx'
-import RecordatorioSheet from './RecordatorioSheet.jsx'
 import './Cuentas.css'
 
 const TABS = [
@@ -38,9 +37,6 @@ function fiadoStatus(f) {
   const nivel = f.riesgo_atraso?.nivel
   return { tone: e.tone, text: nivel ? `${e.label} · riesgo ${nivel}` : e.label }
 }
-
-// Solo los vencidos y por vencer llevan el botón "Recordar"; los demás, nada
-const necesitaRecordatorio = (f) => Boolean(f.accion_sugerida) && (f.estado === 'vencido' || f.estado === 'por_vencer')
 
 // Listas largas: se ven las primeras 5 y un botón para ver todas.
 const LIMITE = 5
@@ -102,7 +98,8 @@ export default function Cuentas() {
   const pedidos = useApi(() => api.getPedidos(), [demo.escenario])
 
   const [selected, setSelected] = useState('deben')
-  const [sheetFiado, setSheetFiado] = useState(null)
+  const [eliminando, setEliminando] = useState(null)
+  const [errorEliminacion, setErrorEliminacion] = useState(null)
   const tabRefs = useRef({})
   const headingRefs = useRef({})
   const sectionRefs = useRef({})
@@ -154,6 +151,21 @@ export default function Cuentas() {
   const totalDebes =
     pedidos.data && (Number(pedidos.data.total_pendiente) || 0) + (Number(pedidos.data.impuestos?.monto_estimado) || 0)
 
+  const eliminarCuenta = async (tipo, id) => {
+    if (eliminando) return
+    setEliminando(`${tipo}:${id}`)
+    setErrorEliminacion(null)
+    try {
+      await api.anularCuenta({ tipo, id })
+      fiados.reload()
+      pedidos.reload()
+    } catch (error) {
+      setErrorEliminacion(error)
+    } finally {
+      setEliminando(null)
+    }
+  }
+
   return (
     <div className="cuentas">
       <PageHeader title="Cobros y pagos" sub="Lo que te deben y lo que debes" />
@@ -188,6 +200,11 @@ export default function Cuentas() {
       </div>
 
       <div className="cuentas-body">
+        {errorEliminacion && (
+          <p className="cuentas-error-eliminar" role="alert">
+            No pude eliminar la cuenta. {errorEliminacion.message} Vuelve a intentarlo.
+          </p>
+        )}
         <div
           id="cuentas-panel-deben"
           role="tabpanel"
@@ -197,7 +214,8 @@ export default function Cuentas() {
         >
           <FiadosBlock
             state={fiados}
-            onRecordar={setSheetFiado}
+            onEliminar={eliminarCuenta}
+            eliminando={eliminando}
             headingRef={(el) => (headingRefs.current.deben = el)}
           />
         </div>
@@ -209,12 +227,16 @@ export default function Cuentas() {
           ref={(el) => (sectionRefs.current.debes = el)}
           className="cuentas-panel"
         >
-          <DebesBlock state={pedidos} headingRef={(el) => (headingRefs.current.debes = el)} />
+          <DebesBlock
+            state={pedidos}
+            onEliminar={eliminarCuenta}
+            eliminando={eliminando}
+            headingRef={(el) => (headingRefs.current.debes = el)}
+          />
         </div>
 
       </div>
 
-      {sheetFiado && <RecordatorioSheet fiado={sheetFiado} onClose={() => setSheetFiado(null)} />}
     </div>
   )
 }
@@ -261,7 +283,26 @@ function Empty({ cta, children }) {
   )
 }
 
-function FiadosBlock({ state, onRecordar, headingRef }) {
+function EliminarCuenta({ tipo, id, nombre, onEliminar, eliminando }) {
+  const pendiente = eliminando === `${tipo}:${id}`
+  return (
+    <div className="cuentas-row-actions">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="cuentas-eliminar"
+        disabled={eliminando !== null}
+        aria-label={`Eliminar ${nombre}`}
+        aria-busy={pendiente}
+        onClick={() => onEliminar(tipo, id)}
+      >
+        {pendiente ? 'Eliminando…' : 'Eliminar'}
+      </Button>
+    </div>
+  )
+}
+
+function FiadosBlock({ state, onEliminar, eliminando, headingRef }) {
   const { data, error, loading, reload } = state
   const items = data?.items || []
   const ver = useVerTodos(loading || error ? 0 : items.length)
@@ -295,19 +336,13 @@ function FiadosBlock({ state, onRecordar, headingRef }) {
               }
               amount={<Money value={f.monto} />}
             >
-              {necesitaRecordatorio(f) && (
-                <div className="cuentas-row-actions">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="cuentas-recordar"
-                    onClick={() => onRecordar(f)}
-                    aria-label={`Recordarle a ${f.cliente}`}
-                  >
-                    Recordar
-                  </Button>
-                </div>
-              )}
+              <EliminarCuenta
+                tipo="fiado"
+                id={f.fiado_id}
+                nombre={`el fiado de ${f.cliente}`}
+                onEliminar={onEliminar}
+                eliminando={eliminando}
+              />
             </ListRow>
           )
         })}
@@ -329,7 +364,7 @@ function pedidoStatus(p) {
   return { tone: 'warning', text: `En ${dias(p.dias_para_vencer)}` }
 }
 
-function DebesBlock({ state, headingRef }) {
+function DebesBlock({ state, onEliminar, eliminando, headingRef }) {
   const { data, error, loading, reload } = state
   const items = data?.items || []
   const imp = data?.impuestos
@@ -358,15 +393,13 @@ function DebesBlock({ state, headingRef }) {
                   }
                   amount={<Money value={p.monto_pendiente ?? p.monto} />}
                 >
-                  <div className="cuentas-row-actions">
-                    <Link
-                      to="/simulador"
-                      className="cc-btn cc-btn--ghost cc-btn--sm cuentas-link"
-                      aria-label={`Ver opciones para pagar a ${p.proveedor}`}
-                    >
-                      Ver opciones →
-                    </Link>
-                  </div>
+                  <EliminarCuenta
+                    tipo="pedido"
+                    id={p.pedido_id}
+                    nombre={`la deuda con ${p.proveedor}`}
+                    onEliminar={onEliminar}
+                    eliminando={eliminando}
+                  />
                 </ListRow>
               )
             })}
@@ -381,7 +414,15 @@ function DebesBlock({ state, headingRef }) {
                   </span>
                 }
                 amount={imp.monto_estimado != null ? <Money value={imp.monto_estimado} /> : undefined}
-              />
+              >
+                <EliminarCuenta
+                  tipo="impuesto"
+                  id={imp.impuesto_id}
+                  nombre={imp.nombre || 'el impuesto del mes'}
+                  onEliminar={onEliminar}
+                  eliminando={eliminando}
+                />
+              </ListRow>
             )}
           </List>
         )}

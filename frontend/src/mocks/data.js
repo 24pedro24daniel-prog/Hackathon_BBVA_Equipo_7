@@ -333,7 +333,7 @@ export const pedidos = () => ({
       fecha_pedido: '2026-11-12', fecha_vencimiento: '2026-12-05', estado: 'pendiente', dias_para_vencer: 21,
     },
   ],
-  impuestos: { estado: 'al_dia', proximo_vencimiento: '2026-12-15', monto_estimado: 20.0, nombre: 'RUS de noviembre' },
+  impuestos: { impuesto_id: 'IMP-0011', estado: 'al_dia', proximo_vencimiento: '2026-12-15', monto_estimado: 20.0, nombre: 'RUS de noviembre' },
 })
 
 export const pedidosSano = () => ({
@@ -348,7 +348,7 @@ export const pedidosSano = () => ({
       fecha_pedido: '2026-11-11', fecha_vencimiento: '2026-11-18', estado: 'por_vencer', dias_para_vencer: 4,
     },
   ],
-  impuestos: { estado: 'al_dia', proximo_vencimiento: '2026-12-15', monto_estimado: 20.0, nombre: 'RUS de noviembre' },
+  impuestos: { impuesto_id: 'IMP-0011', estado: 'al_dia', proximo_vencimiento: '2026-12-15', monto_estimado: 20.0, nombre: 'RUS de noviembre' },
 })
 
 // ---------- F6 Alertas ----------
@@ -584,7 +584,7 @@ export const fiadosDe = (e) =>
   e === 'nuevo' ? { total_pendiente: 0, total_vencido: 0, items: [], meta: meta('riesgo-atraso-clf', '0.2.0') } : e === 'sano' ? fiadosSano() : fiados()
 export const pedidosDe = (e) =>
   e === 'nuevo'
-    ? { total_pendiente: 0, items: [], impuestos: { estado: 'al_dia', proximo_vencimiento: '2026-12-15', monto_estimado: 20 } }
+    ? { total_pendiente: 0, items: [], impuestos: { impuesto_id: 'IMP-0011', estado: 'al_dia', proximo_vencimiento: '2026-12-15', monto_estimado: 20 } }
     : e === 'sano'
       ? pedidosSano()
       : pedidos()

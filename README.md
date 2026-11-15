@@ -49,29 +49,70 @@ Las referencias y el sustento del problema están documentados en [context.md](.
 - **Prioridad del MVP:** registro por voz/texto/foto con doble confirmación, pedidos a crédito de proveedores, auditoría básica de Nuevo RUS, consulta del estado, resumen financiero con 3 cubetas, forecast a 30 días, cuentas por cobrar/pagar y alertas principales. Para la demo se acotan algunas intenciones del asistente, tres subindicadores principales del índice y dos gráficos analíticos.
 - **Potencial de expansión (Roadmap):** una vez validado en bodegas RUC 10 en efectivo, la arquitectura parametrizada (`rules.json`) escala hacia bodegas con billeteras digitales (Yape/Plin) y POS, otros rubros minoristas RUC 10 (ferreterías, farmacias de barrio, bazares, restaurantes), comparación con pares reales y exportación consentida de historial para evaluación humana.
 
-## Enfoque técnico previsto
+## Arquitectura y enfoque técnico
 
-- **Frontend:** React y Vite en [`frontend/`](./frontend/).
-- **API y Lógica Determinística:** FastAPI y Pydantic en [`backend/`](./backend/), con contratos previstos bajo `/api/v1` en [`contract.md`](./contract.md) y reglas desacopladas en `rules.json`.
-- **Voz, OCR y Asistente:** ejecución local con `faster-whisper` (voz), `PaddleOCR` (cuaderno) y LLM local vía `Ollama` (con fallback por plantillas) para garantizar operación offline.
-- **Proyección:** comparar un baseline naive estacional con LightGBM de regresión por cuantiles, justificado por su capacidad para modelar pagos rígidos a proveedores, días sin registro y picos de campaña navideña.
-- **Riesgo de atraso y calidad de datos:** comparar un clasificador de atraso en fiados con un baseline histórico y evaluar detección de duplicados/errores de registro; evitar fuga de datos y validar con particiones temporales.
-- **Trazabilidad y evaluación:** medir exactitud por campo de la ingesta (foto/voz/texto), WER de transcripción, MAE/cobertura del forecast vs. baseline, métricas de alertas y *groundedness* de las cifras del asistente. Los objetivos son metas de evaluación, no resultados ya demostrados.
+- **Frontend ([`frontend/`](./frontend/)):** Aplicación web *mobile-first* (`360px`) en **React 19 + Vite + React Router**, con las 6 vistas operativas del MVP (`Inicio`, `Proyección 30 días`, `Simulador`, `Cuentas`, `Progreso` y `Chat`). Soporta modo interactivo autónomo con mocks (`VITE_USE_MOCK=true`, incluyendo selector de escenario de Pedro con 3 meses de historial vs. Día 3 y modo degradado sin IA) o conexión en vivo al backend (`/api/v1`).
+- **Backend y Motores Determinísticos ([`backend/`](./backend/)):** API REST en **FastAPI + SQLAlchemy 2 + PostgreSQL 16** bajo `/api/v1` según [`contract.md`](./contract.md). Incluye motores determinísticos para arqueo de caja, proyección estacional con bandas `P10/P50/P90`, chequeo preventivo de pedidos, simulador *What-If*, evaluación de las 4 reglas de alertas y cálculo del índice de salud financiera.
+- **Voz, Visión (Cuaderno) y Asistente IA:**
+  - Transcripción de notas de voz con **`faster-whisper`**.
+  - Lectura de fotos del cuaderno de fiados mediante modelo de visión (**VLM** vía OpenRouter, con emparejamiento de clientes por alias, descarte de tachaduras y *fallback* determinístico por *fixtures* cuando no hay conexión o clave).
+  - Extracción estructurada y asistente conversacional con *tool calling* sobre **OpenRouter** y *fallback* por reglas determinísticas (`app/services/ingesta/reglas.py`), más trazabilidad completa en la tabla `llm_llamadas` y subida opcional de medios con URLs prefirmadas en **Cloudflare R2**.
+- **Pipeline de Datos Sintéticos y Auditoría ([`data/`](./data/)):** Generador determinístico (`seed=42`, [`generate_synthetic_data.mjs`](./data/generate_synthetic_data.mjs)) que produce **22 tablas CSV** (`37 164` registros) para **30 bodegas RUC 10 (`10xxxxxxxxx`) en Nuevo RUS**, operando 100% en efectivo/crédito con ingesta manual (`voz`, `texto`, `foto`). Incluye auditoría automatizada de 10 criterios ([`audit_quality.mjs`](./data/audit_quality.mjs) y [`AUDITORIA_CALIDAD_DATOS.md`](./data/AUDITORIA_CALIDAD_DATOS.md)), validación estadística de esquemas con **Pandera** ([`validate_pandera.py`](./data/pipeline_python/validate_pandera.py)) y corpus de evaluación de ingesta con ruido OCR/ASR de **NLPAug** (`180` frases en [`eval/frases_ingesta_eval.csv`](./data/eval/frases_ingesta_eval.csv)).
+- **Modelos de Machine Learning ([`modelo/`](./modelo/)):**
+  - **Forecast diario (`LightGBM Quantile Regression`):** Notebook [`modelo_ingreso_egreso_lightgbm.ipynb`](./modelo/modelo_ingreso_egreso_lightgbm.ipynb) y artefactos `.joblib` en [`modelo/artifacts/forecast/`](./modelo/artifacts/forecast/) para predecir cuantiles `P10`, `P50` y `P90` de ingresos y egresos diarios (`MAE` de `S/ 31.75` en ingreso y `S/ 11.43` en egreso, superando al baseline naive en **+34.5%** y **+68.1%** con cobertura `P10–P90` de ~78%).
+  - **Score pedagógico / riesgo (`Logistic Regression`):** Notebook [`credit_scoring_bodegas_logreg.ipynb`](./modelo/credit_scoring_bodegas_logreg.ipynb) y artefactos serializados en [`modelo/artifacts/credit_scoring/`](./modelo/artifacts/credit_scoring/) (`AUC test = 0.771`).
 
-## Estado actual del repositorio
+## Estructura del repositorio
 
-La documentación define el producto y los contratos objetivo; no implica que esas funcionalidades ya estén implementadas.
+| Ruta | Contenido |
+| :--- | :--- |
+| [`frontend/`](./frontend/) | App web React 19 + Vite (6 pantallas del MVP, modo mock y cliente API con `X-API-Key` e `Idempotency-Key`). |
+| [`backend/`](./backend/) | API FastAPI, modelos SQLAlchemy (25 tablas), `seed_demo.py`, motores financieros, ingesta IA, Docker Compose y suite de `pytest` (`test_a_*`, `test_b_*`, `eval_forecast`, `eval_extractor`). |
+| [`data/`](./data/) | Generador sintético (`generate_synthetic_data.mjs`), 22 CSVs (`data/csv/`), DDL PostgreSQL (`schema.sql`), auditoría de calidad (`10/10 PASS`), validación Pandera y aumentación NLPAug. |
+| [`modelo/`](./modelo/) | Notebooks de entrenamiento (`LightGBM` por cuantiles y `LogisticRegression`) y artefactos `.joblib` exportados en [`modelo/artifacts/`](./modelo/artifacts/). |
+| [`PRODUCT.md`](./PRODUCT.md) | Definición de usuarios, propósito, posicionamiento y principios de diseño del producto. |
+| [`context.md`](./context.md) | Problemática, sustento con fuentes, objetivos, funcionalidades y guion de demo de Pedro (`EMP-0001`). |
+| [`contract.md`](./contract.md) | Especificación completa de contratos de la API REST (`/api/v1`). |
+| [`diccionario_datos.md`](./diccionario_datos.md) / [`modelo_datos.dbml`](./modelo_datos.dbml) | Diccionario de las 25 entidades del modelo relacional y esquema DBML. |
+| [`docs/arquitectura.drawio`](./docs/arquitectura.drawio) | Diagrama de arquitectura del sistema. |
 
-- [`frontend/`](./frontend/) es una base inicial React + Vite.
-- [`backend/`](./backend/) pendiente de implementación (API, motor determinístico, dataset sintético y modelos).
-- [`PRODUCT.md`](./PRODUCT.md) define usuarios, propósito y principios de producto.
-- [`context.md`](./context.md) desarrolla problemática, objetivos, funcionalidades, alcance y storytelling.
-- [`contract.md`](./contract.md) describe los contratos previstos para la API.
+## Instrucciones de ejecución (Local)
 
-### Instrucciones de ejecución (Local)
-
-**1. Iniciar el frontend:**
+### 1. Frontend (React + Vite)
+Por defecto corre con los mocks interactivos de la historia de Pedro sin requerir base de datos:
 ```bash
 cd frontend
 npm install
 npm run dev
+# Disponible en http://localhost:5173
+```
+*(Para conectarlo al backend real, configura `VITE_USE_MOCK=false`, `VITE_PROXY_TARGET=http://localhost:8000` y `VITE_API_KEY` en `frontend/.env`).*
+
+### 2. Backend + Base de Datos (Docker Compose — recomendado)
+```bash
+cd backend
+cp example.env .env   # Configura POSTGRES_USER, POSTGRES_PASSWORD y API_KEY
+docker compose up -d
+docker compose run --rm backend python -m app.db.reset
+# API en http://localhost:8000 | Swagger UI en http://localhost:8000/docs
+```
+Para ejecutar las pruebas automatizadas y los *backtests*:
+```bash
+docker compose run --rm backend pytest -q
+docker compose run --rm backend python -m tests.eval_forecast
+docker compose run --rm backend python -m tests.eval_extractor
+```
+
+### 3. Generación y validación del Dataset Sintético (`data/`)
+```bash
+node data/generate_synthetic_data.mjs
+node data/audit_quality.mjs
+python data/pipeline_python/validate_pandera.py
+python data/pipeline_python/augment_nlpaug_ingesta.py
+```
+
+### 4. Entrenamiento y exportación de Modelos ML (`modelo/`)
+```bash
+python -m nbconvert --to notebook --execute --inplace modelo/modelo_ingreso_egreso_lightgbm.ipynb
+python -m nbconvert --to notebook --execute --inplace modelo/credit_scoring_bodegas_logreg.ipynb
+```

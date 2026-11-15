@@ -26,6 +26,7 @@ export const api = {
   getFiados: (estado = 'pendiente') => request('GET', `${emp()}/fiados`, { query: { estado } }),
   recordatorioFiado: (fiado_id) => request('POST', `/fiados/${fiado_id}/recordatorio`, { idempotent: false }),
   getPedidos: (estado = 'pendiente') => request('GET', `${emp()}/pedidos`, { query: { estado } }),
+  anularCuenta: ({ tipo, id }) => request('POST', `${emp()}/cuentas/anular`, { body: { tipo, id } }),
   chequearPedido: ({ proveedor, monto, fecha_vencimiento }) =>
     request('POST', `${emp()}/pedidos/chequeo`, { body: { proveedor, monto, fecha_vencimiento }, idempotent: false }),
   simular: (acciones) => request('POST', `${emp()}/simular`, { body: { acciones }, idempotent: false }),

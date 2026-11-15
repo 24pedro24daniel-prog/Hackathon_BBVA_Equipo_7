@@ -19,6 +19,30 @@ const borradores = new Map()
 const saldos = { ...D.SALDO_INICIAL }
 const movimientosNuevos = { pedro: [], sano: [], nuevo: [] } // lo que se confirma en el chat aparece en Últimos movimientos
 const esc = (e) => (e === 'nuevo' || e === 'sano' ? e : 'pedro')
+// Se conserva el registro anulado durante la sesión, separado por escenario.
+const cuentasAnuladas = { pedro: new Map(), sano: new Map(), nuevo: new Map() }
+
+function fiadosActivos(escenario) {
+  const data = D.fiadosDe(escenario)
+  const items = data.items.filter((f) => !cuentasAnuladas[escenario].has(`fiado:${f.fiado_id}`))
+  return {
+    ...data,
+    items,
+    total_pendiente: items.reduce((s, f) => s + f.monto, 0),
+    total_vencido: items.filter((f) => f.estado === 'vencido' || f.estado === 'por_vencer').reduce((s, f) => s + f.monto, 0),
+  }
+}
+
+function pedidosActivos(escenario) {
+  const data = D.pedidosDe(escenario)
+  const items = data.items.filter((p) => !cuentasAnuladas[escenario].has(`pedido:${p.pedido_id}`))
+  return {
+    ...data,
+    items,
+    total_pendiente: items.reduce((s, p) => s + (p.monto_pendiente ?? p.monto), 0),
+    impuestos: cuentasAnuladas[escenario].has(`impuesto:${data.impuestos?.impuesto_id}`) ? null : data.impuestos,
+  }
+}
 
 const PEDIDO_BASE = 2400
 const SALDO_BASE = -650 // 'pedro': p50 del 30/11
@@ -28,7 +52,7 @@ const saldoBase = (escenario) => (esc(escenario) === 'sano' ? D.saldoSanoAl3011(
 
 /** Monto que entra si cobras fiados: los fiado_ids pedidos o, si no vienen, el total pendiente */
 function montoFiados(escenario, fiadoIds) {
-  const f = D.fiadosDe(esc(escenario))
+  const f = fiadosActivos(esc(escenario))
   if (!fiadoIds?.length) return f.total_pendiente
   return f.items.filter((x) => fiadoIds.includes(x.fiado_id)).reduce((s, x) => s + x.monto, 0)
 }
@@ -105,6 +129,15 @@ async function handle(method, path, { query, body }) {
     case 'GET /empresas/:id/resumen': {
       const r = structuredClone(D.resumenDe(escenario))
       r.indicadores.saldo_caja_negocio.valor = saldos[escenario]
+      if (cuentasAnuladas[escenario].size > 0) {
+        const f = fiadosActivos(escenario)
+        const p = pedidosActivos(escenario)
+        r.indicadores.pendiente_cobro = { valor: f.total_pendiente, n_fiados: f.items.length }
+        r.indicadores.pagos_pendientes = {
+          valor: p.total_pendiente + (p.impuestos?.monto_estimado ?? 0),
+          n_obligaciones: p.items.length + (p.impuestos ? 1 : 0),
+        }
+      }
       return ok({ ...r, periodo: query.periodo || r.periodo })
     }
 
@@ -115,16 +148,34 @@ async function handle(method, path, { query, body }) {
       return ok({ ajuste_id: 'AJU-0003', forecast_recalculado: true }, 201)
 
     case 'GET /empresas/:id/fiados':
-      return ok(D.fiadosDe(escenario))
+      return ok(fiadosActivos(escenario))
 
     case 'POST /fiados/:id/recordatorio': {
-      const f = D.fiadosDe(escenario).items.find((x) => path.includes(x.fiado_id))
+      const f = fiadosActivos(escenario).items.find((x) => path.includes(x.fiado_id))
       if (!f) return err(404, 'NO_ENCONTRADO', 'No encontré ese fiado.')
       return ok({ mensaje: `Hola, ${f.cliente} 😊 Le recuerdo amablemente los S/ ${f.monto} pendientes en la bodega. ¡Gracias!` })
     }
 
     case 'GET /empresas/:id/pedidos':
-      return ok(D.pedidosDe(escenario))
+      return ok(pedidosActivos(escenario))
+
+    case 'POST /empresas/:id/cuentas/anular': {
+      const { tipo, id } = body ?? {}
+      if (!['fiado', 'pedido', 'impuesto'].includes(tipo) || !id) {
+        return err(422, 'CUENTA_INVALIDA', 'Indica qué cuenta quieres eliminar.')
+      }
+      const clave = `${tipo}:${id}`
+      if (cuentasAnuladas[escenario].has(clave)) return ok({ id, anulada: true })
+      const pedidos = pedidosActivos(escenario)
+      const cuenta = tipo === 'fiado'
+        ? fiadosActivos(escenario).items.find((f) => f.fiado_id === id)
+        : tipo === 'pedido'
+          ? pedidos.items.find((p) => p.pedido_id === id)
+          : pedidos.impuestos?.impuesto_id === id ? pedidos.impuestos : null
+      if (!cuenta) return err(404, 'NO_ENCONTRADO', 'No encontré esa cuenta.')
+      cuentasAnuladas[escenario].set(clave, { ...cuenta, anulada: true, anulado_en: new Date().toISOString() })
+      return ok({ id, anulada: true })
+    }
 
     case 'POST /empresas/:id/pedidos/chequeo': {
       const monto = Number(body?.monto ?? PEDIDO_BASE)
@@ -282,7 +333,7 @@ async function handle(method, path, { query, body }) {
 function asistente(mensaje, conversacion_id, fallback, escenario = 'pedro') {
   const m = mensaje.toLowerCase()
   const saldoNegocio = saldos[escenario]
-  const teDeben = D.fiadosDe(escenario).total_pendiente
+  const teDeben = fiadosActivos(escenario).total_pendiente
   const sano = escenario === 'sano'
   const nuevo = escenario === 'nuevo'
   const saldo3011 = saldoBase(escenario)
