@@ -13,8 +13,8 @@
 .inicio__hola {
   font-family: var(--font-display);
   font-weight: var(--display-weight);
-  font-size: 22px;
-  line-height: 1.2;
+  font-size: var(--fs-title); /* mismo tamaño que los títulos de las demás pantallas */
+  line-height: 1.15;
   letter-spacing: -0.01em;
   color: var(--title);
 }
