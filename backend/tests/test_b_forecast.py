@@ -185,12 +185,14 @@ def test_forecast_usa_baseline_si_el_modelo_no_esta(db, monkeypatch, tmp_path, r
 
 
 def test_artefactos_reales_del_equipo_de_datos():
-    meta = settings.ml_artifacts_dir / "forecast" / "metadata.json"
+    meta = settings.ml_artifacts_dir / "prediccion_ingreso_egreso" / "metadata.json"
     if not meta.exists():
         pytest.skip(f"No están los artefactos reales en {meta} (monta ../modelo/artifacts o define ML_ARTIFACTS_DIR)")
     d = modelo_ml.diagnostico_forecast()
     assert d["artefactos"] is True and d["estado"] == "no_disponible"
-    assert set(d["features_no_construibles"]) == {"rubro", "zona", "usa_fiado", "usa_billetera_digital"}
+    # rubro y zona fueron resueltos por el equipo de ML (zona -> n_trabajadores, rubro con taxonomia real),
+    # pero el chequeo _CONSTRUIBLE de modelo_ml.py sigue sin reconocerlos como construibles (ver su docstring).
+    assert set(d["features_no_construibles"]) == {"rubro", "n_trabajadores", "antiguedad_meses", "usa_fiado", "usa_billetera_digital"}
 
 
 # ── B12 /health ──

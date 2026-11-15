@@ -5,11 +5,16 @@ la BD sin inventar valores. Aquí solo se lee `metadata.json` (JSON, sin depende
 si algún feature no tiene equivalente en la BD, el modelo queda "no_disponible" con el motivo concreto y los motores
 usan el baseline determinístico con `meta.fallback_usado = true`.
 
-Diagnóstico al 14/11 (artefactos de modelo/artifacts/forecast/, notebook modelo_ingreso_egreso_lightgbm.ipynb):
-- `rubro` ∈ {abarrotes, bebidas, mixto, panaderia}: la BD usa la taxonomía de `rubros` (bodega, restaurante, …).
-- `zona` ∈ {periurbano, rural, urbano}: la BD guarda el distrito/zona libre (p. ej. "SJL"), sin regla de mapeo.
-- `usa_fiado`, `usa_billetera_digital`: banderas fijas del simulador del notebook, sin definición para datos reales.
-Los 23 features restantes (lags, medias y desviaciones de ingreso/egreso diario, calendario) sí son construibles.
+Diagnóstico al 15/11 (artefactos de modelo/artifacts/prediccion_ingreso_egreso/, notebook
+modelo_ingreso_egreso_lightgbm.ipynb). El equipo de ML ya resolvió `rubro` (ahora usa la taxonomía real de
+`rubros`: bodega/restaurante/taller/distribuidora) y reemplazó `zona` por `n_trabajadores` (existe directo en
+`empresas.n_trabajadores`). Este chequeo automático solo reconoce como "construible" lo que matchea
+`_CONSTRUIBLE` (lags/medias/stds/calendario); `rubro`, `n_trabajadores` y `antiguedad_meses` seguirán
+apareciendo en `features_no_construibles` hasta que alguien actualice esa regex/MOTIVOS_FEATURE para
+reflejar que sí son construibles vía join/columna directa con la BD real.
+- `usa_fiado`, `usa_billetera_digital`: siguen sin definición acordada para datos reales (propuesta en el
+  `metadata.json` del notebook: ">=1 registro en los últimos 90 días", a confirmar con backend).
+Los 23 features de lags, medias, desviaciones de ingreso/egreso diario y calendario sí son construibles.
 """
 
 import json
@@ -82,7 +87,7 @@ def _diagnostico_forecast(ruta: str, _mtime_cache: float | None) -> dict:
 
 def diagnostico_forecast() -> dict:
     """Estado del modelo LightGBM de forecast sin cargarlo (barato: lee metadata.json y lo cachea por mtime)."""
-    base = directorio() / "forecast"
+    base = directorio() / "prediccion_ingreso_egreso"
     return _diagnostico_forecast(str(base), _mtime(base / "metadata.json"))
 
 

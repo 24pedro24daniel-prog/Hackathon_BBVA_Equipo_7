@@ -158,7 +158,7 @@ regla en el docstring de su módulo y en `../contract.md`.
 
 ### Modelos de ML (equipo de datos)
 
-Los artefactos viven fuera del contexto del build, en `../modelo/artifacts/` (`forecast/` LightGBM por cuantiles,
+Los artefactos viven fuera del contexto del build, en `../modelo/artifacts/` (`prediccion_ingreso_egreso/` LightGBM por cuantiles,
 `credit_scoring/` regresión logística). `docker-compose.yml` los monta **solo lectura** en `/app/ml/artifacts` y fija
 `ML_ARTIFACTS_DIR=/app/ml/artifacts`; fuera de docker `ML_ARTIFACTS_DIR` vacío (en `parametros.env`) resuelve a
 `../modelo/artifacts`.

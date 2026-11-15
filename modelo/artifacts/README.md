@@ -4,7 +4,7 @@ Formato: `.joblib` (serialización estándar de scikit-learn/LightGBM en Python)
 **No son `.pt`** — ese formato es de PyTorch y no aplica aquí; `joblib` es el equivalente correcto
 para modelos de scikit-learn y LightGBM.
 
-## `forecast/` — Predicción de ingreso y egreso diario (LightGBM)
+## `prediccion_ingreso_egreso/` — Predicción de ingreso y egreso diario (LightGBM)
 
 Generado por: `modelo/modelo_ingreso_egreso_lightgbm.ipynb`
 
@@ -12,7 +12,7 @@ Generado por: `modelo/modelo_ingreso_egreso_lightgbm.ipynb`
 |---|---|
 | `ingreso_p10.joblib`, `ingreso_p50.joblib`, `ingreso_p90.joblib` | `LGBMRegressor` para ingreso, cuantiles 10/50/90 |
 | `egreso_p10.joblib`, `egreso_p50.joblib`, `egreso_p90.joblib` | `LGBMRegressor` para egreso, cuantiles 10/50/90 |
-| `metadata.json` | Orden exacto de features, columnas categóricas (`rubro`, `zona`) y sus categorías válidas |
+| `metadata.json` | Orden exacto de features, columna categórica (`rubro`) y sus categorías válidas |
 
 **Cómo consumir:**
 ```python
@@ -25,7 +25,7 @@ with open("metadata.json") as f:
 modelo_p50 = joblib.load("ingreso_p50.joblib")
 
 # X debe tener las columnas de meta["features_en_orden"], en ese orden,
-# con 'rubro' y 'zona' como pandas Categorical usando meta["categorias_rubro"] / meta["categorias_zona"]
+# con 'rubro' como pandas Categorical usando meta["categorias_rubro"]
 pred = modelo_p50.predict(X)
 ```
 
