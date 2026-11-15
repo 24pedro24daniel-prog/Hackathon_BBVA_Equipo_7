@@ -1,0 +1,187 @@
+/* Piezas compartidas de la landing y del login: barra oscura, panel navy con el abanico de puntos y botón píldora.
+   Colores de index.css (navy #070e46, Electric #001391, light blue #85c8ff). Mobile-first: 16 px de margen lateral. */
+.lp,
+.ing {
+  --lp-ink: #02051f;        /* barra y pie: navy casi negro */
+  --lp-navy: var(--title);  /* panel: midnight navy #070e46 */
+  --lp-electric: var(--brand);
+  --lp-sky: var(--accent);  /* light blue #85c8ff */
+  --lp-on-dark: #ffffff;
+  --lp-on-dark-muted: var(--on-brand-muted); /* #c9d8ff: 12:1 sobre navy */
+  --lp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --lp-max: 1360px;
+  --lp-side: 16px;  /* margen lateral de la página */
+  --lp-pad: 20px;   /* margen interno del panel; en escritorio las secciones se alinean con él */
+  min-height: 100dvh;
+  background: var(--bg);
+  overflow-x: clip;
+}
+@media (min-width: 768px) {
+  .lp,
+  .ing { --lp-side: 32px; }
+}
+@media (min-width: 900px) {
+  .lp,
+  .ing { --lp-pad: clamp(40px, 5vw, 88px); }
+}
+
+/* ---------- Barra superior ---------- */
+.lp-bar {
+  background: var(--lp-ink);
+  color: var(--lp-on-dark);
+}
+.lp-bar__in {
+  max-width: var(--lp-max);
+  margin: 0 auto;
+  padding: 0 var(--lp-side);
+  padding-top: env(safe-area-inset-top);
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.lp-bar__marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+.lp-bar__logo {
+  display: block;
+  flex: none;
+  color: var(--lp-electric);
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(133, 200, 255, 0.35);
+}
+.lp-bar__nombre {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.lp-bar__ingresar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  color: var(--lp-on-dark);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.lp-bar__ingresar:hover {
+  background: var(--lp-on-dark);
+  border-color: var(--lp-on-dark);
+  color: var(--lp-navy);
+}
+@media (min-width: 768px) {
+  .lp-bar__in { min-height: 72px; }
+}
+
+/* Foco visible sobre fondos oscuros */
+.lp-bar :focus-visible,
+.lp-hero :focus-visible,
+.lp-pie :focus-visible,
+.ing-stage :focus-visible {
+  outline: 2px solid var(--lp-on-dark);
+  outline-offset: 3px;
+}
+
+/* ---------- Panel navy con la curva Electric y el abanico de puntos ---------- */
+.lp-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  max-width: var(--lp-max);
+  margin: 0 auto;
+  border-radius: 20px;
+  background: var(--lp-navy);
+  color: var(--lp-on-dark);
+}
+/* La curva: un disco Electric que entra por la esquina inferior derecha, con un aro fino por fuera */
+.lp-panel::before,
+.lp-panel::after {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.lp-panel::before {
+  width: 760px;
+  height: 760px;
+  right: -420px;
+  bottom: -430px;
+  background: var(--lp-electric);
+}
+.lp-panel::after {
+  width: 920px;
+  height: 920px;
+  right: -500px;
+  bottom: -510px;
+  border: 1px solid rgba(133, 200, 255, 0.22);
+}
+@media (min-width: 960px) {
+  .lp-panel::before { width: 1180px; height: 1180px; right: -520px; bottom: -720px; }
+  .lp-panel::after { width: 1400px; height: 1400px; right: -630px; bottom: -830px; }
+}
+
+.lp-fan {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  color: var(--lp-sky);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.45) 45%, #000 80%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.45) 45%, #000 80%);
+}
+@media (min-width: 960px) {
+  .lp-fan {
+    -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.4) 38%, #000 72%);
+    mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.4) 38%, #000 72%);
+  }
+}
+
+/* ---------- Botón píldora ---------- */
+.lp-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--lp-sky);
+  color: var(--lp-navy);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s var(--lp-ease);
+}
+.lp-cta svg { transition: transform 0.25s var(--lp-ease); }
+.lp-cta:hover { background: var(--lp-on-dark); }
+.lp-cta:hover svg { transform: translateX(3px); }
+.lp-cta:active { transform: scale(0.98); }
+/* Sobre fondo claro: Electric, como el botón principal de la app */
+.lp-cta--claro { background: var(--lp-electric); color: var(--on-brand); }
+.lp-cta--claro:hover { background: var(--brand-hover); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-fan { animation: lp-proyectar 1.8s var(--lp-ease) both; }
+}
+@keyframes lp-proyectar {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}

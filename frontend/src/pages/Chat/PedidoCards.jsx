@@ -81,7 +81,7 @@ export function OptionsCard({ msg, onRegistrar }) {
           </p>
         ))}
       <div className="chat-actions chat-actions--stack">
-        <Link to="/simulador" className="cc-btn cc-btn--primary cc-btn--block">
+        <Link to="/app/simulador" className="cc-btn cc-btn--primary cc-btn--block">
           Probar opciones
         </Link>
         {!yaRegistrado && (

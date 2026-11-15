@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getDemoSettings, setDemoSettings } from './demo.js'
 
-/** const [demo, setDemo] = useDemo(); demo.escenario ('pedro' | 'sano' | 'nuevo'), demo.fallback (bool) */
+/** const [demo, setDemo] = useDemo(); demo.tecnico (bool), demo.fallback (bool, solo mocks) */
 export function useDemo() {
   const [demo, set] = useState(getDemoSettings)
   useEffect(() => {

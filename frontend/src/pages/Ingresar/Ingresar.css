@@ -1,0 +1,146 @@
+/* Login de las demos: mismo panel navy de la landing con una tarjeta blanca al centro. Usa marca.css. */
+.ing-stage {
+  padding: 0 var(--lp-side) var(--lp-side);
+  background: linear-gradient(var(--lp-ink) 0 40px, transparent 40px);
+}
+.ing-stage__panel {
+  min-height: calc(100dvh - 64px - var(--lp-side));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 16px;
+}
+@media (min-width: 768px) {
+  .ing-stage { background: linear-gradient(var(--lp-ink) 0 56px, transparent 56px); }
+  .ing-stage__panel { min-height: calc(100dvh - 72px - var(--lp-side)); padding: 64px 32px; }
+}
+
+.ing-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px 22px;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--title);
+  box-shadow: 0 32px 64px -28px rgba(2, 5, 31, 0.75);
+}
+@media (min-width: 480px) {
+  .ing-card { padding: 40px 36px; }
+}
+/* Dentro de la tarjeta blanca el foco vuelve a ser Electric */
+.ing-stage .ing-card :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+.ing-card__titulo { font-size: 28px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+.ing-card__sub { margin-top: 8px; font-size: 15px; line-height: 1.45; color: var(--text-muted); }
+
+.ing-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 20px;
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--brand);
+}
+.ing-aviso svg { flex: none; margin-top: 1px; }
+
+.ing-form { display: grid; gap: 18px; margin-top: 24px; }
+.ing-campo__label { display: block; margin-bottom: 6px; font-size: 15px; font-weight: 600; color: var(--title); }
+.ing-campo__input {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--title);
+  font: inherit;
+  font-size: 17px; /* ≥ 16 px: iOS no hace zoom al enfocar */
+  transition: border-color 0.15s ease;
+}
+.ing-campo__input:hover:not(:disabled) { border-color: var(--control-off); }
+.ing-stage .ing-card .ing-campo__input:focus-visible { outline-offset: 1px; border-color: var(--brand); }
+.ing-campo__input[aria-invalid='true'] { border-color: var(--danger); }
+.ing-campo__input:disabled { background: var(--surface-sunken); color: var(--text-muted); }
+
+.ing-campo__clave { position: relative; }
+.ing-campo__clave .ing-campo__input { padding-right: 56px; }
+.ing-campo__ver {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.ing-campo__ver:hover { color: var(--title); background: var(--surface-sunken); }
+
+.ing-mensajes { display: grid; gap: 10px; }
+.ing-mensajes:empty { display: none; }
+.ing-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--danger);
+}
+.ing-error svg { flex: none; margin-top: 1px; }
+
+.ing-despertar {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+.ing-despertar strong { color: var(--title); font-weight: 600; }
+.ing-despertar__puntos { display: inline-flex; gap: 4px; padding-top: 7px; flex: none; }
+.ing-despertar__puntos i { width: 6px; height: 6px; border-radius: 50%; background: var(--brand); }
+@media (prefers-reduced-motion: no-preference) {
+  .ing-despertar__puntos i { animation: ing-punto 1.2s ease-in-out infinite; }
+  .ing-despertar__puntos i:nth-child(2) { animation-delay: 0.15s; }
+  .ing-despertar__puntos i:nth-child(3) { animation-delay: 0.3s; }
+}
+@keyframes ing-punto {
+  0%, 80%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}
+
+.ing-form__enviar { width: 100%; margin-top: 4px; }
+.ing-form__enviar:disabled { opacity: 0.6; cursor: not-allowed; }
+/* Mientras espera respuesta el botón conserva su color: está trabajando, no apagado */
+.ing-form__enviar[aria-busy='true']:disabled { opacity: 1; cursor: progress; }
+.ing-form__enviar:disabled:hover { background: var(--lp-electric); }
+.ing-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: ing-girar 0.8s linear infinite;
+}
+@keyframes ing-girar {
+  to { transform: rotate(360deg); }
+}
+
+.ing-stage__nota {
+  max-width: 40ch;
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--lp-on-dark-muted);
+}

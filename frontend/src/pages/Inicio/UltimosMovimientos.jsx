@@ -48,7 +48,7 @@ export default function UltimosMovimientos() {
                   return (
                     <ListRow
                       key={m.movimiento_id}
-                      to={`/movimientos?id=${m.movimiento_id}`}
+                      to={`/app/movimientos?id=${m.movimiento_id}`}
                       lead={<Icon name={ingreso ? 'arrowDown' : 'arrowUp'} size={18} />}
                       title={tituloMovimiento(m)}
                       sub={`${weekdayDdmm(m.fecha_hora)} · ${hhmm(m.fecha_hora)}${m.afecta_caja === false ? ' · no mueve tu caja' : ''}`}
@@ -58,7 +58,7 @@ export default function UltimosMovimientos() {
                   )
                 })}
               </List>
-              <Link to="/movimientos" className="inicio__movs-ver">
+              <Link to="/app/movimientos" className="inicio__movs-ver">
                 Ver detalle <span aria-hidden="true">→</span>
               </Link>
             </>

@@ -155,6 +155,9 @@ a {
   letter-spacing: -0.01em;
 }
 
+/* Mientras llega el código de una pantalla (carga diferida) */
+.cc-cargando { min-height: 60dvh; }
+
 .sr-only {
   position: absolute;
   width: 1px;

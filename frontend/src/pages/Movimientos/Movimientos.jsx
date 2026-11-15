@@ -1,7 +1,8 @@
 // Detalle de movimientos. Ruta oculta (/movimientos): no está en la navegación principal;
-// se llega desde "Últimos movimientos → Ver detalle" en Inicio. ?id=MOV-… abre ese movimiento.
+// se llega desde "Últimos movimientos → Ver detalle" en Inicio. ?id=MOV-… abre ese movimiento;
+// ?tipo=retiro_personal (u otro tipo del contrato) filtra la lista, p. ej. desde la alerta de retiros.
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { daysBetween, hhmm, soles, weekdayDdmm } from '../../lib/format.js'
@@ -22,6 +23,7 @@ export default function Movimientos() {
   const corte = useApi(() => api.getResumen(), []).data?.corte
   const [params] = useSearchParams()
   const idInicial = params.get('id')
+  const tipo = params.get('tipo') || undefined
   const [items, setItems] = useState([])
   const [cursor, setCursor] = useState(null)
   const [estado, setEstado] = useState({ loading: true, error: null })
@@ -29,7 +31,7 @@ export default function Movimientos() {
 
   const cargar = (desde = null) => {
     setEstado({ loading: true, error: null })
-    api.getMovimientos({ limit: PAGINA, cursor: desde }).then(
+    api.getMovimientos({ limit: PAGINA, cursor: desde, tipo }).then(
       (res) => {
         setItems((prev) => (desde ? [...prev, ...res.items] : res.items))
         setCursor(res.next_cursor)
@@ -39,7 +41,11 @@ export default function Movimientos() {
     )
   }
 
-  useEffect(() => cargar(null), [])
+  useEffect(() => {
+    setItems([])
+    cargar(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipo])
 
   // Al llegar con ?id, lleva la vista a ese movimiento
   useEffect(() => {
@@ -62,6 +68,14 @@ export default function Movimientos() {
     <div className="movs">
       <PageHeader back title="Tus movimientos" />
       <div className="movs__body">
+        {tipo && (
+          <p className="cc-muted cc-small movs__filtro">
+            Solo: {TIPO_LABEL[tipo] || tipo.replace(/_/g, ' ')} ·{' '}
+            <Link to="/app/movimientos" className="movs__filtro-link">
+              Ver todos
+            </Link>
+          </p>
+        )}
         {estado.loading && !items.length ? (
           <LoadingBlock heights={[220, 220]} />
         ) : estado.error && !items.length ? (

@@ -18,6 +18,13 @@
   letter-spacing: -0.01em;
   color: var(--title);
 }
+.inicio__negocio {
+  margin-top: 2px;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
 
 .inicio__body { padding: 0 var(--gutter); }
 
@@ -188,3 +195,7 @@
   font-size: var(--fs-note); color: var(--text-muted);
 }
 .inicio__cobertura-texto strong { color: var(--danger); font-weight: 600; }
+
+/* Acción sugerida de la alerta, bajo su fila */
+.inicio__alerta-accion { padding: 0 16px 14px 68px; }
+.inicio__alerta-link { color: var(--brand); font-weight: 600; font-size: 15px; text-decoration: underline; text-underline-offset: 2px; }

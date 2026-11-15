@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { ddmm, weekdayDdmm } from '../../lib/format.js'
@@ -98,6 +98,8 @@ export default function Cuentas() {
   const [selected, setSelected] = useState('deben')
   const [eliminando, setEliminando] = useState(null)
   const [errorEliminacion, setErrorEliminacion] = useState(null)
+  const [recordatorio, setRecordatorio] = useState(null) // { id, loading, mensaje, error, copiado }
+  const [params] = useSearchParams()
   const tabRefs = useRef({})
   const headingRefs = useRef({})
   const sectionRefs = useRef({})
@@ -164,6 +166,40 @@ export default function Cuentas() {
     }
   }
 
+  // Texto listo para reenviar al cliente (POST /fiados/{id}/recordatorio). No se envía nada desde la app.
+  const recordar = async (fiadoId) => {
+    setRecordatorio({ id: fiadoId, loading: true })
+    try {
+      const r = await api.recordatorioFiado(fiadoId)
+      setRecordatorio({ id: fiadoId, mensaje: r.mensaje })
+    } catch (error) {
+      setRecordatorio({ id: fiadoId, error: error.message || 'No pude preparar el mensaje.' })
+    }
+  }
+
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(recordatorio.mensaje)
+      setRecordatorio((r) => ({ ...r, copiado: true }))
+    } catch {
+      setRecordatorio((r) => ({ ...r, error: 'No pude copiarlo. Selecciona el texto y cópialo.' }))
+    }
+  }
+
+  // Llegar con ?recordar=FIA-… (o ?cliente=CLI-…), por ejemplo desde una alerta de fiado vencido, deja el mensaje listo.
+  const recordarParam = params.get('recordar')
+  const clienteParam = params.get('cliente')
+  const itemsFiados = fiados.data?.items
+  const yaAbierto = useRef(false)
+  useEffect(() => {
+    if (yaAbierto.current || !itemsFiados) return
+    const f = itemsFiados.find((x) => (recordarParam ? x.fiado_id === recordarParam : clienteParam && x.cliente_id === clienteParam))
+    if (!f) return
+    yaAbierto.current = true
+    recordar(f.fiado_id)
+    document.getElementById(`fiado-${f.fiado_id}`)?.scrollIntoView({ block: 'center' })
+  }, [itemsFiados, recordarParam, clienteParam])
+
   return (
     <div className="cuentas">
       <PageHeader title="Cobros y pagos" sub="Lo que te deben y lo que debes" />
@@ -200,9 +236,9 @@ export default function Cuentas() {
       <div className="cuentas-body">
         {errorEliminacion && (
           <p className="cuentas-error-eliminar" role="alert">
-            {errorEliminacion.status === 404
-              ? 'Todavía no puedo eliminar cuentas desde aquí. Tus cuentas siguen igual.'
-              : `No pude eliminar la cuenta. ${errorEliminacion.message} Vuelve a intentarlo.`}
+            {errorEliminacion.status === 0
+              ? errorEliminacion.message
+              : `No pude eliminar la cuenta. ${errorEliminacion.message}`}
           </p>
         )}
         <div
@@ -214,6 +250,9 @@ export default function Cuentas() {
         >
           <FiadosBlock
             state={fiados}
+            recordatorio={recordatorio}
+            onRecordar={recordar}
+            onCopiar={copiar}
             onEliminar={eliminarCuenta}
             eliminando={eliminando}
             headingRef={(el) => (headingRefs.current.deben = el)}
@@ -276,17 +315,18 @@ function Empty({ cta, children }) {
   return (
     <div className="cuentas-empty">
       <p className="cc-muted">{children}</p>
-      <Link to="/chat" className="cc-btn cc-btn--secondary cc-btn--sm">
+      <Link to="/app/chat" className="cc-btn cc-btn--secondary cc-btn--sm">
         {cta}
       </Link>
     </div>
   )
 }
 
-function EliminarCuenta({ tipo, id, nombre, onEliminar, eliminando }) {
+function EliminarCuenta({ tipo, id, nombre, onEliminar, eliminando, children }) {
   const pendiente = eliminando === `${tipo}:${id}`
   return (
     <div className="cuentas-row-actions">
+      {children}
       <Button
         variant="ghost"
         size="sm"
@@ -302,7 +342,26 @@ function EliminarCuenta({ tipo, id, nombre, onEliminar, eliminando }) {
   )
 }
 
-function FiadosBlock({ state, onEliminar, eliminando, headingRef }) {
+/** Mensaje para reenviar al cliente por tu cuenta (la app no lo manda). */
+function Recordatorio({ r, onCopiar }) {
+  return (
+    <div className="cuentas-recordatorio" role="status">
+      {r.loading && <p className="cc-muted">Preparando el mensaje…</p>}
+      {r.error && <p className="cuentas-error-eliminar">{r.error}</p>}
+      {r.mensaje && (
+        <>
+          <p className="cuentas-recordatorio__texto">“{r.mensaje}”</p>
+          <p className="cc-muted cc-small">Cópialo y mándaselo tú; la app no envía nada.</p>
+          <Button variant="secondary" size="sm" onClick={onCopiar}>
+            {r.copiado ? 'Copiado' : 'Copiar mensaje'}
+          </Button>
+        </>
+      )}
+    </div>
+  )
+}
+
+function FiadosBlock({ state, recordatorio, onRecordar, onCopiar, onEliminar, eliminando, headingRef }) {
   const { data, error, loading, reload } = state
   const items = data?.items || []
   const ver = useVerTodos(loading || error ? 0 : items.length)
@@ -324,6 +383,7 @@ function FiadosBlock({ state, onEliminar, eliminando, headingRef }) {
           return (
             <ListRow
               key={f.fiado_id}
+              id={`fiado-${f.fiado_id}`}
               lead={iniciales(f.cliente)}
               title={f.cliente}
               sub={
@@ -336,13 +396,23 @@ function FiadosBlock({ state, onEliminar, eliminando, headingRef }) {
               }
               amount={<Money value={f.monto} />}
             >
+              {recordatorio?.id === f.fiado_id && <Recordatorio r={recordatorio} onCopiar={onCopiar} />}
               <EliminarCuenta
                 tipo="fiado"
                 id={f.fiado_id}
                 nombre={`el fiado de ${f.cliente}`}
                 onEliminar={onEliminar}
                 eliminando={eliminando}
-              />
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={recordatorio?.id === f.fiado_id && recordatorio.loading}
+                  onClick={() => onRecordar(f.fiado_id)}
+                >
+                  {f.accion_sugerida?.texto_boton || `Recordar a ${f.cliente}`}
+                </Button>
+              </EliminarCuenta>
             </ListRow>
           )
         })}
@@ -430,7 +500,7 @@ function DebesBlock({ state, onEliminar, eliminando, headingRef }) {
         )}
         {items.length === 0 && (
           <Empty cta="Anotar un pedido">
-            No le debes a ningún proveedor. Si haces un pedido a crédito, cuéntamelo en el chat, por ejemplo: “pedí 2,400 a
+            No le debes a ningún proveedor. Si haces un pedido a crédito, cuéntamelo en el chat, por ejemplo: “pedí 2 400 a
             Andina, pago el 30”. Te aviso antes de que venza.
           </Empty>
         )}

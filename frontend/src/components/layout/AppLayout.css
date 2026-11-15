@@ -30,6 +30,8 @@
 }
 .cc-app--chat .cc-nav { display: none; }
 .cc-nav__brand { display: none; }
+/* Negocio de la sesión y "Cerrar sesión": solo en riel y barra lateral (en el teléfono está en el menú Demo) */
+.cc-nav__cuenta { display: none; }
 .cc-nav__link {
   position: relative;
   display: flex;
@@ -77,6 +79,24 @@
   .cc-nav__link:hover { background: var(--row-hover); }
   .cc-nav__link.active { background: var(--brand-soft); }
   .cc-nav__link svg, .cc-nav__link.active svg { padding: 0; background: none; }
+
+  .cc-nav__cuenta {
+    display: grid;
+    gap: 4px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--hairline);
+  }
+  .cc-nav__negocio { display: none; }
+  .cc-nav__salir {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    min-height: 64px; width: 100%; padding: 0;
+    border: 0; border-radius: var(--radius); background: none; cursor: pointer;
+    font-size: 13px; font-weight: 500; color: var(--text-muted);
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
+  .cc-nav__salir:hover { color: var(--title); background: var(--row-hover); }
+  .cc-nav__salir-largo { display: none; }
 }
 
 /* ---------- Escritorio: barra lateral con marca ---------- */
@@ -95,6 +115,22 @@
     border-radius: var(--radius);
     font-size: 16px;
   }
+  .cc-nav__cuenta { padding-top: 16px; }
+  .cc-nav__negocio {
+    display: block;
+    padding: 0 16px 4px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--title);
+    overflow-wrap: anywhere;
+  }
+  .cc-nav__salir {
+    flex-direction: row; justify-content: flex-start; gap: 12px;
+    min-height: 48px; padding: 0 16px; font-size: 16px;
+  }
+  .cc-nav__salir-largo { display: inline; }
+  .cc-nav__salir-corto { display: none; }
 }
 
 /* ---------- Chip y menú Demo ---------- */
@@ -117,3 +153,4 @@
 }
 .cc-demo__opt:hover { background: var(--bg); }
 .cc-demo__opt[aria-checked='true'] { background: var(--brand-soft); color: var(--brand); font-weight: 700; }
+.cc-demo__opt--salir { border-top: 1px solid var(--hairline); border-radius: 0 0 var(--radius-sm) var(--radius-sm); margin-top: 4px; }

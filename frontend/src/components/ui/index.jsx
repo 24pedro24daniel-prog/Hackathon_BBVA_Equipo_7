@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Icon from './Icon.jsx'
-import { confianzaLabel } from '../../lib/format.js'
+import { confianzaLabel, groupThousands } from '../../lib/format.js'
 import { useDemo } from '../../lib/useDemo.js'
 import './ui.css'
 
@@ -82,12 +82,16 @@ export function PageHeader({ sub, kicker, title, back, right }) {
  *  value: número; size: hero | lg | md (fila); tone: auto | neutral | pos | neg
  *  tone="auto": positivo en verde con "+" solo si sign=true (ingresos); negativo en rojo.
  *  inverse: sobre fondo Electric (texto blanco).
+ *  cents: muestra los céntimos cuando el monto los tiene (fiados leídos de una foto: S/ 12.50).
  */
-export function Money({ value, size = 'md', sign = false, tone = 'neutral', inverse, className, ...rest }) {
+export function Money({ value, size = 'md', sign = false, tone = 'neutral', inverse, cents = false, className, ...rest }) {
   const n = Number(value)
   const valid = value !== null && value !== undefined && !Number.isNaN(n)
-  const abs = valid ? Math.round(Math.abs(n)) : null
-  const grouped = valid ? String(abs).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—'
+  // cents: muestra los céntimos solo si los hay (S/ 12.50; S/ 8 sigue sin decimales)
+  const [entero, dec] = valid ? Math.abs(n).toFixed(2).split('.') : []
+  const conCentimos = cents && valid && dec !== '00'
+  const abs = valid ? (conCentimos ? entero : Math.round(Math.abs(n))) : null
+  const grouped = valid ? groupThousands(abs) + (conCentimos ? `.${dec}` : '') : '—'
   const prefix = !valid ? '' : n < 0 ? '−' : sign && n > 0 ? '+' : ''
   const t = tone === 'auto' ? (n < 0 ? 'neg' : sign && n > 0 ? 'pos' : 'neutral') : tone
   return (

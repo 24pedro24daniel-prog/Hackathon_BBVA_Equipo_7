@@ -1,9 +1,15 @@
 // Funciones tipadas por endpoint (ver contract.md). Las pantallas solo importan desde aquí.
 import { request, empresaId } from './client.js'
+import { subirMedia } from './subidas.js'
 
 const emp = (id = empresaId()) => `/empresas/${id}`
 
 export const api = {
+  // Sesión de la demo (AUTH_CONTRATO.md). El login es público; un 401 aquí no cierra ninguna sesión.
+  login: ({ usuario, contrasena }, { signal, timeoutMs } = {}) =>
+    request('POST', '/auth/login', { body: { usuario, contrasena }, idempotent: false, auth: false, signal, timeoutMs }),
+  sesion: () => request('GET', '/auth/sesion'),
+
   // F1 — Ingesta
   interpretar: ({ canal, texto = null, media_url = null }) =>
     request('POST', '/ingesta/interpretar', { body: { empresa_id: empresaId(), canal, texto, media_url } }),
@@ -12,6 +18,8 @@ export const api = {
   leerCuaderno: ({ media_url }) =>
     request('POST', '/ingesta/cuaderno', { body: { empresa_id: empresaId(), media_url } }),
   registrarImpuesto: (payload) => request('POST', `${emp()}/impuestos`, { body: payload }),
+  // Audios y fotos: POST /media/subidas → PUT directo a R2 → media_url (r2://…) para /chat/mensajes o /ingesta/cuaderno
+  subirMedia: (blob, { tipo, contentType }) => subirMedia(blob, { tipo, contentType }),
 
   // Movimientos
   getMovimientos: (query = {}) => request('GET', `${emp()}/movimientos`, { query }),
@@ -56,7 +64,7 @@ export const api = {
   crearMeta: (meta) => request('POST', `${emp()}/metas`, { body: meta }),
 
   // Operación
-  health: () => request('GET', '/health'),
+  health: () => request('GET', '/health', { auth: false }),
 }
 
-export { ApiError, USE_MOCK, EMPRESA_ID, empresaId } from './client.js'
+export { ApiError, USE_MOCK, EMPRESA_ID, empresaId, despertarServidor } from './client.js'

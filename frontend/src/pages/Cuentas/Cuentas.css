@@ -86,3 +86,7 @@
     gap: 16px 24px;
   }
 }
+
+/* Mensaje de recordatorio bajo el fiado */
+.cuentas-recordatorio { display: grid; gap: 8px; justify-items: start; padding: 0 16px 8px 68px; }
+.cuentas-recordatorio__texto { color: var(--title); }

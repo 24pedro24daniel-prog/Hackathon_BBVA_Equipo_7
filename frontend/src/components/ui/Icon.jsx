@@ -14,6 +14,7 @@ const paths = {
   mic: <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0" /><path d="M12 17.5V21" /></>,
   camera: <><path d="M4 8h3.5L9 5.5h6L16.5 8H20v11H4z" /><circle cx="12" cy="13" r="3.5" /></>,
   play: <path d="M8 5v14l11-7z" />,
+  pause: <><rect x="6.5" y="5" width="3.5" height="14" rx="1" /><rect x="14" y="5" width="3.5" height="14" rx="1" /></>,
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
   send: <><path d="M4 12 20 4l-6 16-3-7z" /></>,
@@ -26,6 +27,10 @@ const paths = {
   user: <><circle cx="12" cy="8" r="4" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></>,
   receipt: <><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" /><path d="M9 8h6M9 12h6" /></>,
   close: <path d="M6 6l12 12M18 6 6 18" />,
+  logout: <><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M10 16.5 5.5 12 10 7.5" /><path d="M5.5 12H15" /></>,
+  eye: <><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></>,
+  eyeOff: <><path d="M10.6 5.6A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.8 3.6" /><path d="M6.6 6.7C3.9 8.4 2.5 12 2.5 12S6 18.5 12 18.5a9 9 0 0 0 4.4-1.1" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" /><path d="M3.5 3.5l17 17" /></>,
+  arrowRight: <><path d="M4 12h15" /><path d="m13 6 6 6-6 6" /></>,
 }
 
 export default function Icon({ name, size = 20, strokeWidth = 1.8, className, title }) {
@@ -34,7 +39,7 @@ export default function Icon({ name, size = 20, strokeWidth = 1.8, className, ti
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill={name === 'play' ? 'currentColor' : 'none'}
+      fill={name === 'play' || name === 'pause' ? 'currentColor' : 'none'}
       stroke="currentColor"
       strokeWidth={strokeWidth}
       strokeLinecap="round"

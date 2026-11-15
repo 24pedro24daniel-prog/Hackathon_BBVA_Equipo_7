@@ -72,3 +72,6 @@
   .movs__detalle { padding-left: 16px; }
   .movs__dato { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* Filtro por tipo (?tipo=…) */
+.movs__filtro-link { color: var(--brand); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }

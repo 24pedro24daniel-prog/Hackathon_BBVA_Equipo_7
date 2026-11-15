@@ -3,7 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { soles, ddmm, daysBetween } from '../../lib/format.js'
+import { destinoAlerta, esFaltante, estiloAlerta } from '../../lib/alertas.js'
 import DemoMenu from '../../components/layout/DemoMenu.jsx'
+import { useSesion } from '../../lib/useSesion.js'
 import {
   Card,
   Button,
@@ -21,9 +23,8 @@ import {
 import UltimosMovimientos from './UltimosMovimientos.jsx'
 import './Inicio.css'
 
-// No hay endpoint de empresa en el contrato todavía; el nombre del dueño va fijo para la demo.
-const NOMBRE_DUENIO = 'Pedro'
-const DIAS_REQUERIDOS_DEFAULT = 30
+// Solo si el backend no manda `dias_requeridos_forecast`; el backend usa 28.
+const DIAS_REQUERIDOS_DEFAULT = 28
 const MAX_PROXIMOS = 3
 
 const diasTxt = (n) => `${n} ${n === 1 ? 'día' : 'días'}`
@@ -35,6 +36,11 @@ export default function Inicio() {
   const resumen = useApi(() => api.getResumen(), [])
   const forecast = useApi(() => api.getForecast(30), [])
   const alertas = useApi(() => api.getAlertas('activa'), [])
+
+  // El negocio sale de la sesión (login). El nombre del dueño solo si el backend lo manda (negocio.duenio, opcional).
+  const sesion = useSesion()
+  const negocio = sesion?.negocio?.nombre
+  const duenio = sesion?.negocio?.duenio
 
   const r = resumen.data
   const diasConDatos = r?.dias_con_datos
@@ -48,7 +54,8 @@ export default function Inicio() {
     <div className="inicio">
       <header className="inicio__top">
         <div className="inicio__top-text">
-          <h1 className="inicio__hola">¡Hola, {NOMBRE_DUENIO}!</h1>
+          <h1 className="inicio__hola">{duenio ? `¡Hola, ${duenio}!` : '¡Hola!'}</h1>
+          {negocio && <p className="inicio__negocio">{negocio}</p>}
         </div>
         <DemoMenu />
       </header>
@@ -87,7 +94,7 @@ function InicioCargando() {
 function RegistrarTransaccion() {
   const navigate = useNavigate()
   return (
-    <Button size="lg" icon="mic" className="inicio__anotar" onClick={() => navigate('/chat')}>
+    <Button size="lg" icon="mic" className="inicio__anotar" onClick={() => navigate('/app/chat')}>
       Registrar transacción
     </Button>
   )
@@ -228,8 +235,9 @@ const ICONO_EVENTO = {
 
 /** Próximos pagos y cobros (forecast) con la alerta principal pegada a su fila. */
 function armarProximos(eventos, alerta, corte) {
-  const filas = eventos.map((e) => ({
-    key: `${e.fecha}-${e.concepto}`,
+  // El índice va en la clave: puede haber dos eventos iguales el mismo día (p. ej. dos cuotas de un préstamo).
+  const filas = eventos.map((e, i) => ({
+    key: `${e.fecha}-${e.concepto}-${i}`,
     fecha: e.fecha,
     titulo: e.concepto,
     monto: e.monto,
@@ -243,7 +251,7 @@ function armarProximos(eventos, alerta, corte) {
       fecha: alerta.fecha_evento,
       titulo: alerta.titulo_corto || alerta.titulo,
       monto: null,
-      icono: 'warning',
+      icono: estiloAlerta(alerta).icon,
       alerta,
     })
   }
@@ -258,41 +266,82 @@ function armarProximos(eventos, alerta, corte) {
   return visibles.sort((a, b) => (a.fecha ?? '').localeCompare(b.fecha ?? ''))
 }
 
+// Alertas que hablan de un pago con fecha: se pegan a su fila de "Próximos movimientos". Las demás van en "Avisos".
+const ALERTAS_DE_PAGO = new Set(['faltante_caja', 'pedido_excesivo', 'obligacion_proxima'])
+const MAX_AVISOS = 3
+
 function LoQueViene({ forecast, alertas, corte }) {
   if ((forecast.loading && !forecast.data) || (alertas.loading && !alertas.data)) return <Skeleton height={232} />
   if (forecast.error && alertas.error) return <ErrorState error={alertas.error} onRetry={alertas.reload} />
 
   const items = [...(alertas.data?.items ?? [])].sort((a, b) => (a.prioridad ?? 99) - (b.prioridad ?? 99))
-  const alerta = items[0] ?? null
+  const alerta = items.find((a) => ALERTAS_DE_PAGO.has(a.tipo)) ?? null
+  const avisos = items.filter((a) => a !== alerta).slice(0, MAX_AVISOS)
   const hoy = corte ?? forecast.data?.fecha_corte
   const filas = armarProximos(forecast.data?.proximos_eventos ?? [], alerta, hoy)
 
   return (
-    <Section title="Próximos movimientos">
-      <Card flush>
-        {filas.length === 0 ? (
-          <p className="inicio__viene-vacio">No tienes pagos ni cobros en los próximos 30 días.</p>
-        ) : (
-          <List>
-            {filas.map((f) => {
-              const dias = hoy && f.fecha ? daysBetween(hoy, f.fecha) : null
-              const fecha = f.fecha ? `${ddmm(f.fecha)}${dias != null ? ` · ${enDias(dias)}` : ''}` : null
-              return (
-                <ListRow
-                  key={f.key}
-                  lead={<Icon name={f.icono} size={20} />}
-                  title={f.titulo}
-                  sub={fecha}
-                  amount={f.monto != null ? <Money value={f.monto} sign tone={f.monto > 0 ? 'pos' : 'neutral'} /> : null}
-                >
-                  {f.alerta && <Cobertura pago={f.monto} falta={f.alerta.monto} />}
-                </ListRow>
-              )
-            })}
-          </List>
-        )}
-      </Card>
-    </Section>
+    <>
+      <Section title="Próximos movimientos">
+        <Card flush>
+          {filas.length === 0 ? (
+            <p className="inicio__viene-vacio">No tienes pagos ni cobros en los próximos 30 días.</p>
+          ) : (
+            <List>
+              {filas.map((f) => {
+                const dias = hoy && f.fecha ? daysBetween(hoy, f.fecha) : null
+                const fecha = f.fecha ? `${ddmm(f.fecha)}${dias != null ? ` · ${enDias(dias)}` : ''}` : null
+                return (
+                  <ListRow
+                    key={f.key}
+                    lead={<Icon name={f.icono} size={20} />}
+                    title={f.titulo}
+                    sub={fecha}
+                    amount={f.monto != null ? <Money value={f.monto} sign tone={f.monto > 0 ? 'pos' : 'neutral'} /> : null}
+                  >
+                    {f.alerta && esFaltante(f.alerta) && <Cobertura pago={f.monto} falta={f.alerta.monto} />}
+                    {f.alerta && <AccionAlerta alerta={f.alerta} />}
+                  </ListRow>
+                )
+              })}
+            </List>
+          )}
+        </Card>
+      </Section>
+      {avisos.length > 0 && (
+        <Section title="Avisos">
+          <Card flush>
+            <List>
+              {avisos.map((a) => {
+                const destino = destinoAlerta(a)
+                return (
+                  <ListRow
+                    key={a.alerta_id}
+                    lead={<Icon name={estiloAlerta(a).icon} size={20} />}
+                    title={a.titulo_corto || a.titulo}
+                    sub={a.insight}
+                    to={destino?.to}
+                  />
+                )
+              })}
+            </List>
+          </Card>
+        </Section>
+      )}
+    </>
+  )
+}
+
+/** Botón de texto de la alerta de la fila (lo que sugiere el backend: simulador, retiros, cuentas…). */
+function AccionAlerta({ alerta }) {
+  const destino = destinoAlerta(alerta)
+  if (!destino) return null
+  return (
+    <div className="inicio__alerta-accion">
+      <Link to={destino.to} className="inicio__alerta-link">
+        {destino.texto}
+      </Link>
+    </div>
   )
 }
 

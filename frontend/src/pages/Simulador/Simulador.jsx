@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { ddmm, soles } from '../../lib/format.js'
-import { Card, ErrorState, Icon, LoadingBlock, MetaLine, Money, PageHeader } from '../../components/ui/index.jsx'
+import { useSearchParams } from 'react-router-dom'
+import { Card, ErrorState, Icon, LoadingBlock, MetaLine, Money, PageHeader, TraceInfo } from '../../components/ui/index.jsx'
 import './Simulador.css'
 
 /** "2026-11-30" + 15 → "2026-12-15" */
@@ -17,11 +18,17 @@ function joinNombres(nombres) {
   return `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}`
 }
 
-/** Todo lo que la pantalla necesita, sacado del backend: pedido pendiente, chequeo, fiados, mínimo y resultado inicial. */
-async function cargarEscenario() {
+/**
+ * Todo lo que la pantalla necesita, sacado del backend: pedido pendiente, chequeo, fiados, mínimo y resultado inicial.
+ * `pedidoId` (?pedido_id=, p. ej. desde una alerta): el pedido a simular; si no existe, el del día crítico.
+ */
+async function cargarEscenario(pedidoId) {
   const [forecast, pedidos, fiados] = await Promise.all([api.getForecast(30), api.getPedidos(), api.getFiados('pendiente')])
   const items = pedidos.items || []
-  const pedido = items.find((p) => p.pedido_id === forecast.dia_critico?.obligacion_asociada?.id) || items[0]
+  const pedido =
+    items.find((p) => p.pedido_id === pedidoId) ||
+    items.find((p) => p.pedido_id === forecast.dia_critico?.obligacion_asociada?.id) ||
+    items[0]
   if (!pedido) return null
   // Sin acciones, /simular da el punto de partida antes de mover opciones.
   const [chequeo, inicial] = await Promise.all([
@@ -58,7 +65,9 @@ function buildAcciones(esc, { monto, partes, cobrar }) {
 }
 
 export default function Simulador() {
-  const { data: esc, error, loading, reload } = useApi(cargarEscenario, [])
+  const [params] = useSearchParams()
+  const pedidoId = params.get('pedido_id')
+  const { data: esc, error, loading, reload } = useApi(() => cargarEscenario(pedidoId), [pedidoId])
 
   if (loading && !esc)
     return (
@@ -208,6 +217,7 @@ function SimuladorEscenario({ esc }) {
             </p>
           )}
         </div>
+        <Detalle r={sim.data} />
 
         <div className="sim-foot">
           <p>Simulación con tus ventas y gastos recientes. Tú decides; nada se ejecuta solo.</p>
@@ -215,6 +225,26 @@ function SimuladorEscenario({ esc }) {
         </div>
       </div>
     </Shell>
+  )
+}
+
+/** Lo que el backend avisa del cálculo: notas visibles (p. ej. un pago que cae fuera de la proyección) y, plegado, de dónde sale. */
+function Detalle({ r }) {
+  const notas = (r.notas || []).filter(Boolean)
+  const extra = r.ventana_hasta ? [['Hasta qué día mira', ddmm(r.ventana_hasta)]] : []
+  const hayTrace = r.fundamento || r.limites || extra.length > 0
+  if (!notas.length && !hayTrace) return null
+  return (
+    <>
+      {notas.length > 0 && (
+        <ul className="sim-notas">
+          {notas.map((n, i) => (
+            <li key={i}>{n}</li>
+          ))}
+        </ul>
+      )}
+      {hayTrace && <TraceInfo fundamento={r.fundamento} limites={r.limites} confianza={r.confianza} extra={extra} />}
+    </>
   )
 }
 

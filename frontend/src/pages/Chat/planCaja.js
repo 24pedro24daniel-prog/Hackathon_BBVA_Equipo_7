@@ -95,7 +95,7 @@ export async function armarPlanCaja() {
       problema,
       pasosTitulo: 'Para seguir así:',
       pasos: habitos,
-      acciones: [{ tipo: 'abrir_simulador', texto: 'Probar opciones' }],
+      acciones: [{ tipo: 'abrir_simulador', texto: 'Probar opciones', pedido_id: pedido?.pedido_id }],
       fecha,
     }
   }
@@ -141,7 +141,7 @@ export async function armarPlanCaja() {
 
   const acciones = []
   if (recordar) acciones.push({ tipo: 'recordar_fiado', texto: `Recordar a ${recordar.cliente}`, fiado: recordar })
-  acciones.push({ tipo: 'abrir_simulador', texto: 'Probar opciones' })
+  acciones.push({ tipo: 'abrir_simulador', texto: 'Probar opciones', pedido_id: pedido?.pedido_id })
 
   return {
     tone: falta ? 'danger' : 'warning',

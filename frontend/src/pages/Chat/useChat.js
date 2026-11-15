@@ -6,12 +6,14 @@
 // Las tarjetas con acciones llevan `status`: pending | editing | saving | done | replaced | discarded.
 // Todo texto o audio va a POST /chat/mensajes (con el borrador pendiente, si hay): el backend decide si es un registro,
 // una corrección/respuesta, un "sí", un "bórralo" o una pregunta. Los botones usan sus endpoints directos.
+// Audio y foto reales se suben primero a R2 (api.subirMedia) y se mandan como media_url r2://… (contract.md §1.0).
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { ddmm, hhmm, soles } from '../../lib/format.js'
+import { destinoAlerta } from '../../lib/alertas.js'
 import { isAffirmative, isNegative, parseNumero, textoConfirmado } from './chatText.js'
-import { capturarFotoCuaderno, capturarNotaDeVoz, DEMO_VOICE_NOTES } from './media.js'
+import { capturarFotoCuaderno, capturarNotaDeVoz, DEMO_VOICE_NOTES, duracionTexto } from './media.js'
 import { DEMO_SCRIPTS } from './demoScripts.js'
 import { armarPlanCaja, preguntaPlan } from './planCaja.js'
 
@@ -60,8 +62,22 @@ export function useChat({ demo, intent } = {}) {
   }
 
   function handleError(err, retry) {
-    // Mensajes del backend que ya están escritos para Pedro (no interpretable, ya confirmado, falta el monto…)
-    const paraPedro = ['NO_INTERPRETABLE', 'NO_ENCONTRADO', 'CONFLICTO'].includes(err?.codigo) || (err?.codigo === 'VALIDACION' && err.status === 400)
+    // Límite de uso de las rutas de IA (contract.md §12.4)
+    if (err?.status === 429) {
+      const s = err.retryAfter
+      bot('text', { text: s ? `Mandaste muchos mensajes seguidos. Espera ${s} s y vuelve a intentar.` : 'Mandaste muchos mensajes seguidos. Espera un momento y vuelve a intentar.' })
+      return
+    }
+    // Subida de audio/foto: el texto ya está escrito para Pedro y se puede reintentar con el mismo archivo
+    if (err?.paraPedro) {
+      bot('error', { text: err.message, retry, status: 'pending' })
+      return
+    }
+    // Mensajes del backend que ya están escritos para Pedro (no interpretable, ya confirmado, falta el monto,
+    // "ahora no puedo escuchar audios"…)
+    const paraPedro =
+      ['NO_INTERPRETABLE', 'NO_ENCONTRADO', 'CONFLICTO', 'SERVICIO_NO_DISPONIBLE'].includes(err?.codigo) ||
+      (err?.codigo === 'VALIDACION' && err.status === 400)
     if (paraPedro) {
       bot('text', { text: err.message })
       return
@@ -246,19 +262,25 @@ export function useChat({ demo, intent } = {}) {
 
   // ---------- F6: alerta proactiva ----------
 
-  // Solo abre el simulador: no marca la alerta como atendida (Pedro aún no hizo nada).
-  const abrirAlerta = () => navigate('/simulador')
+  // Lleva a donde indica la alerta (simulador, cuentas, retiros…): no la marca como atendida (Pedro aún no hizo nada).
+  const abrirAlerta = (alerta) => {
+    const destino = destinoAlerta(alerta)
+    if (destino) navigate(destino.to)
+  }
 
   // ---------- F7: asistente ----------
 
   function accionAsistente(accion) {
-    if (accion.tipo === 'abrir_simulador') return navigate('/simulador')
     if (accion.tipo === 'hablar_humano') {
       me('text', { text: accion.texto || 'Hablar con una persona' })
       bot('text', {
         text: 'Listo, le paso tu consulta a una persona del equipo y te escribe por aquí.',
       })
+      return
     }
+    // abrir_simulador, ver_cuentas… llevan a la pantalla correspondiente; una acción desconocida no hace nada
+    const destino = destinoAlerta({ accion })
+    if (destino) navigate(destino.to)
   }
 
   // ---------- Plan de caja ("Probar qué hacer" desde 30 días) ----------
@@ -278,7 +300,7 @@ export function useChat({ demo, intent } = {}) {
   async function accionPlan(id, accion) {
     const m = get(id)
     if (!m) return
-    if (accion.tipo === 'abrir_simulador') return navigate('/simulador')
+    if (accion.tipo === 'abrir_simulador') return navigate(`/app/simulador${accion.pedido_id ? `?pedido_id=${accion.pedido_id}` : ''}`)
     if (accion.tipo !== 'recordar_fiado' || m.usadas.includes(accion.tipo)) return
     me('text', { text: accion.texto })
     update(id, { usadas: [...m.usadas, accion.tipo] })
@@ -334,7 +356,8 @@ export function useChat({ demo, intent } = {}) {
       const nuevos = fiados.length - repetidos
       const total = fiados.reduce((s, f) => s + Number(f.monto || 0), 0) - (r?.duplicados || []).reduce((s, f) => s + f.monto, 0)
       const lines = []
-      if (nuevos > 0) lines.push(`Guardé ${nuevos} ${nuevos === 1 ? 'fiado' : 'fiados'} por **${soles(total)}** ✅`)
+      const totalTxt = soles(total, { cents: Math.round(total * 100) % 100 !== 0 })
+      if (nuevos > 0) lines.push(`Guardé ${nuevos} ${nuevos === 1 ? 'fiado' : 'fiados'} por **${totalTxt}** ✅`)
       if (repetidos > 0) lines.push(`${repetidos} ya ${repetidos === 1 ? 'estaba' : 'estaban'} en tu cuaderno; no los dupliqué.`)
       bot('text', { text: lines.join('\n') })
     } catch (err) {
@@ -391,22 +414,57 @@ export function useChat({ demo, intent } = {}) {
     return conversar({ texto })
   }
 
+  /** Nota de voz de prueba (guiones de demo y alternativa sin micrófono) */
   async function enviarVoz(note) {
     const nota = await capturarNotaDeVoz(note)
     const audioId = me('audio', { duracion: nota.duracion, transcripcion: null })
     return conversar({ canal: 'voz', texto: nota.texto, media_url: nota.media_url, audioId })
   }
 
+  /** Nota de voz grabada: se sube a R2 y el backend la transcribe (Whisper) e interpreta */
+  async function enviarAudio({ blob, contentType, duracionS }) {
+    const audioId = me('audio', { duracion: duracionTexto(duracionS), src: URL.createObjectURL(blob), transcripcion: null })
+    return subirAudio(audioId, blob, contentType)
+  }
+
+  async function subirAudio(audioId, blob, contentType) {
+    let media_url
+    try {
+      media_url = await withTyping('Subiendo tu audio…', () => api.subirMedia(blob, { tipo: 'audio', contentType }))
+    } catch (err) {
+      return handleError(err, () => subirAudio(audioId, blob, contentType))
+    }
+    return conversar({ canal: 'voz', texto: null, media_url, audioId })
+  }
+
+  /** Foto de prueba del cuaderno (guion "fiados") */
   async function enviarFoto() {
     const foto = await capturarFotoCuaderno()
     me('photo', { caption: foto.caption })
     return leerCuaderno(foto.media_url)
   }
 
+  /** Foto real (ya achicada en el navegador): se sube a R2 y el backend la lee con el modelo de visión */
+  async function enviarFotoArchivo({ blob, contentType, url }) {
+    me('photo', { src: url, caption: null })
+    return subirFoto(blob, contentType)
+  }
+
+  async function subirFoto(blob, contentType) {
+    setFlujo('Fiados')
+    let media_url
+    try {
+      media_url = await withTyping('Subiendo tu foto…', () => api.subirMedia(blob, { tipo: 'imagen', contentType }))
+    } catch (err) {
+      return handleError(err, () => subirFoto(blob, contentType))
+    }
+    return leerCuaderno(media_url)
+  }
+
   // ---------- Al montar: alerta del día + guion de demo opcional ----------
 
   const actions = {
-    enviarTexto, enviarVoz, enviarFoto, correcto, corregir, elegirOpcion, verOpciones, registrarIgual,
+    enviarTexto, enviarVoz, enviarAudio, enviarFoto, enviarFotoArchivo, correcto, corregir, elegirOpcion, verOpciones, registrarIgual,
     abrirAlerta, accionAsistente, accionPlan, planCaja, guardarCuaderno, corregirCuaderno, retry,
   }
   const actionsRef = useRef(actions)

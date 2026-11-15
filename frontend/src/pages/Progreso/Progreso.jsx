@@ -3,6 +3,7 @@ import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { ddmm } from '../../lib/format.js'
 import {
+  Button,
   Card,
   ErrorState,
   Icon,
@@ -85,7 +86,7 @@ export default function Progreso() {
     <div className="progreso">
       <PageHeader title="Tu progreso" />
       <div className="progreso-body">
-        {loading && <LoadingBlock heights={[220, 180, 110, 300]} />}
+        {loading && !data && <LoadingBlock heights={[220, 180, 110, 300]} />}
         {error && <ErrorState error={error} onRetry={reload} />}
         {data && (
           <>
@@ -96,7 +97,7 @@ export default function Progreso() {
             </div>
             <div className="progreso-col">
               <Componentes salud={data} />
-              <Metas metas={data.metas_activas || []} rachas={data.rachas || []} />
+              <Metas metas={data.metas_activas || []} rachas={data.rachas || []} onCreada={reload} />
             </div>
             <p className="progreso-privacy cc-small">
               Tu historial es tuyo. Solo se comparte si tú lo activas, y puedes retirarlo cuando quieras.
@@ -320,12 +321,176 @@ function Componentes({ salud }) {
 
 /* ---------- Metas (patrón "pots" de Monzo) ---------- */
 
-function Metas({ metas, rachas }) {
+/**
+ * Metas que se pueden crear (POST /metas, contract.md §8.2). `regla` y `recordatorio` son los valores
+ * por defecto de cada plantilla; el sueldo fijo es la única que pide un dato (cuánto te pagas).
+ */
+const PLANTILLAS = [
+  {
+    id: 'apartar_para_pedido',
+    titulo: 'Apartar para el pedido',
+    sub: 'Separas S/ 1 de cada S/ 10 que vendes para tu próximo pedido.',
+    body: () => ({
+      regla: { tipo: 'porcentaje_de_venta', valor: 0.1, destino: 'fondo_pedidos' },
+      recordatorio: { frecuencia: 'semanal', dia: 'lunes' },
+    }),
+  },
+  {
+    id: 'sueldo_fijo',
+    titulo: 'Ponerme un sueldo fijo',
+    sub: 'Te pagas lo mismo cada semana y no sacas de más de la caja.',
+    pideMonto: true,
+    body: (monto) => ({
+      regla: { tipo: 'monto_fijo', valor: monto, destino: 'sueldo' },
+      recordatorio: { frecuencia: 'semanal', dia: 'sábado' },
+    }),
+  },
+  {
+    id: 'colchon_caja',
+    titulo: 'Armar un colchón de caja',
+    sub: 'Separas S/ 1 de cada S/ 20 que vendes para los días flojos.',
+    body: () => ({
+      regla: { tipo: 'porcentaje_de_venta', valor: 0.05, destino: 'colchon' },
+      recordatorio: { frecuencia: 'semanal', dia: 'lunes' },
+    }),
+  },
+  {
+    id: 'reservar_impuestos',
+    titulo: 'Reservar para impuestos',
+    sub: 'Separas S/ 1 de cada S/ 20 que vendes para llegar tranquilo a pagar.',
+    body: () => ({
+      regla: { tipo: 'porcentaje_de_venta', valor: 0.05, destino: 'impuestos' },
+      recordatorio: { frecuencia: 'semanal', dia: 'viernes' },
+    }),
+  },
+  {
+    id: 'registrar_30_dias',
+    titulo: 'Anotar 30 días seguidos',
+    sub: 'Anotas tus ventas y gastos todos los días, sin saltarte ninguno.',
+    body: () => ({ recordatorio: { frecuencia: 'diaria' } }),
+  },
+]
+
+/**
+ * Crear una meta en tres pasos: botón → lista de metas → confirmar (con el monto, solo en el sueldo fijo).
+ * `paso`: null (cerrado) | 'elegir' | plantilla elegida.
+ */
+function CrearMeta({ disponibles, onCreada }) {
+  const [paso, setPaso] = useState(null)
+  const [monto, setMonto] = useState('')
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState(null)
+  const [creada, setCreada] = useState(null)
+  const montoId = useId()
+
+  if (!disponibles.length && !creada) return null
+
+  const cerrar = () => {
+    setPaso(null)
+    setMonto('')
+    setError(null)
+  }
+
+  const crear = async () => {
+    const valor = Number(String(monto).replace(',', '.'))
+    if (paso.pideMonto && !(valor > 0)) {
+      setError('Escribe cuánto te quieres pagar por semana.')
+      return
+    }
+    setGuardando(true)
+    setError(null)
+    try {
+      const res = await api.crearMeta({ plantilla: paso.id, ...paso.body(valor) })
+      setCreada(res?.titulo || paso.titulo)
+      cerrar()
+      onCreada()
+    } catch (e) {
+      // Mensaje real del backend (validación, sin conexión…), ya escrito para Pedro
+      setError(e?.message || 'No pude crear la meta. Intenta otra vez.')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  if (paso && paso !== 'elegir') {
+    return (
+      <div className="progreso-nueva">
+        <p className="progreso-nueva__title">{paso.titulo}</p>
+        <p className="progreso-nueva__sub">{paso.sub}</p>
+        {paso.pideMonto && (
+          <div className="progreso-nueva__campo">
+            <label htmlFor={montoId}>¿Cuánto te pagas por semana?</label>
+            <span className="progreso-nueva__monto">
+              <span aria-hidden="true">S/</span>
+              <input
+                id={montoId}
+                type="number"
+                inputMode="decimal"
+                min="1"
+                step="1"
+                value={monto}
+                onChange={(e) => setMonto(e.target.value)}
+              />
+            </span>
+          </div>
+        )}
+        {error && (
+          <p className="progreso-nueva__error" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="progreso-nueva__acciones">
+          <Button size="sm" onClick={crear} disabled={guardando} aria-busy={guardando}>
+            {guardando ? 'Creando…' : 'Crear meta'}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => { setError(null); setPaso('elegir') }} disabled={guardando}>
+            Elegir otra
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (paso === 'elegir') {
+    return (
+      <div className="progreso-nueva">
+        <p className="progreso-nueva__title">¿Qué quieres lograr?</p>
+        <List className="progreso-nueva__lista">
+          {disponibles.map((p) => (
+            <ListRow key={p.id} title={p.titulo} sub={p.sub} onClick={() => setPaso(p)} />
+          ))}
+        </List>
+        <Button variant="ghost" size="sm" onClick={cerrar}>
+          Ahora no
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="progreso-nueva">
+      {creada && (
+        <p className="progreso-nueva__ok" role="status">
+          Listo, creé tu meta «{creada}».
+        </p>
+      )}
+      {disponibles.length > 0 && (
+        <Button variant="secondary" size="sm" icon="plus" onClick={() => { setCreada(null); setPaso('elegir') }}>
+          Crear una meta
+        </Button>
+      )}
+    </div>
+  )
+}
+
+function Metas({ metas, rachas, onCreada }) {
   const titleId = useId()
   const activas = metas.filter((m) => !m.estado || m.estado === 'activa')
   const rachasVisibles = rachas
     .filter((r) => RACHAS[r.tipo] && r.valor > 0)
     .map((r) => ({ key: r.tipo, ...RACHAS[r.tipo](r.valor) }))
+  const usadas = new Set(activas.map((m) => m.plantilla))
+  const disponibles = PLANTILLAS.filter((p) => !usadas.has(p.id))
 
   return (
     <Card flush className="progreso-metas" aria-labelledby={titleId}>
@@ -345,13 +510,12 @@ function Metas({ metas, rachas }) {
             end={m.acumulado != null ? <span className="cc-row__sub">apartado</span> : undefined}
           />
         ))}
-        {!activas.length && (
-          <ListRow to="/chat" title="Crear una meta" sub="Dila en el chat, por ejemplo “quiero apartar para el pedido”." />
-        )}
+        {!activas.length && <ListRow title="Todavía no tienes metas" sub="Una meta te ayuda a separar plata o a tomar un buen hábito." />}
         {rachasVisibles.map((r) => (
           <ListRow key={r.key} title={r.titulo} sub={r.sub} />
         ))}
       </List>
+      <CrearMeta disponibles={disponibles} onCreada={onCreada} />
     </Card>
   )
 }

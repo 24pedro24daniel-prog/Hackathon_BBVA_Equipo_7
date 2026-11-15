@@ -1,6 +1,6 @@
 // Chat simulado de WhatsApp: superficie principal de registro (F1), alertas (F6) y asistente (F7).
 // /chat?demo=registro|pedido|alertas|fiados reproduce la conversación del mockup para la presentación.
-// navigate('/chat', { state: { intent: 'plan_caja' } }) abre el chat con el plan para el próximo pago ("Probar qué hacer").
+// navigate('/app/chat', { state: { intent: 'plan_caja' } }) abre el chat con el plan para el próximo pago ("Probar qué hacer").
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import ChatHeader from './ChatHeader.jsx'
@@ -25,7 +25,13 @@ export default function Chat() {
     <div className="chat-page">
       <ChatHeader flujo={flujo} />
       <MessageList messages={messages} typing={typing} actions={actions} />
-      <Composer busy={busy} onText={actions.enviarTexto} onVoice={actions.enviarVoz} onPhoto={actions.enviarFoto} />
+      <Composer
+        busy={busy}
+        onText={actions.enviarTexto}
+        onVoice={actions.enviarVoz}
+        onAudio={actions.enviarAudio}
+        onFoto={actions.enviarFotoArchivo}
+      />
     </div>
   )
 }

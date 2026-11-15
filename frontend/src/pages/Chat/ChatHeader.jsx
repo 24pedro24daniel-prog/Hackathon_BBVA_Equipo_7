@@ -6,7 +6,7 @@ export default function ChatHeader({ flujo }) {
   const navigate = useNavigate()
   return (
     <header className="chat-header">
-      <button type="button" className="cc-iconbtn" onClick={() => navigate('/')} aria-label="Volver a Inicio">
+      <button type="button" className="cc-iconbtn" onClick={() => navigate('/app')} aria-label="Volver a Inicio">
         <Icon name="back" size={22} />
       </button>
       <div className="chat-header__text">

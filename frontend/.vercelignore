@@ -1,0 +1,9 @@
+# Lo que NO se sube a Vercel con `vercel deploy` (el build corre en Vercel con npm ci).
+.env
+.env.*
+!.env.example
+.vercel
+node_modules
+dist
+*.log
+*.pdf

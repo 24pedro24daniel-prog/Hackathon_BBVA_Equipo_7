@@ -27,13 +27,14 @@ export const resumenPedro = {
   empresa_id: 'EMP-0001',
   periodo: '2026-11',
   corte: CORTE,
-  dias_con_datos: 92, // EXT: para el estado "día 3"
+  dias_con_datos: 92,
+  dias_requeridos_forecast: 28,
   indicadores: {
     saldo_caja_negocio: { valor: 2340.0, variacion_pct: null },
     ingresos_mes: { valor: 8540.0, variacion_pct: -6.2 },
     egresos_mes: { valor: 7310.0, variacion_pct: 4.8 },
     ganancia_neta: { valor: 980.0, variacion_pct: -18.5, es_aproximada: true, rango: [760.0, 1210.0] },
-    retiros_personales: { valor: 1900.0, sueldo_fijo_definido: null, promedio_historico: 1200.0 },
+    retiros_personales: { valor: 1900.0, sueldo_fijo_definido: 400.0, promedio_historico: 1200.0, sueldo_frecuencia: 'semanal', exceso_vs_promedio: 700.0 },
     pendiente_cobro: { valor: 445.0, n_fiados: 7 },
     pagos_pendientes: { valor: 3215.0, n_obligaciones: 7, detalle: 'Andina, 5 pedidos chicos y RUS' }, // detalle: EXT
   },
@@ -46,12 +47,13 @@ export const resumenSano = {
   periodo: '2026-11',
   corte: CORTE,
   dias_con_datos: 92,
+  dias_requeridos_forecast: 28,
   indicadores: {
     saldo_caja_negocio: { valor: 3620.0, variacion_pct: null },
     ingresos_mes: { valor: 9680.0, variacion_pct: 5.4 },
     egresos_mes: { valor: 7420.0, variacion_pct: -1.2 },
     ganancia_neta: { valor: 1760.0, variacion_pct: 9.8, es_aproximada: true, rango: [1540.0, 1980.0] },
-    retiros_personales: { valor: 1100.0, sueldo_fijo_definido: 1100.0, promedio_historico: 1150.0 },
+    retiros_personales: { valor: 1100.0, sueldo_fijo_definido: 400.0, promedio_historico: 1150.0, sueldo_frecuencia: 'semanal', exceso_vs_promedio: 0.0 },
     pendiente_cobro: { valor: 85.0, n_fiados: 3 },
     pagos_pendientes: { valor: 2520.0, n_obligaciones: 3, detalle: 'Andina, Panadería y RUS' },
   },
@@ -63,13 +65,13 @@ export const resumenNuevo = {
   periodo: '2026-11',
   corte: CORTE,
   dias_con_datos: 3,
-  dias_requeridos_forecast: 30, // EXT
+  dias_requeridos_forecast: 28,
   indicadores: {
     saldo_caja_negocio: { valor: 1120.0, variacion_pct: null },
     ingresos_mes: { valor: 1870.0, variacion_pct: null },
     egresos_mes: { valor: 1600.0, variacion_pct: null },
     ganancia_neta: { valor: 235.0, variacion_pct: null, es_aproximada: true, rango: [150.0, 320.0] },
-    retiros_personales: { valor: 150.0, sueldo_fijo_definido: null, promedio_historico: null },
+    retiros_personales: { valor: 150.0, sueldo_fijo_definido: null, promedio_historico: null, sueldo_frecuencia: null, exceso_vs_promedio: null },
     pendiente_cobro: { valor: 0, n_fiados: 0 },
     pagos_pendientes: { valor: 0, n_obligaciones: 0 },
   },
@@ -124,7 +126,7 @@ export const forecastPedro = () => ({
   disponible_para_gastar: {
     valor: 0.0,
     formula: 'saldo_actual + cobros_esperados − pagos_comprometidos_hasta_proximo_vencimiento − minimo_operativo − reserva_impuestos',
-    // pagos_comprometidos: Andina 2,400 + RUS 20 + pedidos chicos que vencen antes (180 + 140 + 95 + 120)
+    // pagos_comprometidos: Andina 2 400 + RUS 20 + pedidos chicos que vencen antes (180 + 140 + 95 + 120)
     componentes: { saldo_actual: 2340.0, cobros_esperados: 190.0, pagos_comprometidos: 2955.0, minimo_operativo: 800.0, reserva_impuestos: 20.0 },
     mensaje: 'Hoy no hagas gastos extra: arriesgas el pago del 30/11.',
   },
@@ -150,7 +152,7 @@ export const forecastNuevo = () => ({
   horizonte_dias: 30,
   disponible: false, // EXT
   dias_con_datos: 3, // EXT
-  dias_requeridos: 30, // EXT
+  dias_requeridos: 28,
   saldo_actual: 1120.0,
   serie: [],
   meta: meta('forecast-lgbm-quantile', '0.3.1'),
@@ -202,7 +204,7 @@ export const forecastSano = () => ({
   disponible_para_gastar: {
     valor: 180.0,
     formula: 'saldo_actual + cobros_esperados − pagos_comprometidos_hasta_proximo_vencimiento − minimo_operativo − reserva_impuestos',
-    // pagos_comprometidos: Andina 2,400 + Panadería 100 + luz y agua 180
+    // pagos_comprometidos: Andina 2 400 + Panadería 100 + luz y agua 180
     componentes: { saldo_actual: SALDO_SANO, cobros_esperados: 60.0, pagos_comprometidos: 2680.0, minimo_operativo: 800.0, reserva_impuestos: 20.0 },
     mensaje: 'Puedes gastar hasta S/ 180 hoy y igual pagas a Andina el 30/11.',
   },
@@ -274,7 +276,7 @@ export const fiados = () => ({
   ],
   fundamento: 'Cada riesgo sale de cuánto se demoró esa persona antes y de cuántos días lleva este fiado.', // EXT
   limites: 'Es una estimación; no sabe si el vecino tuvo un imprevisto.', // EXT
-  meta: meta('riesgo-atraso-clf', '0.2.0'),
+  meta: meta('riesgo-atraso-baseline', '0.1.0'),
 })
 
 export const fiadosSano = () => ({
@@ -302,7 +304,7 @@ export const fiadosSano = () => ({
   ],
   fundamento: 'Cada riesgo sale de cuánto se demoró esa persona antes y de cuántos días lleva este fiado.',
   limites: 'Es una estimación; no sabe si el vecino tuvo un imprevisto.',
-  meta: meta('riesgo-atraso-clf', '0.2.0'),
+  meta: meta('riesgo-atraso-baseline', '0.1.0'),
 })
 
 export const pedidos = () => ({
@@ -310,7 +312,7 @@ export const pedidos = () => ({
   items: [
     {
       pedido_id: 'PED-0012', proveedor: 'Distribuidora Andina', monto: 2400.0, monto_pendiente: 2400.0,
-      fecha_pedido: '2026-11-13', fecha_vencimiento: '2026-11-30', estado: 'por_vencer', dias_para_vencer: 16,
+      fecha_pedido: '2026-11-13', fecha_vencimiento: '2026-11-30', estado: 'pendiente', dias_para_vencer: 16,
     },
     {
       pedido_id: 'PED-0015', proveedor: 'Avícola La Granja', monto: 95.0, monto_pendiente: 95.0,
@@ -318,11 +320,11 @@ export const pedidos = () => ({
     },
     {
       pedido_id: 'PED-0013', proveedor: 'Panadería San Jorge', monto: 180.0, monto_pendiente: 180.0,
-      fecha_pedido: '2026-11-11', fecha_vencimiento: '2026-11-18', estado: 'por_vencer', dias_para_vencer: 4,
+      fecha_pedido: '2026-11-11', fecha_vencimiento: '2026-11-18', estado: 'pendiente', dias_para_vencer: 4,
     },
     {
       pedido_id: 'PED-0014', proveedor: 'Lácteos del Valle', monto: 140.0, monto_pendiente: 140.0,
-      fecha_pedido: '2026-11-07', fecha_vencimiento: '2026-11-21', estado: 'por_vencer', dias_para_vencer: 7,
+      fecha_pedido: '2026-11-07', fecha_vencimiento: '2026-11-21', estado: 'pendiente', dias_para_vencer: 7,
     },
     {
       pedido_id: 'PED-0017', proveedor: 'Distribuidora El Sol', monto: 120.0, monto_pendiente: 120.0,
@@ -341,11 +343,11 @@ export const pedidosSano = () => ({
   items: [
     {
       pedido_id: 'PED-0012', proveedor: 'Distribuidora Andina', monto: 2400.0, monto_pendiente: 2400.0,
-      fecha_pedido: '2026-11-13', fecha_vencimiento: '2026-11-30', estado: 'por_vencer', dias_para_vencer: 16,
+      fecha_pedido: '2026-11-13', fecha_vencimiento: '2026-11-30', estado: 'pendiente', dias_para_vencer: 16,
     },
     {
       pedido_id: 'PED-0013', proveedor: 'Panadería San Jorge', monto: 100.0, monto_pendiente: 100.0,
-      fecha_pedido: '2026-11-11', fecha_vencimiento: '2026-11-18', estado: 'por_vencer', dias_para_vencer: 4,
+      fecha_pedido: '2026-11-11', fecha_vencimiento: '2026-11-18', estado: 'pendiente', dias_para_vencer: 4,
     },
   ],
   impuestos: { impuesto_id: 'IMP-0011', estado: 'al_dia', proximo_vencimiento: '2026-12-15', monto_estimado: 20.0, nombre: 'RUS de noviembre' },
@@ -366,7 +368,7 @@ export const alertas = () => ({
       nivel_riesgo: 'alto',
       titulo: 'El 30/11 te faltarían S/ 650 para pagar a Andina',
       titulo_corto: 'El 30/11 no te alcanzará', // EXT (chat)
-      insight: 'Para pagar S/ 2,400 a Distribuidora Andina te faltarían S/ 650.',
+      insight: 'Para pagar S/ 2 400 a Distribuidora Andina te faltarían S/ 650.',
       resumen_causas: 'vendiste menos, pedido grande y fiados sin cobrar.', // EXT
       causas: [
         { descripcion: 'Vendiste menos que el mes pasado', monto: 560.0 },
@@ -374,23 +376,24 @@ export const alertas = () => ({
         { descripcion: 'Fiados sin cobrar', monto: 445.0 },
       ],
       accion: { tipo: 'abrir_simulador', texto_boton: 'Ver qué puedo hacer', payload: { pedido_id: 'PED-0012' } },
-      microexplicacion: 'Si pides más de lo que vendes en el plazo de pago, la caja no llega a la fecha.',
+      microexplicacion: 'Si sacas de la caja sin un monto fijo, es difícil saber cuánto puedes pedir.',
       canales: ['whatsapp', 'app'],
       estado: 'activa',
+      enviada_en: null,
       meta: meta('reglas-alertas + forecast-lgbm-quantile', '0.3.1'),
     },
   ],
 })
 
 // ---------- F8 Salud ----------
-// Los cinco factores del puntaje (mismo orden y pesos en todos los escenarios).
+// Los tres hábitos del puntaje (mismo orden y pesos que el backend: score-reglas, contract.md §8.1).
 export const FACTORES_SALUD = [
-  { id: 'regularidad_ventas', nombre: 'Vender todos los días', peso: 0.25, que_mide: 'Que vendas de forma constante, sin días en cero.' },
-  { id: 'pago_proveedores', nombre: 'Pagar a tiempo a proveedores', peso: 0.25, que_mide: 'Que pagues tus pedidos a tiempo, sin acumular deuda ni atrasos.' },
-  { id: 'registro_ventas', nombre: 'Anotar tus ventas', peso: 0.2, que_mide: 'Qué parte de tus ventas anotas: mientras más anotas, mejores son tus números.' },
-  { id: 'fiado_cobro', nombre: 'Fiar poco y cobrar a tiempo', peso: 0.15, que_mide: 'Cuánto de lo que vendes es fiado y qué tan rápido lo cobras.' },
-  { id: 'antiguedad', nombre: 'Tiempo con el negocio', peso: 0.15, que_mide: 'Cuánto tiempo llevas con el negocio: más tiempo, más historial.' },
+  { id: 'constancia_registro', nombre: 'Anotar todos los días', peso: 0.35 },
+  { id: 'separacion_personal', nombre: 'Ponerte un sueldo fijo', peso: 0.4 },
+  { id: 'impuestos_al_dia', nombre: 'Impuestos al día', peso: 0.25 },
 ]
+const FUNDAMENTO_SALUD =
+  'Sale de 3 hábitos: anotar todos los días, ponerte un sueldo fijo (el que más cuenta) y tener tus impuestos al día.'
 
 /** score = round(Σ valor × peso). Se redondea a 2 decimales antes para evitar errores de coma flotante. */
 export const scoreDesdeFactores = (subs) =>
@@ -398,89 +401,83 @@ export const scoreDesdeFactores = (subs) =>
 
 /** Une los valores de un escenario { id: { valor, detalle, destacado? } } con FACTORES_SALUD. */
 function armarFactores(valores) {
-  return FACTORES_SALUD.map((f) => ({ ...f, ...valores[f.id] }))
+  return FACTORES_SALUD.map((f) => ({ ...f, destacado: true, ...valores[f.id] }))
 }
 
-// Pedro: 96·0.25 + 45·0.25 + 85·0.2 + 60·0.15 + 65·0.15 = 71
+// Pedro: 100·0.35 + 78·0.40 + 100·0.25 = 91.2 → 91 (mismos subindicadores que data/csv/score_salud.csv, 2026-11)
 const subsPedro = armarFactores({
-  regularidad_ventas: { valor: 96, detalle: 'Vendiste 88 de 92 días', destacado: true },
-  pago_proveedores: { valor: 45, detalle: '1 pago atrasado a Avícola La Granja y S/ 2,400 por pagar a Andina', destacado: true },
-  registro_ventas: { valor: 85, detalle: 'Anotas unos 85 de cada 100 soles que vendes' },
-  fiado_cobro: { valor: 60, detalle: 'Fías 5 de cada 100 soles que vendes; 2 fiados ya vencieron', destacado: true },
-  antiguedad: { valor: 65, detalle: '3 años con la bodega · 92 días anotando aquí' },
+  constancia_registro: { valor: 100, detalle: '14 de 14 días anotando este mes' },
+  separacion_personal: { valor: 78, detalle: 'Sueldo fijo de S/ 400 por semana; este mes sacaste S/ 1 900 (S/ 700 más de lo usual)' },
+  impuestos_al_dia: { valor: 100, detalle: 'Al día' },
 })
 
-// Sano: 97·0.25 + 92·0.25 + 90·0.2 + 80·0.15 + 60·0.15 = 86.25 → 86
+// Sano: 95·0.35 + 80·0.40 + 100·0.25 = 90.25 → 90
 const subsSano = armarFactores({
-  regularidad_ventas: { valor: 97, detalle: 'Vendiste 89 de 92 días', destacado: true },
-  pago_proveedores: { valor: 92, detalle: 'Pagaste a tiempo tus últimos 6 pedidos', destacado: true },
-  registro_ventas: { valor: 90, detalle: 'Anotas unos 90 de cada 100 soles que vendes' },
-  fiado_cobro: { valor: 80, detalle: 'Fías 2 de cada 100 soles que vendes y ninguno está vencido', destacado: true },
-  antiguedad: { valor: 60, detalle: '3 años con la bodega · 92 días anotando aquí' },
+  constancia_registro: { valor: 95, detalle: '13 de 14 días anotando este mes' },
+  separacion_personal: { valor: 80, detalle: 'Sueldo fijo de S/ 400 por semana; este mes sacaste S/ 1 100' },
+  impuestos_al_dia: { valor: 100, detalle: 'Al día' },
 })
 
-// Nuevo (día 3): 60·0.25 + 50·0.25 + 40·0.2 + 50·0.15 + 20·0.15 = 46
+// Nuevo (día 3): 10·0.35 + 50·0.40 + 100·0.25 = 48.5 → 49
 const subsNuevo = armarFactores({
-  regularidad_ventas: { valor: 60, detalle: 'Vendiste los 3 días; con más días se verá mejor', destacado: true },
-  pago_proveedores: { valor: 50, detalle: 'Aún no anotas pagos a proveedores' },
-  registro_ventas: { valor: 40, detalle: 'Llevas 3 días anotando tus ventas', destacado: true },
-  fiado_cobro: { valor: 50, detalle: 'Aún no anotas fiados' },
-  antiguedad: { valor: 20, detalle: '3 días de historial aquí' },
+  constancia_registro: { valor: 10, detalle: '3 de 30 días anotando; con más días se verá mejor' },
+  separacion_personal: { valor: 50, detalle: 'Aún no tienes un sueldo fijo definido' },
+  impuestos_al_dia: { valor: 100, detalle: 'Al día' },
 })
 
 export const salud = () => ({
-  dias_con_datos: 92, // EXT
-  score: scoreDesdeFactores(subsPedro), // 71
-  score_anterior: 64,
-  etapa_actual: 'estabilizar',
+  score: scoreDesdeFactores(subsPedro), // 91
+  score_anterior: 91,
+  etapa_actual: 'crecer', // backend: ≥ 90 → crecer
   etapas: ['organizar', 'estabilizar', 'proteger', 'crecer'], // EXT
   subindicadores: subsPedro,
   historial: [
-    { mes: '2026-08', score: 38 },
-    { mes: '2026-09', score: 52 },
-    { mes: '2026-10', score: 64 },
-    { mes: '2026-11', score: 71 },
+    { mes: '2026-08', score: 79 },
+    { mes: '2026-09', score: 89 },
+    { mes: '2026-10', score: 91 },
+    { mes: '2026-11', score: 91 },
   ],
   rachas: [{ tipo: 'semanas_registrando', valor: 4 }],
-  metas_activas: [ // EXT
-    { meta_id: 'MET-0004', plantilla: 'apartar_para_pedido', titulo: 'Apartar para el pedido', detalle: 'S/ 1 de cada S/ 10 que vendes', acumulado: 420.0, objetivo: 800.0, estado: 'activa' },
+  metas_activas: [
+    { meta_id: 'MET-0004', plantilla: 'apartar_para_pedido', titulo: 'Apartar para el pedido', detalle: 'S/ 1 de cada S/ 10 que vendes', acumulado: 420.0, estado: 'activa' },
   ],
   consentimiento_compartir_historial: false,
+  fundamento: FUNDAMENTO_SALUD,
   meta: meta('score-reglas', '0.1.0'),
 })
 
 export const saludSano = () => ({
-  dias_con_datos: 92,
-  score: scoreDesdeFactores(subsSano), // 86
-  score_anterior: 83,
+  score: scoreDesdeFactores(subsSano), // 90
+  score_anterior: 86,
   etapa_actual: 'proteger',
   etapas: ['organizar', 'estabilizar', 'proteger', 'crecer'],
   subindicadores: subsSano,
   historial: [
-    { mes: '2026-08', score: 72 },
-    { mes: '2026-09', score: 78 },
-    { mes: '2026-10', score: 83 },
-    { mes: '2026-11', score: 86 },
+    { mes: '2026-08', score: 76 },
+    { mes: '2026-09', score: 82 },
+    { mes: '2026-10', score: 86 },
+    { mes: '2026-11', score: 90 },
   ],
   rachas: [{ tipo: 'semanas_registrando', valor: 12 }],
   metas_activas: [
-    { meta_id: 'MET-0004', plantilla: 'apartar_para_pedido', titulo: 'Apartar para el pedido', detalle: 'S/ 1 de cada S/ 10 que vendes', acumulado: 760.0, objetivo: 800.0, estado: 'activa' },
+    { meta_id: 'MET-0004', plantilla: 'apartar_para_pedido', titulo: 'Apartar para el pedido', detalle: 'S/ 1 de cada S/ 10 que vendes', acumulado: 760.0, estado: 'activa' },
   ],
   consentimiento_compartir_historial: false,
+  fundamento: FUNDAMENTO_SALUD,
   meta: meta('score-reglas', '0.1.0'),
 })
 
 export const saludNuevo = () => ({
-  dias_con_datos: 3,
-  score: scoreDesdeFactores(subsNuevo), // 46
+  score: scoreDesdeFactores(subsNuevo), // 49
   score_anterior: null,
   etapa_actual: 'organizar',
   etapas: ['organizar', 'estabilizar', 'proteger', 'crecer'],
   subindicadores: subsNuevo,
-  historial: [{ mes: '2026-11', score: 46 }],
+  historial: [{ mes: '2026-11', score: 49 }],
   rachas: [{ tipo: 'semanas_registrando', valor: 0 }],
   metas_activas: [],
   consentimiento_compartir_historial: false,
+  fundamento: FUNDAMENTO_SALUD,
   meta: meta('score-reglas', '0.1.0'),
 })
 
@@ -581,7 +578,7 @@ export const resumenDe = (e) => (e === 'nuevo' ? resumenNuevo : e === 'sano' ? r
 export const forecastDe = (e) => (e === 'nuevo' ? forecastNuevo() : e === 'sano' ? forecastSano() : forecastPedro())
 export const saludDe = (e) => (e === 'nuevo' ? saludNuevo() : e === 'sano' ? saludSano() : salud())
 export const fiadosDe = (e) =>
-  e === 'nuevo' ? { total_pendiente: 0, total_vencido: 0, items: [], meta: meta('riesgo-atraso-clf', '0.2.0') } : e === 'sano' ? fiadosSano() : fiados()
+  e === 'nuevo' ? { total_pendiente: 0, total_vencido: 0, items: [], meta: meta('riesgo-atraso-baseline', '0.1.0') } : e === 'sano' ? fiadosSano() : fiados()
 export const pedidosDe = (e) =>
   e === 'nuevo'
     ? { total_pendiente: 0, items: [], impuestos: { impuesto_id: 'IMP-0011', estado: 'al_dia', proximo_vencimiento: '2026-12-15', monto_estimado: 20 } }

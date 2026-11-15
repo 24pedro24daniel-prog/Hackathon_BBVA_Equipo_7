@@ -1,5 +1,5 @@
 // Lista de mensajes: elige el componente según `from` + `kind` y hace auto-scroll al más nuevo.
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button, Icon } from '../../components/ui/index.jsx'
 import { AlertCard } from './AlertCard.jsx'
 import { AssistantCard } from './AssistantCard.jsx'
@@ -9,11 +9,41 @@ import { OptionsCard, WarningCard } from './PedidoCards.jsx'
 import { PlanCard } from './PlanCard.jsx'
 import { ClarifyCard, ConfirmCard } from './RegistroCards.jsx'
 
+/** Nota de voz. Si fue grabada en el navegador (`src` = blob:), se puede escuchar; las de prueba no tienen audio. */
 function AudioBubble({ msg }) {
+  const audio = useRef(null)
+  const [sonando, setSonando] = useState(false)
+  const alternar = () => {
+    const a = audio.current
+    if (!a) return
+    if (a.paused) a.play().catch(() => setSonando(false))
+    else a.pause()
+  }
   return (
     <OutBubble time={msg.time} className="chat-audio">
       <span className="chat-audio__player">
-        <Icon name="play" size={18} title="Nota de voz" />
+        {msg.src ? (
+          <>
+            <button
+              type="button"
+              className="chat-audio__play"
+              onClick={alternar}
+              aria-label={sonando ? 'Pausar tu nota de voz' : 'Escuchar tu nota de voz'}
+            >
+              <Icon name={sonando ? 'pause' : 'play'} size={16} />
+            </button>
+            <audio
+              ref={audio}
+              src={msg.src}
+              preload="metadata"
+              onPlay={() => setSonando(true)}
+              onPause={() => setSonando(false)}
+              onEnded={() => setSonando(false)}
+            />
+          </>
+        ) : (
+          <Icon name="play" size={18} title="Nota de voz" />
+        )}
         <Waveform />
         <span className="num">{msg.duracion}</span>
       </span>
@@ -25,8 +55,12 @@ function AudioBubble({ msg }) {
 function PhotoBubble({ msg }) {
   return (
     <OutBubble time={msg.time} className="chat-photo">
-      <div className="chat-photo__img" role="img" aria-label="Foto de una página del cuaderno de fiados" />
-      <p>{msg.caption}</p>
+      {msg.src ? (
+        <img className="chat-photo__foto" src={msg.src} alt="Foto del cuaderno de fiados que mandaste" />
+      ) : (
+        <div className="chat-photo__img" role="img" aria-label="Foto de una página del cuaderno de fiados" />
+      )}
+      {msg.caption && <p>{msg.caption}</p>}
     </OutBubble>
   )
 }
@@ -53,7 +87,7 @@ function Message({ msg, a }) {
     case 'options':
       return <OptionsCard msg={msg} onRegistrar={() => a.registrarIgual(msg.warningId)} />
     case 'alert':
-      return <AlertCard msg={msg} onAccion={() => a.abrirAlerta(msg.id)} />
+      return <AlertCard msg={msg} onAccion={a.abrirAlerta} />
     case 'assistant':
       return <AssistantCard msg={msg} onAccion={a.accionAsistente} />
     case 'plan':

@@ -3,8 +3,10 @@
 //   saldo_30/11 = base + (2400 − monto_pedido) + (2 partes ? monto/2 : 0) + (cobrar fiados ? monto de esos fiados : 0)
 // base: −650 en 'pedro'; en 'sano' el p50 del 30/11 de su serie (positivo, sobre el mínimo de S/ 800).
 // Escenarios: 'pedro' (92 días, no le alcanza) | 'sano' (92 días, sí le alcanza) | 'nuevo' (día 3).
+// El escenario lo decide la sesión: demo1 → 'pedro', demo2 → 'sano', demo3 → 'nuevo' (ver mocks/auth.js).
 import * as D from './data.js'
 import { getDemoSettings } from '../lib/demo.js'
+import { autenticar, escenarioDeSesion } from './auth.js'
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 const ok = (body, status = 200) => ({ status, body })
@@ -20,6 +22,14 @@ const saldos = { ...D.SALDO_INICIAL }
 const movimientosNuevos = { pedro: [], sano: [], nuevo: [] } // lo que se confirma en el chat aparece en Últimos movimientos
 const esc = (e) => (e === 'nuevo' || e === 'sano' ? e : 'pedro')
 // Se conserva el registro anulado durante la sesión, separado por escenario.
+const metasCreadas = { pedro: [], sano: [], nuevo: [] } // metas creadas desde Progreso durante la sesión
+const PLANTILLAS_META = {
+  registrar_30_dias: { titulo: 'Anotar 30 días seguidos', detalle: () => 'Objetivo: 30' },
+  sueldo_fijo: { titulo: 'Ponerme un sueldo fijo', detalle: (r) => `S/ ${Math.round(Number(r?.valor) || 0)} fijos` },
+  colchon_caja: { titulo: 'Armar un colchón de caja', detalle: () => 'S/ 1 de cada S/ 20 que vendes' },
+  apartar_para_pedido: { titulo: 'Apartar para el pedido', detalle: () => 'S/ 1 de cada S/ 10 que vendes' },
+  reservar_impuestos: { titulo: 'Reservar para impuestos', detalle: () => 'S/ 1 de cada S/ 20 que vendes' },
+}
 const cuentasAnuladas = { pedro: new Map(), sano: new Map(), nuevo: new Map() }
 
 function fiadosActivos(escenario) {
@@ -58,7 +68,7 @@ function montoFiados(escenario, fiadoIds) {
 }
 
 export function simularSaldo({ monto = PEDIDO_BASE, partes = 1, cobrarFiados = false, fiadoIds = null, escenario } = {}) {
-  const e = escenario ?? getDemoSettings().escenario
+  const e = escenario ?? escenarioDeSesion()
   let saldo = saldoBase(e) + (PEDIDO_BASE - monto)
   if (partes >= 2) saldo += monto / 2
   if (cobrarFiados) saldo += montoFiados(e, fiadoIds)
@@ -118,7 +128,7 @@ function interpretarTexto(texto = '') {
 
 async function handle(method, path, { query, body }) {
   const { fallback } = getDemoSettings()
-  const escenario = esc(getDemoSettings().escenario)
+  const escenario = esc(escenarioDeSesion())
   const sano = escenario === 'sano'
   const key = `${method} ${path.replace(/\/empresas\/[^/]+/, '/empresas/:id').replace(/\/(fiados|alertas)\/[A-Z]+-\d+/, '/$1/:id')}`
 
@@ -187,15 +197,18 @@ async function handle(method, path, { query, body }) {
         estado_caja: estado,
         venta_esperada_periodo: ventaEsperada,
         exceso_vs_ventas: Math.max(0, monto - ventaEsperada),
+        saldo_minimo_hasta_vencimiento: saldo,
+        fecha_saldo_minimo: '2026-11-30',
+        pedido_coincidente_id: null,
         // Si ya te alcanza, no hay nada que sugerir
         sugerencias: estado === 'te_alcanza' ? [] : [
           { accion: 'reducir_pedido', monto_sugerido: 1800.0, saldo_resultante: simularSaldo({ monto: 1800, escenario }) },
           { accion: 'pagar_en_partes', partes: 2, saldo_resultante: simularSaldo({ monto, partes: 2, escenario }) },
-          { accion: 'combinar', detalle: 'pedir 1,800 + pagar en 2 partes', saldo_resultante: simularSaldo({ monto: 1800, partes: 2, escenario }) },
+          { accion: 'combinar', detalle: 'pedir 1 800 + pagar en 2 partes', saldo_resultante: simularSaldo({ monto: 1800, partes: 2, escenario }) },
         ],
         fundamento: estado === 'te_alcanza'
-          ? 'En 2 semanas sueles vender unos S/ 2,600 y ese día te quedaría colchón.'
-          : 'En 2 semanas sueles vender unos S/ 2,000 y ese día no tendrás colchón.',
+          ? 'En 2 semanas sueles vender unos S/ 2 600 y ese día te quedaría colchón.'
+          : 'En 2 semanas sueles vender unos S/ 2 000 y ese día no tendrás colchón.',
         limites: 'Proyección basada en tus ventas de los últimos 3 meses; no considera eventos que no hayas registrado.',
         confianza: 'media',
         meta: D.meta('forecast-lgbm-quantile', '0.3.1'),
@@ -220,9 +233,11 @@ async function handle(method, path, { query, body }) {
         con_acciones: { saldo_minimo: con, fecha: '2026-11-30', estado_caja: estadoCaja(con) },
         mejora: con - base,
         serie_con_acciones: [{ fecha: '2026-11-30', p50: con }],
-        fundamento: 'Cálculo con tus ventas de los últimos 3 meses.', // EXT
-        limites: 'Tú decides; nada se ejecuta solo. Pagar en partes depende de que Andina acepte.', // EXT
-        confianza: 'media', // EXT
+        fundamento: 'Cálculo sobre tu proyección (ventas y gastos de las últimas 4 semanas y tus pagos con fecha): se compara el saldo más bajo hasta el 30/11.',
+        limites: 'Tú decides; nada se ejecuta solo. Pagar en partes o mover una fecha depende de que el proveedor acepte.',
+        confianza: 'media',
+        ventana_hasta: '2026-11-30',
+        notas: partes > 1 ? ['La segunda parte (15/12) queda fuera de esta proyección, que llega hasta el 14/12: revisa tu caja antes de esa fecha.'] : [],
         meta: D.meta('simulador-deterministico', '0.1.0'),
       })
     }
@@ -233,11 +248,20 @@ async function handle(method, path, { query, body }) {
     case 'POST /alertas/:id/accion':
       return ok({ estado: 'atendida' })
 
-    case 'GET /empresas/:id/salud':
-      return ok(D.saludDe(escenario))
+    case 'GET /empresas/:id/salud': {
+      const s = D.saludDe(escenario)
+      return ok({ ...s, metas_activas: [...s.metas_activas, ...metasCreadas[esc(escenario)]] })
+    }
 
-    case 'POST /empresas/:id/metas':
-      return ok({ meta_id: 'MET-0005', estado: 'activa' }, 201)
+    case 'POST /empresas/:id/metas': {
+      const { plantilla, regla } = body ?? {}
+      const meta = PLANTILLAS_META[plantilla]
+      if (!meta) return err(400, 'VALIDACION', 'Esa meta no existe.')
+      if (plantilla === 'sueldo_fijo' && !(Number(regla?.valor) > 0)) return err(400, 'VALIDACION', 'Indica cuánto te quieres pagar.')
+      const meta_id = `MET-${String(5 + metasCreadas.pedro.length + metasCreadas.sano.length + metasCreadas.nuevo.length).padStart(4, '0')}`
+      metasCreadas[esc(escenario)].push({ meta_id, plantilla, titulo: meta.titulo, detalle: meta.detalle(regla), acumulado: 0, estado: 'activa' })
+      return ok({ meta_id, estado: 'activa', titulo: meta.titulo }, 201)
+    }
 
     case 'GET /empresas/:id/movimientos': {
       const todos = [...movimientosNuevos[escenario], ...D.movimientos(escenario)]
@@ -252,7 +276,37 @@ async function handle(method, path, { query, body }) {
       return ok({ movimiento_id: `MOV-000${++seq}`, registros_creados: [], alertas_disparadas: [], saldo_caja_negocio: saldos[escenario] }, 201)
 
     case 'GET /empresas/:id/analisis':
-      return ok({ agrupar_por: query.agrupar_por || 'categoria', tipo: query.tipo || 'egreso', grupos: [] })
+      // comparacion_pares es null mientras haya menos de 5 empresas del mismo rubro (contract.md §5)
+      return ok({
+        agrupar_por: query.agrupar_por || 'categoria',
+        tipo: query.tipo || 'egreso',
+        periodo: { desde: '2026-11-01', hasta: D.CORTE },
+        grupos: [
+          { clave: 'mercaderia', monto: 4980.0, participacion_pct: 68.1, variacion_pct: 12.4 },
+          { clave: 'retiro_personal', monto: 1900.0, participacion_pct: 26.0, variacion_pct: 58.3 },
+        ],
+        total: 7310.0,
+        comparacion_pares: null,
+        comparacion_pares_motivo: 'Aún no hay suficientes negocios parecidos para comparar.',
+      })
+
+    // Subida a R2 simulada: misma validación que el backend; el front no hace el PUT en modo mock.
+    case 'POST /media/subidas': {
+      const TIPOS = { audio: ['audio/ogg', 'audio/webm', 'audio/mpeg', 'audio/mp4', 'audio/wav'], imagen: ['image/jpeg', 'image/png', 'image/webp'] }
+      const MAX = { audio: 10485760, imagen: 8388608 }
+      const ct = String(body?.content_type || '').split(';')[0].trim().toLowerCase()
+      if (!TIPOS[body?.tipo]?.includes(ct)) return err(400, 'VALIDACION', `El tipo '${ct}' no está permitido para ${body?.tipo}.`)
+      if (!(body.tamano_bytes > 0) || body.tamano_bytes > MAX[body.tipo]) return err(400, 'VALIDACION', 'El archivo pesa demasiado.')
+      const ext = ct.split('/')[1]
+      return ok({
+        media_url: `r2://empresas/${body.empresa_id}/${body.tipo === 'audio' ? 'audios' : 'fotos'}/2026/11/mock-${++seq}.${ext}`,
+        upload_url: 'https://mock.invalid/subida',
+        metodo: 'PUT',
+        headers_requeridos: { 'Content-Type': ct },
+        expira_en: new Date(Date.now() + 600e3).toISOString(),
+        tamano_max_bytes: MAX[body.tipo],
+      }, 201)
+    }
 
     case 'POST /ingesta/interpretar': {
       await wait(body?.canal === 'voz' ? 1400 : 500) // "Escuchando tu audio…"
@@ -389,8 +443,8 @@ function asistente(mensaje, conversacion_id, fallback, escenario = 'pedro') {
       respuesta: nuevo
         ? `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Con unos días más de datos te digo cómo vienen tus próximas semanas.`
         : sano
-          ? `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Te deben S/ ${teDeben} en fiados y el 30/11 pagas S/ 2,400 a Andina. Ese día te quedarían unos S/ ${saldo3011}: sí te alcanza.`
-          : `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Te deben S/ ${teDeben} en fiados y el 30/11 pagas S/ 2,400 a Andina. Si no cambias nada, ese día te faltarían S/ 650.`,
+          ? `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Te deben S/ ${teDeben} en fiados y el 30/11 pagas S/ 2 400 a Andina. Ese día te quedarían unos S/ ${saldo3011}: sí te alcanza.`
+          : `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Te deben S/ ${teDeben} en fiados y el 30/11 pagas S/ 2 400 a Andina. Si no cambias nada, ese día te faltarían S/ 650.`,
       tabla,
       herramientas_llamadas: [{ nombre: 'obtener_resumen', args: { periodo: '2026-11' } }, { nombre: 'obtener_forecast', args: { horizonte_dias: 30 } }],
       cifras_usadas: [{ valor: saldoNegocio, fuente: 'resumen.saldo_caja_negocio' }, ...(nuevo ? [] : [{ valor: sano ? saldo3011 : 650, fuente: sano ? 'forecast.serie.p50' : 'forecast.dia_critico.saldo_p50' }])],
@@ -401,7 +455,7 @@ function asistente(mensaje, conversacion_id, fallback, escenario = 'pedro') {
     return {
       ...base,
       intencion: 'explicar_alerta',
-      respuesta: `Sí te alcanza: el 30/11 pagas S/ 2,400 a Distribuidora Andina y ese día te quedarían unos S/ ${saldo3011}, por encima de tu mínimo de S/ 800. Vendes parejo todos los días y tus fiados son pocos (S/ ${teDeben}).`,
+      respuesta: `Sí te alcanza: el 30/11 pagas S/ 2 400 a Distribuidora Andina y ese día te quedarían unos S/ ${saldo3011}, por encima de tu mínimo de S/ 800. Vendes parejo todos los días y tus fiados son pocos (S/ ${teDeben}).`,
       herramientas_llamadas: [{ nombre: 'obtener_forecast', args: { horizonte_dias: 30 } }],
       cifras_usadas: [{ valor: 2400, fuente: 'pedidos.PED-0012.monto' }, { valor: saldo3011, fuente: 'forecast.serie.p50' }],
     }
@@ -412,7 +466,7 @@ function asistente(mensaje, conversacion_id, fallback, escenario = 'pedro') {
       ...base,
       intencion: 'explicar_alerta',
       ofrecer_humano: true,
-      respuesta: `El 30/11 vence tu pago de S/ 2,400 a Distribuidora Andina. Este mes vendiste unos S/ 560 menos que el mes pasado, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ ${teDeben} en fiados sin cobrar. Si pides S/ 1,800 y pagas en 2 partes, ese día tendrías S/ 850.`,
+      respuesta: `El 30/11 vence tu pago de S/ 2 400 a Distribuidora Andina. Este mes vendiste unos S/ 560 menos que el mes pasado, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ ${teDeben} en fiados sin cobrar. Si pides S/ 1 800 y pagas en 2 partes, ese día tendrías S/ 850.`,
       herramientas_llamadas: [{ nombre: 'obtener_alertas', args: { estado: 'activa' } }, { nombre: 'simular', args: { acciones: ['reducir_pedido:1800', 'pagar_en_partes:2'] } }],
       cifras_usadas: [{ valor: 2400, fuente: 'pedidos.PED-0012.monto' }, { valor: 850, fuente: 'simular.con_acciones.saldo_minimo' }],
     }
@@ -438,8 +492,12 @@ function asistente(mensaje, conversacion_id, fallback, escenario = 'pedro') {
 // Chat: versión simple de la ruta del backend (reglas, sin LLM). Reusa interpretar, confirmar, chequeo y asistente.
 const PAGOS_MOCK = [[/billetera|yape|plin/, 'billetera_digital'], [/efectivo/, 'efectivo'], [/tarjeta/, 'tarjeta'], [/transferencia/, 'transferencia']]
 
-async function chatMock({ texto = '', canal = 'texto', media_url, borrador_id, conversacion_id }, path, { fallback, escenario }) {
+// Sin Whisper en modo mock: un audio grabado de verdad (r2://…) se "transcribe" siempre con esta frase.
+const TRANSCRIPCION_MOCK = 'vendí dos cervezas'
+
+async function chatMock({ texto, canal = 'texto', media_url, borrador_id, conversacion_id }, path, { fallback, escenario }) {
   await wait(canal === 'voz' ? 1100 : 400)
+  texto = texto || (canal === 'voz' && media_url?.startsWith('r2://') ? TRANSCRIPCION_MOCK : '')
   const t = texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
   const empPath = path.replace(/\/chat\/mensajes$/, '')
   const meta = D.meta('reglas-chat', '0.1.0', { fallback_usado: fallback })
@@ -495,6 +553,8 @@ async function chatMock({ texto = '', canal = 'texto', media_url, borrador_id, c
 }
 
 export async function mockRequest(method, path, opts) {
-  await wait(250 + Math.random() * 200)
+  await wait(path === '/auth/login' ? 700 : 250 + Math.random() * 200)
+  const auth = await autenticar(method, path, opts)
+  if (auth) return auth
   return handle(method, path, opts)
 }

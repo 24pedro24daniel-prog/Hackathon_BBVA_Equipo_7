@@ -2,9 +2,12 @@
 
 const TZ = 'America/Lima'
 
-function groupThousands(intStr) {
-  // Coma como separador de miles: "2,340"
-  return intStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+/**
+ * Separador de miles: espacio (no separable, para que "2 340" no se parta en dos líneas).
+ * Es el mismo formato que usa el backend en sus textos ("S/ 2 340"), no coma.
+ */
+export function groupThousands(intStr) {
+  return String(intStr).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 
 /**
@@ -12,7 +15,7 @@ function groupThousands(intStr) {
  * opts.sign: true agrega "+" a positivos (para movimientos).
  */
 export function soles(value, { cents = false, sign = false } = {}) {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) return 'S/ —'
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return 'S/ —'
   const n = Number(value)
   const abs = Math.abs(n)
   const fixed = cents ? abs.toFixed(2) : String(Math.round(abs))

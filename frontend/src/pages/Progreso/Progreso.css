@@ -193,3 +193,22 @@
   }
   .progreso-body > :not(.progreso-col) { grid-column: 1 / -1; }
 }
+
+/* Crear una meta */
+.progreso-nueva { display: grid; gap: 12px; justify-items: start; padding: 4px 16px 16px; }
+.progreso-nueva__title { font-size: var(--fs-section); font-weight: 600; color: var(--title); }
+.progreso-nueva__sub { font-size: var(--fs-note); color: var(--text-muted); }
+.progreso-nueva__lista { margin-inline: -16px; width: calc(100% + 32px); }
+.progreso-nueva__campo { display: grid; gap: 6px; font-size: var(--fs-note); color: var(--text-muted); width: 100%; }
+.progreso-nueva__monto {
+  display: flex; align-items: center; gap: 8px; min-height: var(--tap); padding: 0 14px;
+  background: var(--surface-sunken); border-radius: var(--radius); color: var(--title); font-weight: 600;
+}
+.progreso-nueva__monto:focus-within { box-shadow: 0 0 0 2px var(--brand); }
+.progreso-nueva__monto input {
+  flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 17px; color: var(--title);
+  padding: 10px 0; outline: none; font-variant-numeric: tabular-nums;
+}
+.progreso-nueva__acciones { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.progreso-nueva__error { color: var(--danger); font-size: var(--fs-note); }
+.progreso-nueva__ok { color: var(--ok); font-size: var(--fs-note); font-weight: 600; }

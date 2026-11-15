@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
-import { useDemo } from '../../lib/useDemo.js'
 import { ddmm, soles, solesRange, weekdayDdmm } from '../../lib/format.js'
 import {
   Button,
@@ -34,8 +33,7 @@ function moneyTone(tone) {
 }
 
 export default function Forecast() {
-  const [demo] = useDemo()
-  const { data, error, loading, reload } = useApi(() => api.getForecast(30), [demo.escenario])
+  const { data, error, loading, reload } = useApi(() => api.getForecast(30), [])
 
   return (
     <div className="fc-page">
@@ -71,7 +69,7 @@ function ForecastEmpty({ data }) {
       <p className="cc-small cc-muted">
         {tiene} de {requiere} días
       </p>
-      <Button size="lg" icon="mic" onClick={() => navigate('/chat')}>
+      <Button size="lg" icon="mic" onClick={() => navigate('/app/chat')}>
         Registrar transacción
       </Button>
     </Card>
@@ -195,7 +193,7 @@ function ForecastContent({ f }) {
           )}
         </Card>
 
-        <Button block size="lg" onClick={() => navigate('/chat', { state: { intent: 'plan_caja' } })}>
+        <Button block size="lg" onClick={() => navigate('/app/chat', { state: { intent: 'plan_caja' } })}>
           Probar qué hacer
         </Button>
       </div>

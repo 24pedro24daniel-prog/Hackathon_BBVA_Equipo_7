@@ -76,7 +76,7 @@ export function filasMovimiento(mov) {
   return rows
 }
 
-/** Resumen para la pregunta aclaratoria: "pedido a crédito de **S/ 2,400 a Distribuidora Andina**" */
+/** Resumen para la pregunta aclaratoria: "pedido a crédito de **S/ 2 400 a Distribuidora Andina**" */
 export function resumenEntendido(mov) {
   if (mov.tipo === 'compra') {
     const cred = mov.metodo_pago === 'credito' ? ' a crédito' : ''
@@ -124,7 +124,8 @@ export function boldMonto(text = '', monto) {
   if (monto === null || monto === undefined) return text
   const grouped = String(Math.round(Math.abs(monto))).replace(/\B(?=(\d{3})+(?!\d))/g, '[,\\s\\u202F\\u00A0]?')
   const re = new RegExp(`S/[\\s\\u00A0]?${grouped}(?:\\.\\d+)?`)
-  return text.replace(re, (m) => `**${m.replace(/^S\/\s/, 'S/\u00A0')}**`)
+  // El monto queda con espacios no separables ("S/ 2 400"), igual que el formato del backend
+  return text.replace(re, (m) => `**${m.replace(/[\s,]+/g, '\u00A0')}**`)
 }
 
 const cap = (s = '') => s.charAt(0).toUpperCase() + s.slice(1)

@@ -32,7 +32,7 @@ export function CuadernoCard({ msg, onGuardar, onCorregir }) {
                 {f.detalle}
               </span>
             </div>
-            <Money value={montos[i]} className="chat-fiados__amount" />
+            <Money value={montos[i]} cents className="chat-fiados__amount" />
           </li>
         ))}
       </ul>
