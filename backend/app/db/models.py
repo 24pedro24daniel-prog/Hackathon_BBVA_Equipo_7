@@ -1,4 +1,4 @@
-"""Las 25 tablas de modelo_datos.dbml (+ la tabla técnica idempotency_keys).
+"""Las 25 tablas de modelo_datos.dbml (+ las tablas técnicas idempotency_keys y llm_llamadas).
 
 Reglas: dinero Numeric(12,2) → Decimal; probabilidades y confianzas Numeric(4,3); fecha-hora timestamptz.
 Nada calculado se guarda (saldo, pendiente, atraso, estados): sale de services/finanzas/consultas.py.
@@ -581,6 +581,57 @@ class IdempotencyKey(Base):
     payload_hash: Mapped[str] = mapped_column(String(64))
     status_code: Mapped[int] = mapped_column(Integer)
     respuesta: Mapped[Any] = mapped_column(JSON)
+    creado_en: Mapped[datetime]
+
+
+ORIGENES_LLM = ("extractor", "asistente", "vision")
+ESTADOS_LLM = ("ok", "timeout", "http_error", "red", "respuesta_invalida", "sin_configurar")
+USOS_LLM = ("aceptada", "rechazada_validacion", "rechazada_verificador")
+REFERENCIAS_LLM = ("borrador", "mensaje")
+
+
+def _en(columna: str, valores: tuple[str, ...], nulo: bool = False) -> str:
+    lista = ", ".join(f"'{v}'" for v in valores)
+    return f"{columna} IN ({lista})" if not nulo else f"{columna} IS NULL OR {columna} IN ({lista})"
+
+
+class LlmLlamada(Base):
+    """Trazabilidad de cada llamada al LLM/VLM (observabilidad; no es parte del DBML de negocio)."""
+
+    __tablename__ = "llm_llamadas"
+    __table_args__ = (
+        CheckConstraint(_en("origen", ORIGENES_LLM), name="origen_valido"),
+        CheckConstraint(_en("estado", ESTADOS_LLM), name="estado_valido"),
+        CheckConstraint(_en("resultado_uso", USOS_LLM, nulo=True), name="resultado_uso_valido"),
+        CheckConstraint(_en("referencia_tipo", REFERENCIAS_LLM, nulo=True), name="referencia_tipo_valida"),
+        CheckConstraint("prompt_tokens IS NULL OR prompt_tokens >= 0", name="prompt_tokens_no_negativo"),
+        CheckConstraint("completion_tokens IS NULL OR completion_tokens >= 0", name="completion_tokens_no_negativo"),
+        CheckConstraint("total_tokens IS NULL OR total_tokens >= 0", name="total_tokens_no_negativo"),
+        Index(None, "empresa_id", "creado_en"),
+        Index(None, "origen", "creado_en"),
+    )
+
+    llamada_id: Mapped[str] = _id()
+    empresa_id: Mapped[str | None] = _fk("empresas.empresa_id", nullable=True)
+    origen: Mapped[str] = mapped_column(String(20))
+    referencia_tipo: Mapped[str | None] = mapped_column(String(20))
+    referencia_id: Mapped[str | None] = mapped_column(String(20))
+    prompt_version: Mapped[str | None] = mapped_column(String(30))
+    proveedor: Mapped[str] = mapped_column(String(30), default="openrouter", server_default=text("'openrouter'"))
+    modelo_solicitado: Mapped[str | None] = mapped_column(String(100))
+    modelo_respondido: Mapped[str | None] = mapped_column(String(100))
+    generation_id: Mapped[str | None] = mapped_column(String(100))
+    request: Mapped[Any | None] = mapped_column(JSON)
+    respuesta: Mapped[Any | None] = mapped_column(JSON)
+    prompt_tokens: Mapped[int | None] = mapped_column(Integer)
+    completion_tokens: Mapped[int | None] = mapped_column(Integer)
+    total_tokens: Mapped[int | None] = mapped_column(Integer)
+    costo_usd: Mapped[Decimal | None] = mapped_column(Numeric(12, 8))
+    latencia_ms: Mapped[int | None] = mapped_column(Integer)
+    estado: Mapped[str] = mapped_column(String(20))
+    http_status: Mapped[int | None] = mapped_column(SmallInteger)
+    error: Mapped[str | None] = mapped_column(Text)
+    resultado_uso: Mapped[str | None] = mapped_column(String(30))
     creado_en: Mapped[datetime]
 
 

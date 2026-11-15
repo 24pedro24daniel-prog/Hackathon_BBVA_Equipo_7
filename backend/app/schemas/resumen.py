@@ -20,6 +20,8 @@ class IndRetiros(BaseModel):
     valor: Dinero
     sueldo_fijo_definido: Dinero | None = None
     promedio_historico: Dinero | None = None
+    sueldo_frecuencia: str | None = None     # EXT: frecuencia del sueldo fijo (semanal, mensual…)
+    exceso_vs_promedio: Dinero | None = None  # EXT: valor − promedio_historico (si es positivo)
 
 
 class IndPendienteCobro(BaseModel):

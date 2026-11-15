@@ -1,31 +1,25 @@
-"""Smoke tests de la Fase 0 (Dev B): todos los endpoints responden con el JSON del contrato.
+"""Smoke tests de Dev B: los endpoints responden con el contrato y con las cifras reales de la historia de Pedro
+(calculadas sobre la BD de pruebas sembrada; antes eran mocks).
 
 Ejecutar desde backend/:  pytest tests/test_b_smoke.py -v
-No requieren BD (los stubs no la usan).
+Las rutas que leen la BD usan `client_db` (BD de pruebas, con rollback); nunca la BD de desarrollo.
 """
 from datetime import date
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.config import get_settings, settings
+from app.core.config import get_settings
 from app.main import app
-from app.mocks import data as mock
+from tests._b_util import reloj_fijo  # noqa: F401
 
 E = "/api/v1/empresas/EMP-0001"
 
 
-@pytest.fixture(autouse=True)
-def _estado_limpio():
-    mock.ESTADO["saldo"] = 2340.0
-    mock.BORRADORES.clear()
-    yield
-    mock.ESTADO["saldo"] = 2340.0
-
-
 @pytest.fixture
-def client():
-    return TestClient(app, headers={"X-API-Key": settings.API_KEY.get_secret_value()})
+def client(client_db, reloj_fijo):
+    """Para B, `client` = cliente sobre la BD de pruebas sembrada (con rollback) y reloj fijo el 14/11."""
+    return client_db
 
 
 # ---------- público / auth / errores ----------
@@ -95,7 +89,7 @@ def test_analisis_y_alertas(client):
     assert j["items"][0]["tipo"] == "faltante_caja" and len(j["items"][0]["causas"]) == 3
 
 
-# ---------- B: cálculos del mock (coinciden con contract.md) ----------
+# ---------- B: cálculos reales (coinciden con contract.md) ----------
 def test_chequeo_2400(client):
     j = client.post(f"{E}/pedidos/chequeo",
                     json={"proveedor": "Distribuidora Andina", "monto": 2400, "fecha_vencimiento": "2026-11-30"}).json()
@@ -119,7 +113,8 @@ def test_ajuste_y_preferencias(client):
     assert r.status_code == 201 and r.json()["forecast_recalculado"] is True
     r = client.put(f"{E}/preferencias-alertas", json={"canales": ["whatsapp"], "max_por_dia": 2})
     assert r.status_code == 200 and r.json()["silencio_desde"] == "21:00"
-    r = client.post("/api/v1/alertas/ALR-0007/accion", json={"accion": "descartada"})
+    alerta_id = client.get(f"{E}/alertas").json()["items"][0]["alerta_id"]
+    r = client.post(f"/api/v1/alertas/{alerta_id}/accion", json={"accion": "descartada"})
     assert r.json()["estado"] == "descartada"
 
 
@@ -139,7 +134,6 @@ def test_flujo_venta_se_registra(client_db):
     assert c.json()["alertas_disparadas"] == []
 
 
-@pytest.mark.xfail(reason="B: finanzas.saldo_caja todavía devuelve el mock (2340 fijo); pasa cuando lea la BD", strict=False)
 def test_flujo_venta_cambia_saldo(client_db):
     b = _interpretar(client_db, "vendí dos cervezas")
     c = client_db.post("/api/v1/ingesta/confirmar", json={"borrador_id": b["borrador_id"], "confirmado": True})
@@ -149,10 +143,15 @@ def test_flujo_venta_cambia_saldo(client_db):
 def test_flujo_pedido_credito_dispara_alerta(client_db):
     b = _interpretar(client_db, "pedí 2 400 a Andina para pagar el 30")
     assert b["movimiento_propuesto"]["monto"] == 2400.0 and b["campos_faltantes"] == ["fecha_vencimiento"]
+    assert b["chequeo_pedido"]["saldo_proyectado_al_vencimiento"] == -650.0  # coincide con PED-0012 ya registrado
     c = client_db.post("/api/v1/ingesta/confirmar", json={"borrador_id": b["borrador_id"], "confirmado": True,
                                                           "correcciones": {"fecha_vencimiento": "2026-11-30"}})
     assert c.status_code == 201, c.text
-    assert "faltante_caja" in [a["tipo"] for a in c.json()["alertas_disparadas"]]
+    alertas = c.json()["alertas_disparadas"]
+    assert [a["tipo"] for a in alertas] == ["faltante_caja", "pedido_excesivo"]
+    # sobre el seed este es un 2.º pedido de 2 400 (PED-0012 ya existe): el 30/11 faltarían 3 050
+    assert alertas[0]["monto"] == 3050.0 and alertas[1]["monto"] == 400.0
+    assert c.json()["chequeo_pedido"]["saldo_proyectado_al_vencimiento"] == -3050.0
 
 
 def test_confirmar_descartar_204_y_borrador_inexistente_404(client_db):

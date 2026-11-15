@@ -602,3 +602,37 @@ TableGroup etiquetas_y_resultados {
   predicciones_fiado
   score_salud
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TÉCNICA (observabilidad; no es parte del modelo de negocio, igual que idempotency_keys)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Table llm_llamadas {
+  llamada_id varchar(20) [pk, note: 'LLM-000001']
+  empresa_id varchar(20) [ref: > empresas.empresa_id]
+  origen varchar(20) [not null, note: 'extractor | asistente | vision']
+  referencia_tipo varchar(20) [note: 'borrador | mensaje']
+  referencia_id varchar(20) [note: 'borradores.borrador_id o conversaciones.mensaje_id (sin FK: es polimórfica)']
+  prompt_version varchar(30)
+  proveedor varchar(30) [not null, default: 'openrouter']
+  modelo_solicitado varchar(100)
+  modelo_respondido varchar(100)
+  generation_id varchar(100) [note: 'id de la respuesta de OpenRouter']
+  request json [note: 'messages, tools, tool_choice, temperature, max_tokens. Imágenes como {imagen:{sha256,bytes,mime}}; nunca headers ni API key']
+  respuesta json [note: 'content, tool_calls crudos y finish_reason']
+  prompt_tokens int
+  completion_tokens int
+  total_tokens int
+  costo_usd decimal(12,8) [note: 'usage.cost de OpenRouter']
+  latencia_ms int
+  estado varchar(20) [not null, note: 'ok | timeout | http_error | red | respuesta_invalida | sin_configurar']
+  http_status smallint
+  error text [note: 'mensaje corto, sin secretos']
+  resultado_uso varchar(30) [note: 'aceptada | rechazada_validacion | rechazada_verificador']
+  creado_en timestamptz [not null]
+
+  indexes {
+    (empresa_id, creado_en)
+    (origen, creado_en)
+  }
+}

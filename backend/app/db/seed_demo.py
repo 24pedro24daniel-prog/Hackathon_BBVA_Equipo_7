@@ -331,10 +331,11 @@ class _Generador:
                                descripcion="Pago a Distribuidora Andina", deuda_id=deuda_id))  # fmt: skip
 
     def pedidos_andina(self) -> None:
+        # Andina trae solo cerveza y gaseosa chica (lo mismo que PED-0012); la gaseosa grande y el agua se reponen en el
+        # mercado. Así "lo que vendes de lo que te trae Andina" hasta el 30/11 ronda S/ 2 000 (contrato §4.5).
         for i in range(11):
             fecha = date(2026, 8, 17) + timedelta(days=8 * i)
-            cantidades = {"Cerveza 620 ml": 12 * self.rng.randint(3, 5), "Gaseosa 500 ml": 12 * self.rng.randint(2, 5),
-                          "Gaseosa 3 L": 6 * self.rng.randint(1, 2), "Agua 625 ml": 12 * self.rng.randint(1, 3)}  # fmt: skip
+            cantidades = {"Cerveza 620 ml": 12 * self.rng.randint(3, 5), "Gaseosa 500 ml": 12 * self.rng.randint(2, 5)}
             lineas = [self._linea_costo(n, c) for n, c in cantidades.items()]
             self._deuda_andina(formatear_id("PED", i + 1), fecha, lineas, fecha + timedelta(days=15),
                                fecha + timedelta(days=7))  # fmt: skip
@@ -415,6 +416,26 @@ class _Generador:
             compra.monto = compra.monto + ajuste_diario
             if compra.monto <= 0:
                 raise ValueError("La calibración dejó una compra sin monto; revisa los parámetros del generador")
+        # Redondear el ajuste diario deja un residuo (−649.96): múltiplo de S/ 0.0025 porque la media es de 4 semanas.
+        # Subir x una compra de un día de semana que aparece c veces entre el 15 y el 30/11 baja la proyección x·c/4.
+        # Con a céntimos en un día que aparece 2 veces y b en uno que aparece 3: baja (2a + 3b)·0.0025, y 2a + 3b = n
+        # siempre tiene solución entera → la proyección queda en −650.00 exacto, con montos en céntimos.
+        residuo = self.proyeccion_referencia() - SALDO_OBJETIVO_30_11
+        n = residuo / Decimal("0.0025")
+        if n != n.to_integral_value():
+            raise ValueError("Residuo de calibración inesperado")
+        n = int(n)
+        b = n % 2  # 0 o 1 céntimo en el día que aparece 3 veces
+        a = (n - 3 * b) // 2
+        proyectados = list(_dias(CORTE + timedelta(days=1), FECHA_CRITICA))
+        for veces, centimos in ((2, a), (3, b)):
+            if not centimos:
+                continue
+            dia_semana = next(wd for wd in range(7) if sum(1 for d in proyectados if d.weekday() == wd) == veces)
+            dia = max(d for d in self.compras_mayorista if d < CORTE and d.weekday() == dia_semana)
+            self.compras_mayorista[dia].monto += Decimal(centimos) / 100
+        if self.proyeccion_referencia() != SALDO_OBJETIVO_30_11:
+            raise ValueError("La calibración no dejó la proyección del 30/11 en el objetivo exacto")
 
     def generar(self) -> None:
         for d in _dias(INICIO, FIN_HISTORIA):

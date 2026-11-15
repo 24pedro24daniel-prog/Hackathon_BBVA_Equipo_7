@@ -33,3 +33,5 @@ class AnalisisResponse(BaseModel):
     periodo: PeriodoAnalisis | None = None
     grupos: list[Grupo]
     comparacion_pares: ComparacionPares | None = None
+    comparacion_pares_motivo: str | None = None  # EXT: por qué no hay comparación con pares
+    total: Dinero | None = None                  # EXT: suma de los grupos

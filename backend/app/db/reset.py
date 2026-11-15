@@ -3,6 +3,8 @@
     python -m app.db.reset              # BD principal (POSTGRES_DB)
     python -m app.db.reset --test       # BD de pruebas (POSTGRES_TEST_DB)
     python -m app.db.reset --sin-seed   # solo tablas vacías
+
+Nunca corre contra la BD de producción (APP_ENV=produccion o DATABASE_URL_PRODUCCION): ahí se usa app.db.migrar.
 """
 
 import argparse
@@ -12,15 +14,25 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
+from app.core.config import es_misma_bd, settings
 from app.db import models  # noqa: F401  registra las tablas en Base.metadata
 from app.db.base import Base
 from app.db.seed_demo import sembrar
 from app.db.session import crear_engine
 
 
+class ResetProhibido(RuntimeError):
+    """Se intentó borrar la BD de producción."""
+
+
+def verificar_no_produccion(engine: Engine) -> None:
+    if settings.es_produccion or es_misma_bd(engine.url.render_as_string(), settings.url_produccion):
+        raise ResetProhibido("reset borra todo: nunca contra producción. Usa `python -m app.db.migrar`.")
+
+
 def recrear_esquema(engine: Engine) -> None:
     """DROP SCHEMA public CASCADE: también limpia tipos enum y tablas que ya no existen en models.py."""
+    verificar_no_produccion(engine)
     with engine.begin() as conn:
         conn.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
         conn.execute(text("CREATE SCHEMA public"))

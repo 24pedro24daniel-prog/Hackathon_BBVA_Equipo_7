@@ -32,7 +32,9 @@ const ESTADO_FIADO = {
 }
 
 function fiadoStatus(f) {
-  const e = ESTADO_FIADO[f.estado] || ESTADO_FIADO.pendiente
+  // Fiado al día: sin línea de estado; solo se marca lo que pide atención.
+  if (!ESTADO_FIADO[f.estado] || f.estado === 'pendiente') return null
+  const e = ESTADO_FIADO[f.estado]
   const nivel = f.riesgo_atraso?.nivel
   return { tone: e.tone, text: nivel ? `${e.label} · riesgo ${nivel}` : e.label }
 }
@@ -288,7 +290,7 @@ function FiadosBlock({ state, onRecordar, headingRef }) {
                   <span>
                     Fiado del {ddmm(f.fecha)} · hace {dias(f.dias_transcurridos)}
                   </span>
-                  <Status tone={s.tone}>{s.text}</Status>
+                  {s && <Status tone={s.tone}>{s.text}</Status>}
                 </span>
               }
               amount={<Money value={f.monto} />}

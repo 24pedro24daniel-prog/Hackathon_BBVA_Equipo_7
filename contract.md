@@ -349,6 +349,13 @@ Registro manual desde la app (`canal = manual`). Mismo esquema que `movimiento_p
 ```
 - `ganancia_neta.es_aproximada = true` cuando faltan costos en el catálogo; entonces se envía `rango`.
 - Cálculo determinístico. Sin bloque `meta` de modelo.
+- Definiciones (implementación B2): periodo del día 1 al día de corte; variación contra el mes anterior del día 1 al
+  mismo día. `ingresos_mes` = entradas de caja (ventas al contado, cobros de fiado, otros ingresos; sin préstamos);
+  `egresos_mes` = salidas de caja del negocio (sin el retiro personal); `ganancia_neta` = ventas (incluidas las fiadas) −
+  costo de lo vendido − gastos del negocio − impuestos. `saldo_caja_negocio.variacion_pct` también se calcula.
+- Campos extra (opcionales): `dias_con_datos`, `dias_requeridos_forecast` (28), `retiros_personales.sueldo_frecuencia`,
+  `retiros_personales.exceso_vs_promedio`, `pagos_pendientes.detalle`. `sueldo_fijo_definido` = monto del sueldo fijo
+  vigente (por su frecuencia), `null` si no hay.
 
 ---
 
@@ -387,6 +394,22 @@ Registro manual desde la app (`canal = manual`). Mismo esquema que `movimiento_p
 ```
 - `cobros_esperados` ya viene ponderado por la probabilidad de pago de cada fiado (§4.3).
 - Si el modelo falla, `meta.fallback_usado = true` y la serie sale del baseline.
+- **Estado actual (B3):** el modelo LightGBM de `modelo/artifacts/forecast/` no es integrable (4 de sus 27 features —
+  `rubro`, `zona`, `usa_fiado`, `usa_billetera_digital` — no tienen equivalente en la BD), así que siempre responde el
+  baseline: `meta.modelo = "forecast-naive-estacional"`, `meta.fallback_usado = true`, `meta.fallback_motivo` (extra)
+  con el motivo, y `modelo_metricas = null`. `baseline.mae_backtest` = MAE diario del flujo en las últimas 4 semanas.
+- Línea esperada (`p50`): saldo + media del mismo día de la semana (últimas 4 semanas) del flujo ordinario + pagos con
+  fecha (deudas y cuotas, movimientos programados como luz y sueldo, impuestos impagos) + ajustes manuales. Los fiados
+  **no** entran al `p50` (prudencia: cobrarlos a tiempo es incierto; es la palanca del simulador): entran ponderados a
+  `cobros_esperados`, a la banda optimista (`p90`) y a `proximos_eventos` con `tipo = "cobro_fiado"`, `ponderado = true`.
+  Banda `p10/p90` = ±1.2816·σ·√h (σ = error diario del baseline). Siempre `p10 ≤ p50 ≤ p90`.
+- `dia_critico` = primer día con `p50 < 0`; si no hay, el día más bajo si queda bajo el `minimo_operativo`; si no, `null`.
+  `probabilidad_deficit` = P(saldo < 0) ese día según la banda.
+- `disponible_para_gastar`: la ventana va hasta el día crítico (o el próximo vencimiento de una deuda, o el horizonte);
+  `pagos_comprometidos` incluye deudas, programados (con el sueldo) e impuestos con fecha en la ventana;
+  `reserva_impuestos` = impuestos impagos que vencen después. Se acota en 0.
+- Campos extra: `proximos_eventos`, `fundamento`, `limites`, `confianza`, `disponible` (false si hay < 28 días con
+  registros), `dias_con_datos`, `dias_requeridos`.
 
 ### 4.2 `POST /empresas/{empresa_id}/forecast/ajustes`
 Ajuste manual de partidas ("este mes no pago alquiler").
@@ -394,6 +417,10 @@ Ajuste manual de partidas ("este mes no pago alquiler").
 { "fecha": "2026-11-28", "concepto": "alquiler", "monto": 0.00, "motivo": "acuerdo con el dueño del local" }
 ```
 **Response 201** → `{ "ajuste_id": "AJU-0003", "forecast_recalculado": true }`
+- El ajuste reemplaza el monto de la partida proyectada que coincide (por `programado_id` o por concepto, en el mismo
+  mes); si no coincide con ninguna, se suma como egreso extra ese día. `fecha` debe ser posterior a hoy y `monto ≥ 0`
+  (`400` si no). El forecast lo lista en `ajustes_manuales_aplicados`
+  (`{ajuste_id, fecha, concepto, monto, motivo, tipo: "reemplazo" | "adicional", monto_original?, fecha_original?}`).
 
 ### 4.3 `GET /empresas/{empresa_id}/fiados?estado=pendiente`
 
@@ -418,6 +445,13 @@ Ajuste manual de partidas ("este mes no pago alquiler").
 }
 ```
 
+- `estado=pendiente` devuelve todo lo impago (pendiente, por vencer y vencido); `por_vencer` = el compromiso vence en
+  ≤ 3 días; `vencido` = ya pasó; `pagado` lista los cobrados. Sin fecha de compromiso se asume a 14 días.
+- `riesgo_atraso` (baseline, no hay clasificador entregado): tasa histórica de atraso del cliente a la fecha de corte
+  (fiados pagados después del compromiso o impagos ya vencidos), suavizada hacia la tasa de la bodega
+  (`baseline_probabilidad`). Nunca usa `pago_tardio` ni `perfil_pago`. `meta.modelo = "riesgo-atraso-baseline"`,
+  `meta.fallback_usado = true`. `nivel`: alto ≥ 0.6, medio ≥ 0.3. `accion_sugerida.texto_boton = "Recordar a <cliente>"`.
+
 **`POST /fiados/{fiado_id}/recordatorio`** → genera el texto a reenviar (no lo envía al vecino):
 ```json
 { "mensaje": "Hola, Sra. Carmen 😊 Le recuerdo amablemente los S/ 120 pendientes en la bodega. ¡Gracias!" }
@@ -429,11 +463,13 @@ Préstamos de proveedor (cuentas por pagar). Lee la tabla `deudas` con `tipo = p
 {
   "total_pendiente": 2400.00,
   "items": [
-    { "pedido_id": "PED-0012", "proveedor": "Distribuidora Andina", "monto": 2400.00, "monto_pendiente": 2400.00, "fecha_pedido": "2026-11-13", "fecha_vencimiento": "2026-11-30", "estado": "por_vencer", "dias_para_vencer": 16 }
+    { "pedido_id": "PED-0012", "proveedor": "Distribuidora Andina", "monto": 2400.00, "monto_pendiente": 2400.00, "fecha_pedido": "2026-11-13", "fecha_vencimiento": "2026-11-30", "estado": "pendiente", "dias_para_vencer": 16 }
   ],
-  "impuestos": { "estado": "al_dia", "proximo_vencimiento": "2026-12-15", "monto_estimado": 20.00 }
+  "impuestos": { "estado": "al_dia", "proximo_vencimiento": "2026-12-15", "monto_estimado": 20.00, "nombre": "RUS de noviembre" }
 }
 ```
+- `estado` del pedido: `por_vencer` solo si vence en ≤ 3 días (con 16 días es `pendiente`); el filtro `estado` se
+  comporta como en §4.3. `impuestos.estado`: `vencido` si hay un periodo impago con el vencimiento pasado.
 
 ### 4.5 `POST /empresas/{empresa_id}/pedidos/chequeo`
 Chequeo **antes de confirmar** un pedido a crédito.
@@ -461,6 +497,17 @@ Chequeo **antes de confirmar** un pedido a crédito.
   "meta": { "modelo": "forecast-lgbm-quantile", "modelo_version": "0.3.1", "fallback_usado": false }
 }
 ```
+- `venta_esperada_periodo`: lo que sueles vender (precio de venta, al contado o fiado) de los productos que te trae ese
+  proveedor, desde mañana hasta el vencimiento (tasa de las últimas 4 semanas × días), redondeado a centenas
+  (≥ S/ 1 000) porque es una estimación. Proveedor sin historial de productos → todas tus ventas.
+  `exceso_vs_ventas = max(0, monto − venta_esperada_periodo)`.
+- Si ya hay una deuda igual registrada (mismo proveedor, monto y vencimiento, impaga) se toma como este pedido y no se
+  cuenta dos veces (pasa al confirmar y en la demo con PED-0012): `pedido_coincidente_id` (extra).
+- Sugerencias solo si no te alcanza holgado: `reducir_pedido` a ~90 % de la venta esperada (redondeado hacia abajo),
+  `pagar_en_partes` (2 partes: vencimiento y +15 días) y `combinar`. `saldo_resultante` = saldo más bajo hasta el
+  vencimiento; una parte que cae fuera del horizonte (30 días) no se evalúa y se avisa en `limites`.
+- Campos extra: `saldo_minimo_hasta_vencimiento`, `fecha_saldo_minimo`, `pedido_coincidente_id`. Hoy
+  `meta.modelo = "forecast-naive-estacional"` con `fallback_usado = true` (ver §4.1).
 
 ### 4.6 `POST /empresas/{empresa_id}/simular`
 Simulador de escenarios (lo usan la app y el asistente).
@@ -476,6 +523,15 @@ Simulador de escenarios (lo usan la app y el asistente).
 }
 ```
 - Tipos de acción: `reducir_pedido | pagar_en_partes | diferir_pago | cobrar_fiados | limitar_retiros | ajustar_gasto`
+- Parámetros: `reducir_pedido` (`pedido_id`, `nuevo_monto` = nuevo total), `pagar_en_partes` (`partes` ≥ 2, `fechas`
+  opcional, por defecto vencimiento y +15 días), `diferir_pago` (`fecha`), `cobrar_fiados` (`fiado_ids`, por defecto todos
+  los pendientes; `fecha`, por defecto mañana), `limitar_retiros` (`monto` = tope semanal de retiros fuera del sueldo
+  fijo; 0 = solo el sueldo), `ajustar_gasto` (`monto` extra ese día, negativo = gastas menos; `fecha`). Sin `pedido_id`
+  se usa el pedido del día crítico. Pedido o fiado inexistente/pagado → `400`. El orden de las acciones no importa.
+- `saldo_minimo` = saldo más bajo desde mañana hasta el día crítico de la proyección (si no hay, hasta el final del
+  horizonte de 30 días). Si una acción mueve un pago a una fecha posterior dentro del horizonte, la ventana se alarga
+  hasta esa fecha; un pago que cae fuera del horizonte no se evalúa y se avisa en `limites` y `notas`.
+- Campos extra: `fundamento`, `limites`, `confianza`, `ventana_hasta`, `notas`. `serie_con_acciones` trae los 30 días.
 
 **Response 200**
 ```json
@@ -514,6 +570,11 @@ Query: `desde`, `hasta`, `agrupar_por` (`categoria | producto | proveedor | clie
   }
 }
 ```
+- Base caja (lo que entró o salió de la caja) para `categoria`, `producto` y `mes`; `metodo_pago` incluye lo fiado o
+  pedido a crédito (`credito`); `proveedor` = pedidos a crédito; `cliente_fiado` = ventas fiadas. `clave` de categoría =
+  nombre con `_` (p. ej. `retiro_personal`). Variación contra el periodo anterior (mes en curso: mes anterior al mismo día).
+- `comparacion_pares` se calcula con las empresas del mismo rubro en la BD (mediana de retiros/ventas) y es `null` con
+  menos de 5 pares (la BD de la demo solo tiene a Pedro); el extra `comparacion_pares_motivo` explica por qué. Extra: `total`.
 
 ---
 
@@ -551,22 +612,40 @@ Query: `desde`, `hasta`, `agrupar_por` (`categoria | producto | proveedor | clie
 ```
 - Cada alerta lleva: tipo, fecha del problema, monto, probabilidad o nivel de riesgo, causas y una acción.
 - Prioridad (1 = más alta): `faltante_caja` → `pedido_excesivo` → `retiro_excesivo` → `obligacion_proxima` → `gasto_inusual`/`caida_ventas` → `fiado_vencido` → `meta_lograda` → `resumen_semanal`.
+- Implementadas (B10): las prioridades 1–4. `faltante_caja` (algún día con saldo esperado < 0; causas = retiros del mes
+  sobre lo usual al mismo día, exceso del pedido que vence ese día sobre lo que vendes de esa mercadería, fiados sin
+  cobrar), `pedido_excesivo` (pedido a crédito > venta esperada hasta su vencimiento, §4.5), `retiro_excesivo` (retiros
+  del mes > sueldo fijo esperado a la fecha, o > lo usual si no hay sueldo), `obligacion_proxima` (deuda o impuesto
+  impago que vence en ≤ 3 días).
+- `GET /alertas?estado=activa` primero evalúa las reglas (sin duplicar) y luego lista; otros estados: `atendida`,
+  `descartada`, `todas`. Una alerta ya atendida o descartada no se vuelve a crear al consultar.
+- Los textos (`titulo`, `titulo_corto`, `insight`, `resumen_causas`) se arman al leer. `accion.tipo`:
+  `abrir_simulador` (payload `pedido_id`), `ver_retiros`, `ver_cuentas`. Campos extra: `dias_para_evento`,
+  `titulo_corto`, `resumen_causas`, `enviada_en` (`null` = guardada sin notificar: horario silencioso o límite diario).
 
 ### 6.2 `POST /alertas/{alerta_id}/accion`
 ```json
 { "accion": "ejecutada", "detalle": "abrió simulador" }
 ```
 - `accion`: `ejecutada | descartada | posponer`
-- **Response 200** → `{ "estado": "atendida" }`
+- **Response 200** → `{ "estado": "atendida" }` (`ejecutada` → `atendida`, `descartada` → `descartada`, `posponer` →
+  `pospuesta`: sigue activa y se vuelve a notificar). Alerta inexistente → `404`.
 
 ### 6.3 `POST /empresas/{empresa_id}/alertas/evaluar` (interno)
 Se llama después de cada movimiento confirmado. Devuelve las alertas nuevas.
 - Respeta límites: máximo 2 notificaciones al día por empresa, horario silencioso (21:00–07:00), y ninguna alerta incluye enlaces que pidan credenciales.
+- Body opcional `{ "disparador": "compra_credito" | "<tipo_movimiento>" | null, "entidad_id": "PED-0013" }`. Reglas por
+  disparador: `compra_credito` → faltante + pedido excesivo; `retiro_personal` → faltante + retiro excesivo; otros
+  egresos → faltante; ingresos → ninguna; `null` → las 4. No se duplica una alerta activa (misma regla y entidad, y para
+  el faltante la misma fecha). Toda alerta nueva se guarda y vuelve en la respuesta; queda `enviada_en = null` si es
+  horario silencioso o ya se notificaron `max_por_dia` ese día (se evalúan por prioridad).
 
 ### 6.4 `PUT /empresas/{empresa_id}/preferencias-alertas`
 ```json
 { "canales": ["whatsapp"], "max_por_dia": 2, "silencio_desde": "21:00", "silencio_hasta": "07:00", "resumen_semanal": true }
 ```
+- **Response 200** con las preferencias guardadas (tabla `preferencias_alertas`). Canal fuera de
+  `whatsapp | app | email` u hora inválida → `400`; empresa inexistente → `404`.
 
 ---
 
@@ -682,11 +761,17 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
     "almacenamiento": { "estado": "ok", "bucket": "cajaclara-media" },
     "llm": { "estado": "ok", "modelo": "qwen2.5-7b-instruct", "prompt_versions": { "extractor": "v3", "asistente": "v2", "cuaderno": "v2" } },
     "vlm": { "estado": "ok", "modelo": "openai/gpt-4o-mini", "proveedor": "openrouter" },
-    "forecast": { "estado": "ok", "modelo_version": "0.3.1" },
-    "riesgo_atraso": { "estado": "ok", "modelo_version": "0.2.0" }
+    "forecast": { "estado": "baseline", "modelo": "forecast-naive-estacional", "modelo_version": "0.1.0",
+                  "ml": { "tipo": "lightgbm-quantile", "estado": "no_disponible", "artefactos": true,
+                          "motivo": "rubro: el modelo espera abarrotes, bebidas, mixto, panaderia; …" } },
+    "riesgo_atraso": { "estado": "baseline", "modelo": "riesgo-atraso-baseline", "modelo_version": "0.1.0",
+                       "ml": { "tipo": "clasificador", "estado": "no_disponible", "artefactos": false,
+                               "motivo": "No hay artefactos de un clasificador de riesgo de atraso en modelo/artifacts/" } }
   }
 }
 ```
+- `forecast.estado` / `riesgo_atraso.estado`: `ok` (modelo de ML en uso) o `baseline` (responde el baseline
+  determinístico); `ml.motivo` dice por qué el modelo no está. No carga modelos: solo lee `metadata.json` (cacheado).
 
 ---
 
@@ -707,3 +792,67 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
 
 ### Mock para trabajar en paralelo
 Hasta que los modelos estén listos, el backend publica respuestas fijas con estos mismos JSON (datos de Pedro: saldo S/ 2 340, déficit −S/ 650 el 30/11, pedido S/ 2 400 a Distribuidora Andina, fiados S/ 310). El front y el bot consumen el mock desde el primer momento.
+
+---
+
+## 11. Observabilidad del LLM (interna)
+
+> Uso interno del equipo (costos, latencia, calidad de la salida del modelo). **No forma parte de las pantallas del producto**; llevan `X-API-Key` como el resto. Cada llamada al LLM/VLM (extractor, asistente, cuaderno) deja una fila en la tabla técnica `llm_llamadas`, también si falla. Parámetros: `LLM_TRAZA_ACTIVA`, `LLM_TRAZA_GUARDAR_CONTENIDO`.
+
+### 11.1 `GET /empresas/{empresa_id}/llm/llamadas`
+Query: `origen` (`extractor | asistente | vision`), `estado` (`ok | timeout | http_error | red | respuesta_invalida | sin_configurar`), `desde`, `hasta` (fechas, zona America/Lima), `limit`, `cursor`, `incluir_contenido` (`true` agrega `request` y `respuesta`; por defecto no). Orden: más reciente primero.
+
+```json
+{
+  "items": [
+    {
+      "llamada_id": "LLM-000012",
+      "origen": "extractor",
+      "referencia_tipo": "borrador",
+      "referencia_id": "BOR-0042",
+      "prompt_version": "extractor-v3",
+      "proveedor": "openrouter",
+      "modelo_solicitado": "openai/gpt-4o-mini",
+      "modelo_respondido": "openai/gpt-4o-mini-2024-07-18",
+      "generation_id": "gen-1731600000-abc",
+      "estado": "ok",
+      "http_status": 200,
+      "error": null,
+      "resultado_uso": "aceptada",
+      "prompt_tokens": 1480,
+      "completion_tokens": 60,
+      "total_tokens": 1540,
+      "costo_usd": 0.00026,
+      "latencia_ms": 1280,
+      "creado_en": "2026-11-14T10:42:05-05:00"
+    }
+  ],
+  "next_cursor": null,
+  "meta": { "request_id": "req_8f3a1c", "generado_en": "2026-11-14T10:42:06-05:00", "fallback_usado": false, "latencia_ms": 12 }
+}
+```
+- `resultado_uso`: `aceptada | rechazada_validacion` (la salida no pasó el esquema) `| rechazada_verificador` (el verificador de cifras del asistente la rechazó) `| null` (la llamada falló o aún no se resolvió).
+- `referencia_id` es el borrador (`extractor`, `vision`) o el mensaje del asistente (`asistente`).
+- Las imágenes nunca se guardan: en `request` aparecen como `{"imagen": {"sha256", "bytes", "mime"}}`.
+
+### 11.2 `GET /empresas/{empresa_id}/llm/resumen`
+Query: `desde`, `hasta` (opcionales). `pct_fallback` = % de llamadas cuya salida no se usó (`estado ≠ ok` o rechazada por validación/verificador). Latencias p50/p95 en ms sobre las llamadas que llegaron a salir a la red.
+
+```json
+{
+  "desde": null,
+  "hasta": null,
+  "totales": {
+    "llamadas": 12, "ok": 11, "errores": 1, "pct_fallback": 16.7,
+    "prompt_tokens": 14800, "completion_tokens": 700, "costo_usd": 0.0031,
+    "latencia_p50_ms": 1100, "latencia_p95_ms": 2300
+  },
+  "por_dia": [ { "fecha": "2026-11-14", "llamadas": 12, "ok": 11, "errores": 1, "pct_fallback": 16.7,
+                 "prompt_tokens": 14800, "completion_tokens": 700, "costo_usd": 0.0031,
+                 "latencia_p50_ms": 1100, "latencia_p95_ms": 2300 } ],
+  "por_origen": [ { "origen": "extractor", "llamadas": 8, "ok": 8, "errores": 0, "pct_fallback": 0.0,
+                    "prompt_tokens": 9000, "completion_tokens": 400, "costo_usd": 0.0019,
+                    "latencia_p50_ms": 1000, "latencia_p95_ms": 1800 } ],
+  "meta": { "request_id": "req_8f3a1c", "generado_en": "2026-11-14T10:42:06-05:00", "fallback_usado": false, "latencia_ms": 15 }
+}
+```
