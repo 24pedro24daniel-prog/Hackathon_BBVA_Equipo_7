@@ -149,7 +149,7 @@ def _imprimir(r: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Backtest del forecast de CajaClara (solo lectura).")
+    parser = argparse.ArgumentParser(description="Backtest del forecast de TuCaserito (solo lectura).")
     parser.add_argument("--test", action="store_true", help="usar la BD de pruebas")
     parser.add_argument("--empresa", default="EMP-0001")
     parser.add_argument("--horizonte", type=int, default=14)
