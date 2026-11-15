@@ -119,7 +119,10 @@ backend/
 │       │   ├── __init__.py           ★ INTERFAZ B: re-exporta las funciones públicas (§4.2)
 │       │   ├── consultas.py          v_saldo_caja, v_fiados, v_deudas, v_impuestos (a fecha de corte)
 │       │   ├── resumen.py            F2
-│       │   ├── forecast.py           baseline naive estacional + carga del modelo ML si existe + fallback
+│       │   ├── proyeccion.py         motor de proyección (baseline naive estacional + pagos con fecha + ajustes)
+│       │   ├── forecast.py           GET /forecast y ajustes (usa proyeccion.py)
+│       │   ├── modelo_ml.py          diagnóstico de los artefactos de ML (metadata.json) → integrable o fallback
+│       │   ├── riesgo.py             riesgo de atraso de fiados (baseline) + recordatorio
 │       │   ├── disponible.py         "disponible para gastar"
 │       │   ├── chequeo.py            chequeo antes del pedido (F4)
 │       │   ├── simulador.py
@@ -242,6 +245,33 @@ Prioridad: 🔴 debe estar en la demo · 🟡 versión simplificada.
 | B13 | Análisis F5: 2 agrupaciones (`categoria` y `metodo_pago`) + comparación con pares sintética | `GET /analisis` | 🟡 |
 | B14 | Backtest: MAE/MAPE/cobertura del forecast vs baseline y precision/recall de `faltante_caja` contra `saldo_diario.deficit_14d`; los valores alimentan `baseline` y `modelo_metricas` del forecast | `tests/eval_forecast.py` | 🟡 |
 
+#### Estado de Dev B (rama `back/motores`)
+
+Los mocks de la Fase 0 se eliminaron (`app/mocks/` ya no existe): todo B calcula sobre la BD a fecha de corte.
+
+| # | Estado | Notas |
+|---|---|---|
+| B1 | ✅ real | `consultas.py`: filtra `creado_en`/`fecha_hora` < fin del día de corte (Lima), excluye anuladas, `afecta_caja`; fiados/deudas/impuestos con estados calculados; cronograma de cuotas |
+| B2 | ✅ real | variación vs mes anterior al mismo día; ganancia como rango con el margen de los productos con costo |
+| B3 | ✅ baseline | naive estacional (4 semanas) + pagos con fecha + ajustes; banda ±z·σ·√h; día crítico = 1.er día con p50 < 0. **LightGBM no integrable** (features `rubro`, `zona`, `usa_fiado`, `usa_billetera_digital` sin equivalente en la BD): `meta.fallback_usado = true` con motivo. Fiados ponderados fuera del p50 (en p90, disponible y "Lo que viene") |
+| B4 | ✅ real | `disponible.py` con `componentes` y `mensaje` |
+| B5 | ✅ real | `forecast_ajustes`: reemplaza la partida que coincide o suma un egreso extra |
+| B6 | ✅ baseline | tasa histórica de atraso del cliente (suavizada); sin clasificador de ML entregado → pendiente de data |
+| B7 | ✅ real | pedidos (`por_vencer` ≤ 3 días) + estado de impuestos |
+| B8 | ✅ real | venta esperada de los productos del proveedor hasta el vencimiento; no duplica un pedido ya registrado igual |
+| B9 | ✅ real | 6 acciones; ventana hasta el día crítico (se alarga si un pago movido cae en el horizonte) |
+| B10 | ✅ real | prioridades 1–4, causas cuantificadas, 2/día, silencio, sin duplicar, acción; `GET /alertas` evalúa antes de listar |
+| B11 | ✅ real | `PUT /preferencias-alertas` (tabla `preferencias_alertas`) |
+| B12 | ✅ real | `forecast`/`riesgo_atraso` = `baseline` con el motivo del ML (lee solo `metadata.json`) |
+| B13 | 🟡 simplificado | 6 agrupaciones; comparación con pares calculada con empresas del mismo rubro en la BD → `null` en la demo (solo hay 1 bodega): pendiente de data |
+| B14 | ✅ | `python -m tests.eval_forecast` (MAE/MAPE/cobertura y precision/recall vs `deficit_14d`) |
+
+Cifras de la demo con el seed (14/11): saldo 2 340 · día crítico 30/11 = −650 (p10 −1 295 / p90 +160) · disponible 0 ·
+chequeo 2 400 → [−50, 550, 850] · simular 1 800 + 2 partes → 850 (+ cobrar fiados → 1 160) · alerta `faltante_caja`
+650 con causas 700 / 400 / 310. Para cuadrar exacto se ajustó `seed_demo.py`: la calibración deja la proyección de
+referencia en −650.00 (antes −649.96) y los pedidos históricos de Andina traen solo cerveza y gaseosa chica (así la
+venta esperada de esa mercadería hasta el 30/11 es ≈ S/ 2 000).
+
 **Carga estimada:** A ≈ 13 tareas con más incertidumbre (LLM/Whisper); B ≈ 14 tareas más predecibles (cálculo). Si alguno termina antes, el apoyo natural es: B ayuda a A con A12 (score, que usa sus consultas); A ayuda a B con B13 (análisis).
 
 ---
@@ -281,3 +311,60 @@ Antes de cada merge: `pytest` en verde y `python -m app.db.reset` funcionando de
 - Toda respuesta con salida de modelo lleva `meta`; toda recomendación lleva `fundamento`, `limites` y `confianza`.
 - El LLM **no calcula cifras**: solo llama funciones de B.
 - Secretos solo en `.env`. Datos solo sintéticos.
+
+---
+
+## 9. Lo que falta (al 14/11/2026) y por qué
+
+Estado: A1–A13 y B1–B14 implementados; 538 tests en verde. Lo que sigue **no** está hecho o está simplificado.
+
+### 9.1 Depende del equipo de data
+
+| Pendiente | Por qué no está | Qué se necesita |
+|---|---|---|
+| Forecast con LightGBM (B3) | Los 6 `.joblib` de `modelo/artifacts/forecast/` cargan, pero 4 de sus 27 features no existen en la BD: `rubro` (el modelo espera abarrotes/bebidas/mixto/panaderia; la BD tiene "bodega"…), `zona` (espera urbano/periurbano/rural; la BD guarda texto libre como "SJL"), `usa_fiado` y `usa_billetera_digital` (banderas del simulador del notebook, sin definición para datos reales). No se inventaron valores. Hoy se usa el baseline con `meta.fallback_usado = true`. | Definir cómo calcular esos 4 features para una bodega real (o reentrenar sin ellos) y qué movimientos cuentan como ingreso/egreso. Al integrarlo hay que agregar `lightgbm==4.7.0`, `scikit-learn==1.9.1` y `libgomp1` en la imagen. |
+| Riesgo de atraso de fiados (B6) | No hay artefacto de clasificador. | Entregar el modelo o aceptar el baseline (tasa histórica del cliente). |
+| Score de salud con credit scoring (A12) | `modelo/artifacts/credit_scoring/` existe, pero no se revisó si sus 17 features salen de la BD; A12 usa 3 subindicadores por reglas. | Confirmar que los features se pueden construir sin supuestos (mismo criterio que el forecast). |
+| Comparación con pares (B13) | El cálculo existe, pero la BD solo tiene a Pedro → `comparacion_pares = null` con motivo. | Cargar las 28 bodegas de `data/csv/` en la BD (cargador desde CSV). |
+| Recall de `faltante_caja` (B14) | La historia sintética no tiene ningún día con `deficit_14d` positivo: no se puede medir. | Un dataset con episodios de déficit. |
+
+### 9.2 Dev A — ingesta y conversación
+
+| Pendiente | Por qué |
+|---|---|
+| Registrar de nuevo "pedí 2 400 a Andina para el 30" crea un segundo pedido (PED-0013) y la alerta sale con faltante 3 050 en vez de 650 | PED-0012 ya está en el seed y `confirmar` no detecta pedidos iguales ya registrados. La demo de 6 pasos no lo registra, pero si se dice en vivo, el número sale mal. Arreglo propuesto: avisar "ya está registrado" si coincide proveedor, monto y vencimiento con una deuda pendiente (como los duplicados del cuaderno). |
+| Pregunta por voz ("¿cómo va mi caja?" en audio) no llega al asistente | El webhook manda todo audio a registro; solo el texto cae al asistente si no se puede interpretar. |
+| "Dame un reporte" responde la ayuda genérica | La palabra "reporte" no está en los regex de intención (A10 clasifica por reglas). |
+| Asistente sin function calling del LLM (A10, simplificado) | Decisión del hackathon: la intención se clasifica por regex y cada una tiene un plan fijo de funciones de B; el LLM solo redacta y el verificador descarta cifras inventadas. |
+| Foto que no es del cuaderno (boleta, recibo) | Toda imagen se trata como cuaderno de fiados; no hay ruta para comprobantes. |
+| Whisper real sin probar (A4) | El código está listo, pero no se descargó el modelo `small` (~480 MB) ni se probó con audio real. |
+| VLM probado solo con una imagen sintética (A11) | No hay fotos reales de cuaderno; las fotos no se redimensionan (hasta 8 MB, más latencia). |
+| Ruta LLM del extractor sin medir (A13) | `eval_extractor.py --llm` hace 1 llamada por frase; solo se midió el fallback por reglas (84 % de frases exactas en holdout). |
+| Anular un movimiento | `anular_movimiento()` existe, pero el contrato no tiene endpoint. |
+| Trazas LLM perdidas en errores 500 | Si el request termina en 500 y hace rollback, su fila de `llm_llamadas` se pierde (los errores controlados sí quedan). |
+
+### 9.3 Dev B — motores financieros
+
+| Pendiente | Por qué |
+|---|---|
+| Fiados fuera de la proyección p50 | Decisión para cuadrar la historia (−650 el 30/11); si entraran ponderados daría ≈ −485. Entran en p90, disponible y "Lo que viene". Revisar con el equipo. |
+| `GET /alertas` escribe en la tabla `alertas` | Evalúa las reglas antes de listar porque el seed no trae alertas; un GET con efecto lateral. |
+| Simulador mide el mínimo solo hasta el día crítico | Si la 2.ª cuota cae dentro del horizonte (p. ej. 10/12), el resultado es −712: el baseline proyecta ≈ −250 por semana. |
+| Forecast sobreestima ≈ +200 a 7–14 días | Los pedidos que se hacen después del corte no se pueden prever con el baseline. |
+
+### 9.4 Infraestructura y producción
+
+| Pendiente | Por qué |
+|---|---|
+| BD de producción (Render) sin esquema | La BD `hackbbva` está vacía (0 tablas). Falta decidir: `python -m app.db.migrar` con `APP_ENV=produccion` (tablas vacías) o además cargar la demo (requiere un paso de carga; `reset` está bloqueado en producción a propósito). |
+| Rotar la contraseña de Render | Se compartió en un chat. |
+| Despliegue del backend en producción | No está definido dónde corre ni dónde se fija `APP_ENV=produccion`. |
+| R2 sin prueba de punta a punta | Las credenciales y el bucket ya están configurados, pero falta probar el PUT desde el navegador, la regla CORS del bucket (`PUT` desde el origen del front con header `Content-Type`) y la regla de vida para borrar audios. El tamaño máximo no va firmado en el PUT (se valida al pedir la URL y con HEAD antes de leer). |
+| Cambios de columnas en producción | Sin Alembic: `app.db.migrar` solo crea tablas nuevas; un cambio de columnas en una tabla existente se hace a mano. |
+| Dependencias transitivas sin fijar | `requirements.txt` fija solo las directas; un lock completo saldría de `pip freeze` dentro del contenedor. |
+
+### 9.5 Front (no es del backend, pero lo bloquea en la demo)
+
+- Usar el flujo de subida a R2 (`contract.md` §1.0) en `frontend/src/pages/Chat/media.js` (hoy usa `demo://`).
+- Adoptar los cambios de contrato de B: PED-0012 sale `pendiente` (no `por_vencer`), `comparacion_pares` puede ser `null`, la categoría de análisis es `retiro_personal` (antes `retiros_personales`), y campos opcionales nuevos en resumen, chequeo, simulador y análisis.
+- Probar con `VITE_USE_MOCK=false` los 6 pasos de la demo (§7).

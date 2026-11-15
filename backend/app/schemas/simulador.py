@@ -40,4 +40,6 @@ class SimulacionResponse(BaseModel):
     fundamento: str | None = None   # EXT
     limites: str | None = None      # EXT
     confianza: Confianza | None = None  # EXT
+    ventana_hasta: date | None = None   # EXT: último día que entra a la comparación del saldo mínimo
+    notas: list[str] = []               # EXT: pagos/cobros simulados que quedaron fuera del horizonte
     meta: Meta

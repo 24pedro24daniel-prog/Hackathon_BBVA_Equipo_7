@@ -90,4 +90,7 @@ class ChequeoResponse(BaseModel):
     fundamento: str
     limites: str
     confianza: Confianza
+    saldo_minimo_hasta_vencimiento: Dinero | None = None  # EXT: el día más bajo hasta el vencimiento
+    fecha_saldo_minimo: date | None = None                 # EXT
+    pedido_coincidente_id: str | None = None               # EXT: deuda ya registrada igual a este pedido (no se duplica)
     meta: Meta
