@@ -11,7 +11,8 @@
   ],
   "features_en_orden": [
     "rubro",
-    "zona",
+    "n_trabajadores",
+    "antiguedad_meses",
     "usa_fiado",
     "usa_billetera_digital",
     "ingreso_lag1",
@@ -39,19 +40,17 @@
     "mes"
   ],
   "features_categoricas": [
-    "rubro",
-    "zona"
+    "rubro"
   ],
   "categorias_rubro": [
-    "abarrotes",
-    "bebidas",
-    "mixto",
-    "panaderia"
+    "bodega",
+    "distribuidora",
+    "restaurante",
+    "taller"
   ],
-  "categorias_zona": [
-    "periurbano",
-    "rural",
-    "urbano"
-  ],
-  "notas": "Cada archivo <target>_p<quantil>.joblib es un LGBMRegressor. Para predecir, construir X con las columnas de features_en_orden en ese orden exacto, con 'rubro' y 'zona' como pandas Categorical usando las categorias listadas aqui."
+  "definiciones_propuestas": {
+    "usa_fiado": "True si la empresa tiene >=1 registro en cuaderno_fiado en los ultimos 90 dias (a confirmar con backend)",
+    "usa_billetera_digital": "True si la empresa tiene >=1 registro en billeteras_digitales en los ultimos 90 dias (a confirmar con backend)"
+  },
+  "notas": "Cada archivo <target>_p<quantil>.joblib es un LGBMRegressor. Para predecir, construir X con las columnas de features_en_orden en ese orden exacto, con 'rubro' como pandas Categorical usando las categorias listadas aqui. n_trabajadores reemplaza a zona porque zona es texto libre en la BD real sin regla de mapeo."
 }
