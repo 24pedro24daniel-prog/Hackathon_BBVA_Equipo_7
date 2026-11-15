@@ -1,0 +1,58 @@
+{
+  "motor_version": "reglas_recomendacion-1.0",
+  "umbrales": {
+    "dias_proyeccion_faltante_caja": 14,
+    "cv_ventas_alto": 0.5,
+    "pct_dias_con_venta_bajo": 0.6,
+    "pct_fiado_sobre_ventas_alto": 0.35,
+    "pct_fiado_cobrado_a_tiempo_bajo": 0.5,
+    "gasto_inusual_factor": 1.5,
+    "score_meta_lograda": 70
+  },
+  "prioridad_tipo_alerta": {
+    "faltante_caja": 1,
+    "pedido_excesivo": 2,
+    "retiro_excesivo": 3,
+    "obligacion_proxima": 4,
+    "gasto_inusual": 5,
+    "caida_ventas": 6,
+    "fiado_vencido": 7,
+    "meta_lograda": 8,
+    "resumen_semanal": 9
+  },
+  "reglas_implementadas": [
+    {
+      "tipo_alerta": "faltante_caja",
+      "requiere": [
+        "saldo_proyectado_p10 (de predicciones_saldo)",
+        "empresas.minimo_operativo"
+      ]
+    },
+    {
+      "tipo_alerta": "gasto_inusual",
+      "requiere": [
+        "egreso_pred_p50 (forecast)",
+        "egreso_media30 (feature del forecast)"
+      ]
+    },
+    {
+      "tipo_alerta": "caida_ventas",
+      "requiere": [
+        "pct_dias_con_venta, cv_ventas (features credit scoring)"
+      ]
+    },
+    {
+      "tipo_alerta": "fiado_vencido",
+      "requiere": [
+        "pct_fiado_sobre_ventas, pct_fiado_cobrado_a_tiempo (features credit scoring)"
+      ]
+    },
+    {
+      "tipo_alerta": "meta_lograda",
+      "requiere": [
+        "score (output credit scoring)"
+      ]
+    }
+  ],
+  "notas": "Motor 100% basado en reglas deterministicas (no ML): consume los outputs de modelo_ingreso_egreso_lightgbm.ipynb y credit_scoring_bodegas_logreg.ipynb, no requiere cargar ningun .joblib adicional. Llena directo los campos tipo_alerta, prioridad, accion_sugerida y causas de la tabla alertas (modelo_datos.dbml)."
+}
