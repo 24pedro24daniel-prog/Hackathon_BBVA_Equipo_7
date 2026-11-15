@@ -62,5 +62,11 @@
     "pct_fiado_cobrado_a_tiempo": "Se usa SOLO como tasa agregada por empresa (promedio de fechas en cuaderno_fiado), nunca el campo individual cuaderno_fiado.pago_tardio, que queda reservado para evaluacion.",
     "n_alertas_quiebre_stock": "Proxy construido a partir de alertas.tipo_alerta = caida_ventas (no existe un tipo quiebre_stock en el enum; se podria agregar como mejora opcional, no es obligatorio)."
   },
+  "integracion_score_salud": {
+    "vista_features_propuesta": "v_empresas_credit_features (ver modelo_datos.dbml)",
+    "clave_subindicador_propuesta": "riesgo_pago_ml",
+    "formula": "round(modelo.predict_proba(scaler.transform(X))[:, 1] * 100)",
+    "nota": "El score es inferencia de ML (requiere cargar logreg_model.joblib + scaler.joblib), no es un campo calculado via SQL. La vista solo resuelve las features de entrada; el backend debe correr el modelo y escribir el resultado dentro de score_salud.subindicadores. Clave y forma de combinarlo con otros subindicadores, a confirmar con el equipo."
+  },
   "notas": "Para scorear una bodega nueva: construir X con pd.get_dummies igual que aqui (mismas columnas_en_orden, rellenando con 0 las categorias ausentes), aplicar scaler.transform, luego modelo.predict_proba."
 }

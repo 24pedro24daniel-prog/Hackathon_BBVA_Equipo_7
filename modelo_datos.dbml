@@ -663,3 +663,49 @@ Table llm_llamadas {
 //     WHERE b.empresa_id = e.empresa_id AND b.fecha_hora >= CURRENT_DATE - INTERVAL '90 days'
 //   ) AS usa_billetera_digital
 // FROM empresas e;
+//
+// v_empresas_credit_features: features de entrada del modelo de credit scoring (regresión
+// logística, modelo/artifacts/credit_scoring/). Ventana de agregación: últimos 180 días
+// (parámetro VENTANA_DIAS, ajustable). zona/rubro quedan con la misma observación que en
+// v_empresas_flags/prediccion_ingreso_egreso: rubro usa la taxonomía real de `rubros`, zona
+// es texto libre en la BD y todavía no tiene regla de mapeo acordada (el notebook de credit
+// scoring aún simula zona con categorías propias, pendiente de alinear).
+//
+// CREATE VIEW v_empresas_credit_features AS
+// SELECT
+//   e.empresa_id,
+//   e.tiene_ruc,
+//   EXTRACT(MONTH FROM AGE(CURRENT_DATE, e.fecha_alta))
+//     + EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.fecha_alta)) * 12 AS antiguedad_meses,
+//   (SELECT COALESCE(AVG(t.monto), 0) FROM transacciones t
+//     WHERE t.empresa_id = e.empresa_id AND t.tipo = 'venta'
+//       AND t.fecha_hora >= CURRENT_DATE - INTERVAL '180 days') AS ingreso_mensual_prom,
+//   -- pct_dias_con_venta, cv_ventas: % de días con >=1 venta y coeficiente de variación del
+//   -- monto diario vendido, agregando transacciones.tipo = 'venta' por día en la ventana.
+//   (SELECT COUNT(DISTINCT t.fecha_hora::date)::float / 180 FROM transacciones t
+//     WHERE t.empresa_id = e.empresa_id AND t.tipo = 'venta'
+//       AND t.fecha_hora >= CURRENT_DATE - INTERVAL '180 days') AS pct_dias_con_venta,
+//   -- pct_pagos_a_tiempo, dias_mora_promedio: comparar deudas.fecha_pago_total (o CURRENT_DATE
+//   -- si sigue pendiente) contra deudas.fecha_vencimiento, agregado por empresa_id.
+//   (SELECT AVG((d.fecha_pago_total IS NOT NULL AND d.fecha_pago_total <= d.fecha_vencimiento)::int::float)
+//     FROM deudas d WHERE d.empresa_id = e.empresa_id) AS pct_pagos_a_tiempo,
+//   (SELECT AVG(GREATEST(COALESCE(d.fecha_pago_total, CURRENT_DATE) - d.fecha_vencimiento, 0))
+//     FROM deudas d WHERE d.empresa_id = e.empresa_id) AS dias_mora_promedio,
+//   (SELECT CURRENT_DATE - MAX(t.fecha_hora::date) FROM transacciones t
+//     WHERE t.empresa_id = e.empresa_id) AS dias_desde_ultimo_registro,
+//   -- pct_fiado_sobre_ventas: monto en cuaderno_fiado / monto en ventas, misma ventana.
+//   -- pct_fiado_cobrado_a_tiempo: SOLO como tasa agregada (fecha_pago_total <= fecha_compromiso),
+//   -- NUNCA el campo individual cuaderno_fiado.pago_tardio (reservado para evaluación).
+//   (SELECT COALESCE(SUM(f.monto), 0) FROM cuaderno_fiado f
+//     WHERE f.empresa_id = e.empresa_id AND f.fecha_fiado >= CURRENT_DATE - INTERVAL '180 days')
+//     / NULLIF((SELECT SUM(t.monto) FROM transacciones t
+//       WHERE t.empresa_id = e.empresa_id AND t.tipo = 'venta'
+//         AND t.fecha_hora >= CURRENT_DATE - INTERVAL '180 days'), 0) AS pct_fiado_sobre_ventas,
+//   (SELECT AVG((f.fecha_pago_total IS NOT NULL AND f.fecha_pago_total <= f.fecha_compromiso)::int::float)
+//     FROM cuaderno_fiado f WHERE f.empresa_id = e.empresa_id) AS pct_fiado_cobrado_a_tiempo,
+//   -- n_alertas_quiebre_stock: proxy vía alertas.tipo_alerta = 'caida_ventas' (no existe un tipo
+//   -- quiebre_stock en el enum; agregarlo queda como mejora opcional).
+//   (SELECT COUNT(*) FROM alertas a
+//     WHERE a.empresa_id = e.empresa_id AND a.tipo = 'caida_ventas'
+//       AND a.creada_en >= CURRENT_DATE - INTERVAL '180 days') AS n_alertas_quiebre_stock
+// FROM empresas e;
