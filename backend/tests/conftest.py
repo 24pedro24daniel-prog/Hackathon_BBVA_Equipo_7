@@ -45,6 +45,27 @@ def _sin_ia_real(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _forecast_baseline_por_defecto(monkeypatch):
+    """Los tests de cifras de la demo (30/11 = −650, etc.) usan el baseline determinístico. Los tests del LightGBM piden
+    el motor explícitamente (fixture `motor_lightgbm`) y se saltan si no están los artefactos."""
+    monkeypatch.setattr(settings, "FORECAST_MOTOR", "baseline")
+
+
+@pytest.fixture
+def motor_lightgbm(monkeypatch):
+    """FORECAST_MOTOR=lightgbm con los artefactos reales (salta el test si no están o no cargan)."""
+    from app.services.finanzas import modelo_ml
+
+    monkeypatch.setattr(settings, "FORECAST_MOTOR", "lightgbm")
+    modelo_ml._FORECAST.limpiar()
+    modelo, motivo = modelo_ml.cargar_forecast()
+    if modelo is None:
+        pytest.skip(f"Modelo LightGBM no disponible en {settings.ml_artifacts_dir}: {motivo}")
+    yield modelo
+    modelo_ml._FORECAST.limpiar()
+
+
+@pytest.fixture(autouse=True)
 def _sin_r2_real(monkeypatch):
     """Nunca se crea un cliente boto3 real ni se usan credenciales R2 del .env en los tests."""
 

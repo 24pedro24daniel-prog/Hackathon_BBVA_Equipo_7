@@ -17,7 +17,7 @@ from sqlalchemy import select
 from app.core.errors import ErrorAPI, NoEncontrado
 from app.db import models as m
 from app.schemas.common import Canal, EstadoBorrador
-from app.schemas.ingesta import ConfirmarRequest, WebhookRequest
+from app.schemas.ingesta import ConfirmarRequest, InterpretarRequest, WebhookRequest
 from app.services.ingesta import enrutador, idempotencia, servicio
 from app.services.ingesta.enrutador import EN_CORRECCION
 from app.services.ingesta.servicio import resumen_movimiento, texto_chequeo
@@ -91,7 +91,8 @@ def _desde_resultado(db, r: enrutador.Resultado) -> dict:
         return _respuesta(enrutador.texto_guardado(r.confirmacion or {}))
     if r.tipo == "descartado":
         return _respuesta(r.mensaje or "Listo, no lo anoté.")
-    return _respuesta(r.mensaje or "")
+    texto = r.mensaje or ""
+    return _respuesta(f"🎙️ «{r.transcripcion}»\n{texto}" if r.transcripcion else texto)
 
 
 def _boton(db, empresa: m.Empresa, valor: str) -> dict:
@@ -160,8 +161,12 @@ def procesar(db, body: WebhookRequest) -> dict:
         elif body.tipo == "imagen":
             respuesta = _cuaderno(db, empresa.empresa_id, body.media_url)
         elif body.tipo == "audio":
-            r = enrutador.registro(db, empresa.empresa_id, body.texto, canal=Canal.voz, media_url=body.media_url,
-                                   canal_asistente="whatsapp")  # fmt: skip
+            # Se escucha primero: una pregunta por voz ("¿cómo va mi caja?") va al asistente; un movimiento, a registro.
+            transcrito = servicio.transcribir(InterpretarRequest(empresa_id=empresa.empresa_id, canal=Canal.voz,
+                                                                 texto=body.texto, media_url=body.media_url))  # fmt: skip
+            r = enrutador.procesar_texto(db, empresa.empresa_id, transcrito[0], _en_correccion(db, empresa.empresa_id),
+                                         canal_asistente="whatsapp", autoguardar=False, canal=Canal.voz,
+                                         media_url=body.media_url, transcrito=transcrito)  # fmt: skip
             respuesta = _desde_resultado(db, r)
         elif not (body.texto or "").strip():
             respuesta = _respuesta("No me llegó nada 🙂 Cuéntame qué vendiste o gastaste, o pregúntame lo que quieras.")

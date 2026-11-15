@@ -149,63 +149,58 @@ def test_ajuste_adicional_y_validaciones(client_db, reloj_fijo):
                           json={"fecha": "2026-11-20", "concepto": "x", "monto": 1}).status_code == 404  # fmt: skip
 
 
-# ── ML: diagnóstico y fallback ──
+# ── ML: diagnóstico y fallback (los tests del LightGBM real están en test_d_modelos_ml.py) ──
 
 
 def _con_artefactos(monkeypatch, ruta):
     monkeypatch.setattr(settings, "ML_ARTIFACTS_DIR", str(ruta))
+    modelo_ml.limpiar_cache()
 
 
 def test_sin_artefactos_queda_no_disponible(monkeypatch, tmp_path):
+    monkeypatch.setattr(settings, "FORECAST_MOTOR", "lightgbm")
     _con_artefactos(monkeypatch, tmp_path)
     d = modelo_ml.diagnostico_forecast()
     assert d["estado"] == "no_disponible" and "metadata.json" in d["motivos"][0]
     assert modelo_ml.diagnostico_riesgo_atraso()["estado"] == "no_disponible"
+    modelo_ml.limpiar_cache()
 
 
-def test_features_no_construibles_dejan_el_modelo_sin_integrar(monkeypatch, tmp_path):
+def test_metadata_ilegible_o_artefacto_corrupto_deja_el_modelo_no_disponible(monkeypatch, tmp_path):
+    monkeypatch.setattr(settings, "FORECAST_MOTOR", "lightgbm")
     base = tmp_path / "prediccion_ingreso_egreso"
     base.mkdir()
     for a in modelo_ml.ARCHIVOS_FORECAST:
-        (base / a).write_bytes(b"no es un modelo")  # nunca se deserializa
-    (base / "metadata.json").write_text(json.dumps({"features_en_orden": ["zona", "ingreso_lag1", "dow", "clima"],
-                                                    "categorias_zona": ["urbano"]}), encoding="utf-8")  # fmt: skip
+        (base / a).write_bytes(b"no es un modelo")
+    (base / "metadata.json").write_text(json.dumps({"features_en_orden": ["rubro"], "categorias_rubro": ["bodega"]}),
+                                        encoding="utf-8")  # fmt: skip
     _con_artefactos(monkeypatch, tmp_path)
     d = modelo_ml.diagnostico_forecast()
-    assert d["estado"] == "no_disponible" and d["artefactos"] is True
-    assert d["features_no_construibles"] == ["zona", "clima"]
+    assert d["estado"] == "no_disponible" and d["artefactos"] is True and "No se pudo cargar" in d["motivos"][0]
+    modelo_ml.limpiar_cache()
 
 
 @pytest.mark.db
 def test_forecast_usa_baseline_si_el_modelo_no_esta(db, monkeypatch, tmp_path, reloj_fijo):
+    monkeypatch.setattr(settings, "FORECAST_MOTOR", "lightgbm")
     _con_artefactos(monkeypatch, tmp_path)
     f = finanzas.forecast(db, E, 30)
     assert f.meta.fallback_usado is True and "metadata.json" in f.meta.fallback_motivo
     assert f.dia_critico.saldo_p50 == Decimal("-650.00")
-
-
-def test_artefactos_reales_del_equipo_de_datos():
-    meta = settings.ml_artifacts_dir / "prediccion_ingreso_egreso" / "metadata.json"
-    if not meta.exists():
-        pytest.skip(f"No están los artefactos reales en {meta} (monta ../modelo/artifacts o define ML_ARTIFACTS_DIR)")
-    d = modelo_ml.diagnostico_forecast()
-    assert d["artefactos"] is True and d["estado"] == "no_disponible"
-    # rubro y zona fueron resueltos por el equipo de ML (zona -> n_trabajadores, rubro con taxonomia real),
-    # pero el chequeo _CONSTRUIBLE de modelo_ml.py sigue sin reconocerlos como construibles (ver su docstring).
-    assert set(d["features_no_construibles"]) == {"rubro", "n_trabajadores", "antiguedad_meses", "usa_fiado", "usa_billetera_digital"}
+    modelo_ml.limpiar_cache()
 
 
 # ── B12 /health ──
 
 
-def test_health_reporta_baseline_sin_cargar_modelos(client, monkeypatch):
+def test_health_reporta_baseline_sin_correr_el_forecast(client, monkeypatch):
     llamadas = []
     monkeypatch.setattr(fc, "proyectar", lambda *a, **k: llamadas.append(1))
     h = client.get(f"{P}/health").json()["componentes"]
-    assert {"whisper", "llm", "vlm", "almacenamiento", "base_datos"} <= set(h)
-    for nombre in ("forecast", "riesgo_atraso"):
-        assert h[nombre]["estado"] == "baseline" and h[nombre]["ml"]["estado"] == "no_disponible"
-        assert h[nombre]["ml"]["motivo"]
+    assert {"whisper", "llm", "vlm", "almacenamiento", "base_datos", "credit_scoring"} <= set(h)
+    for nombre in ("forecast", "riesgo_atraso"):  # conftest fija FORECAST_MOTOR=baseline
+        assert h[nombre]["estado"] == "baseline" and h[nombre]["ml"]["motivo"]
+    assert h["riesgo_atraso"]["ml"]["estado"] == "no_disponible" and h["forecast"]["ml"]["estado"] == "desactivado"
     assert h["forecast"]["modelo"] == "forecast-naive-estacional" and h["forecast"]["modelo_version"] == fc.VERSION
     assert llamadas == []
 

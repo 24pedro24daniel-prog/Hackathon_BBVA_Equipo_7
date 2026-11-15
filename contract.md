@@ -11,7 +11,7 @@
 |---|---|
 | Base URL | `/api/v1` |
 | Formato | JSON, UTF-8 |
-| Autenticación (demo) | Header `X-API-Key: <clave>` leída desde `.env`. Nunca en el código ni en el repo |
+| Autenticación | `Authorization: Bearer <token>` (sesión de **una** empresa, del login de las demos, §12) o `X-API-Key: <clave>` (bot/administración: todas las empresas). Públicas: `/health` y `POST /auth/login`. Con Bearer, nada del path, la query ni el body puede apuntar a otra empresa (`403 EMPRESA_NO_PERMITIDA`). Secretos solo en `.env` / panel de Render, nunca en el código ni en el repo |
 | IDs | Strings con prefijo: `EMP-0001`, `MOV-000123`, `FIA-0045`, `PED-0012`, `ALR-0007`, `BOR-…` (borrador) |
 | Dinero | Número decimal en soles con 2 decimales (`2340.00`). Campo `moneda` = `"PEN"` por defecto |
 | Fechas | ISO 8601. Fecha: `2026-11-30`. Fecha-hora: `2026-11-14T10:42:00-05:00` (zona America/Lima) |
@@ -19,6 +19,9 @@
 | Idempotencia | Los `POST` que crean registros aceptan header `Idempotency-Key` (evita duplicar si WhatsApp reenvía el mensaje) |
 | Trazabilidad | Toda respuesta con salida de un modelo incluye el bloque `meta` (ver abajo) |
 | Explicabilidad | Toda recomendación incluye `fundamento`, `limites` y `confianza` |
+| Categorías | Catálogo canónico de 16 nombres `snake_case` (el mismo en `data/csv`, el seed y la BD): `bebidas`, `abarrotes`, `lacteos_panaderia`, `limpieza_aseo`, `snacks_golosinas`, `otros_ingresos`, `mercaderia`, `servicios`, `alquiler_local`, `transporte_flete`, `impuestos`, `financiamiento`, `retiro_personal`, `cobro_fiados`, `prestamos_recibidos`, `otros_gastos`. El backend compara nombres sin importar mayúsculas, tildes ni `_` ≡ espacio y acepta los nombres viejos (`retiro personal`, `pago de prestamos`…); una categoría que no existe en la BD da `400` claro, nunca `500`. Rubros: `bodega`, `restaurante`, `taller`, `distribuidora` |
+| Validación | Los errores de validación (`400`) traen el mensaje y `detalles[].problema` en español ("es obligatorio", "debe ser mayor que 0", "valor no permitido (usa: …)"), nunca el texto en inglés de pydantic |
+| Cantidades | `items[].cantidad` es siempre un número JSON (`2`, `0.5`), en `/ingesta/interpretar`, `/chat/mensajes` y `/movimientos` |
 
 ### Bloque `meta` (en respuestas de modelos)
 
@@ -27,7 +30,7 @@
   "request_id": "req_8f3a1c",
   "generado_en": "2026-11-14T10:42:05-05:00",
   "modelo": "forecast-lgbm-quantile",
-  "modelo_version": "0.3.1",
+  "modelo_version": "lgbm_cuantiles-1.0",
   "prompt_version": null,
   "fallback_usado": false,
   "latencia_ms": 184
@@ -50,10 +53,15 @@
 | HTTP | `codigo` | Cuándo |
 |---|---|---|
 | 400 | `VALIDACION` | Payload inválido |
-| 401 | `NO_AUTORIZADO` | Falta o es inválida la API key |
+| 401 | `NO_AUTORIZADO` | Falta la credencial, la API key es inválida o el token es inválido/manipulado |
+| 401 | `SESION_EXPIRADA` | El token venció (el front vuelve al login) |
+| 401 | `CREDENCIALES_INVALIDAS` | `POST /auth/login`: usuario o contraseña incorrectos (mismo error si el usuario no existe) |
+| 403 | `EMPRESA_NO_PERMITIDA` | Con Bearer, la ruta (path, query o body, incluidos IDs de borradores, fiados, alertas, conversaciones, `media_url`…) apunta a otra empresa |
 | 404 | `NO_ENCONTRADO` | Empresa, borrador o registro inexistente |
 | 409 | `CONFLICTO` | Borrador ya confirmado / idempotency key repetida con otro payload |
 | 422 | `NO_INTERPRETABLE` | El LLM/OCR no pudo extraer un movimiento |
+| 422 | `VALIDACION` | Solo `POST /auth/login`: body inválido (el resto de la API usa `400 VALIDACION`) |
+| 429 | `DEMASIADOS_INTENTOS` | Demasiados logins fallidos desde la IP, o límite de uso de las rutas de IA de la sesión. Header `Retry-After` (segundos) |
 | 503 | `SERVICIO_NO_DISPONIBLE` | LLM, Whisper o R2 (almacenamiento de media) caídos o sin configurar (se responde con fallback cuando existe) |
 
 ### Enums compartidos
@@ -335,6 +343,10 @@ al LLM para clasificar (si el LLM no responde, siguen las reglas). La misma lóg
   `llm-chat` si clasificó el LLM, `reglas-chat` si bastaron las reglas (`fallback_usado = true` si el LLM falló); en
   `registro`/`asistente` es el `meta` de §1.2/§7.
 - Errores con el formato estándar: `400` sin texto, `404` empresa, `422`/`503` como §1.2 para audio.
+- Con la pregunta "¿salió de la caja?" pendiente, los chips ("Sí, salió de la caja" / "No, no salió de la caja"), o un
+  "sí" / "no" escrito, se resuelven primero: sí → `guardado` (retiro), no → `descartado` (ya no queda en bucle).
+- Una pregunta por voz ("¿cómo va mi caja?" en audio) va al asistente igual que si fuera texto, también en el webhook de
+  WhatsApp. "Dame un reporte", "reporte" y "cómo me fue" son la intención `estado_caja`.
 
 ---
 
@@ -400,9 +412,15 @@ Registro manual desde la app (`canal = manual`). Mismo esquema que `movimiento_p
   mismo día. `ingresos_mes` = entradas de caja (ventas al contado, cobros de fiado, otros ingresos; sin préstamos);
   `egresos_mes` = salidas de caja del negocio (sin el retiro personal); `ganancia_neta` = ventas (incluidas las fiadas) −
   costo de lo vendido − gastos del negocio − impuestos. `saldo_caja_negocio.variacion_pct` también se calcula.
-- Campos extra (opcionales): `dias_con_datos`, `dias_requeridos_forecast` (28), `retiros_personales.sueldo_frecuencia`,
-  `retiros_personales.exceso_vs_promedio`, `pagos_pendientes.detalle`. `sueldo_fijo_definido` = monto del sueldo fijo
-  vigente (por su frecuencia), `null` si no hay.
+- Campos extra (opcionales): `negocio.nombre` (= `empresas.nombre_ficticio`, para no fijar "Pedro" en el front),
+  `dias_con_datos`, `dias_requeridos_forecast` (28), `retiros_personales.sueldo_frecuencia`,
+  `retiros_personales.exceso_vs_promedio`, `retiros_personales.sueldo_esperado_a_la_fecha` y `exceso_vs_sueldo`,
+  `pagos_pendientes.detalle`. `sueldo_fijo_definido` = monto del sueldo fijo vigente (por su frecuencia), `null` si no hay.
+- **Sueldo según su frecuencia:** el sueldo diario o semanal cuenta las veces que cae en el rango; el mensual y el
+  quincenal se prorratean por día (S/ 1 350 mensual = S/ 630 al día 14), así a mitad de mes no sale un exceso falso; pero
+  un sueldo que **ya cayó** en el periodo en curso (p. ej. cobrado el día 1) cuenta completo: en cada periodo el esperado
+  es `max(prorrateo, sueldo ya vencido)`, así cobrarse el sueldo al inicio del periodo no dispara `retiro_excesivo`. Lo
+  usan `sueldo_esperado_a_la_fecha`, la alerta `retiro_excesivo` y el subindicador de sueldo del score.
 
 ---
 
@@ -436,20 +454,33 @@ Registro manual desde la app (`canal = manual`). Mismo esquema que `movimiento_p
   "ajustes_manuales_aplicados": [],
   "baseline": { "nombre": "naive_estacional", "mae_backtest": 212.40 },
   "modelo_metricas": { "mae_backtest": 158.10, "cobertura_p10_p90": 0.82 },
-  "meta": { "modelo": "forecast-lgbm-quantile", "modelo_version": "0.3.1", "fallback_usado": false }
+  "meta": { "modelo": "forecast-lgbm-quantile", "modelo_version": "lgbm_cuantiles-1.0", "fallback_usado": false }
 }
 ```
 - `cobros_esperados` ya viene ponderado por la probabilidad de pago de cada fiado (§4.3).
-- Si el modelo falla, `meta.fallback_usado = true` y la serie sale del baseline.
-- **Estado actual (B3):** el modelo LightGBM de `modelo/artifacts/forecast/` no es integrable (4 de sus 27 features —
-  `rubro`, `zona`, `usa_fiado`, `usa_billetera_digital` — no tienen equivalente en la BD), así que siempre responde el
-  baseline: `meta.modelo = "forecast-naive-estacional"`, `meta.fallback_usado = true`, `meta.fallback_motivo` (extra)
-  con el motivo, y `modelo_metricas = null`. `baseline.mae_backtest` = MAE diario del flujo en las últimas 4 semanas.
-- Línea esperada (`p50`): saldo + media del mismo día de la semana (últimas 4 semanas) del flujo ordinario + pagos con
-  fecha (deudas y cuotas, movimientos programados como luz y sueldo, impuestos impagos) + ajustes manuales. Los fiados
-  **no** entran al `p50` (prudencia: cobrarlos a tiempo es incierto; es la palanca del simulador): entran ponderados a
-  `cobros_esperados`, a la banda optimista (`p90`) y a `proximos_eventos` con `tipo = "cobro_fiado"`, `ponderado = true`.
-  Banda `p10/p90` = ±1.2816·σ·√h (σ = error diario del baseline). Siempre `p10 ≤ p50 ≤ p90`.
+- **Motor (`FORECAST_MOTOR` = `lightgbm` por defecto | `baseline`).** Con `lightgbm` el ingreso y el egreso **ordinarios**
+  de cada día salen del LightGBM por cuantiles de `modelo/artifacts/prediccion_ingreso_egreso/` (predicción recursiva día a
+  día, features construidos desde la BD a la fecha de corte; ver `backend/README.md` §ML). `meta.modelo =
+  "forecast-lgbm-quantile"`, `meta.modelo_version = "lgbm_cuantiles-1.0"` (la de `metadata.json`), `fallback_usado = false`,
+  `modelo_metricas` = backtest de 1 paso del modelo en los últimos días de la propia empresa (MAE del flujo neto diario y
+  cobertura de su banda p10–p90; comparable con `baseline.mae_backtest`).
+- **Fallback.** Si el modelo no carga (artefactos, `libgomp`, versiones), la empresa tiene menos de 30 días completos de
+  movimientos, el rubro no es uno de los 4 que conoce el modelo, la predicción lanza un error o `FORECAST_MOTOR=baseline`,
+  la serie sale del baseline: `meta.modelo = "forecast-naive-estacional"`, `meta.modelo_version = "0.1.0"`,
+  `meta.fallback_usado = true`, `meta.fallback_motivo` (extra) con el motivo concreto y `modelo_metricas = null`.
+  `baseline.mae_backtest` = MAE diario del flujo en las últimas 4 semanas del baseline.
+- Línea esperada (`p50`): saldo + flujo ordinario del día (LightGBM, o media del mismo día de la semana de las últimas 4
+  semanas en el baseline) + pagos con fecha (deudas y cuotas, movimientos programados como luz y sueldo, impuestos
+  impagos) + ajustes manuales. **Sin doble conteo:** el modelo se entrenó con el egreso total de la caja y aquí se aplica
+  solo al flujo ordinario (su historia no incluye deudas, impuestos ni programados); sus "pagos fantasma" de los días 5 y
+  15 del entrenamiento se neutralizan (`dom` 5→4, 15→14 solo en los modelos de egreso) para que no dupliquen los eventos
+  reales. Los fiados **no** entran al `p50` (prudencia: cobrarlos a tiempo es incierto; es la palanca del simulador): entran
+  ponderados a `cobros_esperados`, a la banda optimista (`p90`) y a `proximos_eventos` con `tipo = "cobro_fiado"`,
+  `ponderado = true`.
+- Banda `p10/p90`: con `lightgbm`, cuantiles del modelo (p10/p90 de ingreso y egreso, ordenados `p10 ≤ p50 ≤ p90`), con
+  piso en el error cuadrático medio de 1 paso del modelo en esa empresa, acumulados como raíz de la suma de cuadrados a
+  h días (lado malo: menos ingreso y más egreso); con `baseline`, ±1.2816·σ·√h (σ = error diario del baseline). Siempre
+  `p10 ≤ p50 ≤ p90`.
 - `dia_critico` = primer día con `p50 < 0`; si no hay, el día más bajo si queda bajo el `minimo_operativo`; si no, `null`.
   `probabilidad_deficit` = P(saldo < 0) ese día según la banda.
 - `disponible_para_gastar`: la ventana va hasta el día crítico (o el próximo vencimiento de una deuda, o el horizonte);
@@ -556,7 +587,7 @@ Chequeo **antes de confirmar** un pedido a crédito.
   "fundamento": "En 2 semanas sueles vender alrededor de S/ 2 000 y el 30/11 también vencen otros pagos.",
   "limites": "Proyección basada en tus ventas de los últimos 3 meses; no considera eventos que no hayas registrado.",
   "confianza": "media",
-  "meta": { "modelo": "forecast-lgbm-quantile", "modelo_version": "0.3.1", "fallback_usado": false }
+  "meta": { "modelo": "forecast-lgbm-quantile", "modelo_version": "lgbm_cuantiles-1.0", "fallback_usado": false }
 }
 ```
 - `venta_esperada_periodo`: lo que sueles vender (precio de venta, al contado o fiado) de los productos que te trae ese
@@ -568,8 +599,9 @@ Chequeo **antes de confirmar** un pedido a crédito.
 - Sugerencias solo si no te alcanza holgado: `reducir_pedido` a ~90 % de la venta esperada (redondeado hacia abajo),
   `pagar_en_partes` (2 partes: vencimiento y +15 días) y `combinar`. `saldo_resultante` = saldo más bajo hasta el
   vencimiento; una parte que cae fuera del horizonte (30 días) no se evalúa y se avisa en `limites`.
-- Campos extra: `saldo_minimo_hasta_vencimiento`, `fecha_saldo_minimo`, `pedido_coincidente_id`. Hoy
-  `meta.modelo = "forecast-naive-estacional"` con `fallback_usado = true` (ver §4.1).
+- Campos extra: `saldo_minimo_hasta_vencimiento`, `fecha_saldo_minimo`, `pedido_coincidente_id`. `meta`
+  igual que el forecast (§4.1): `forecast-lgbm-quantile` o, si cae al baseline, `forecast-naive-estacional` con
+  `fallback_usado = true` y `fallback_motivo`.
 
 ### 4.6 `POST /empresas/{empresa_id}/simular`
 Simulador de escenarios (lo usan la app y el asistente).
@@ -668,38 +700,60 @@ Query: `desde`, `hasta`, `agrupar_por` (`categoria | producto | proveedor | clie
       "microexplicacion": "Cuando el dinero de la casa y del negocio se mezclan, es difícil saber cuánto puedes pedir.",
       "canales": ["whatsapp", "app"],
       "estado": "activa",
-      "meta": { "modelo": "reglas-alertas + forecast-lgbm-quantile", "modelo_version": "0.3.1", "fallback_usado": false }
+      "meta": { "modelo": "reglas-alertas + forecast-lgbm-quantile", "modelo_version": "0.2.0", "fallback_usado": false }
     }
   ]
 }
 ```
 - Cada alerta lleva: tipo, fecha del problema, monto, probabilidad o nivel de riesgo, causas y una acción.
 - Prioridad (1 = más alta): `faltante_caja` → `pedido_excesivo` → `retiro_excesivo` → `obligacion_proxima` → `gasto_inusual`/`caida_ventas` → `fiado_vencido` → `meta_lograda` → `resumen_semanal`.
-- Implementadas (B10): las prioridades 1–4. `faltante_caja` (algún día con saldo esperado < 0; causas = retiros del mes
+- Implementadas (B10): prioridades 1–7. `faltante_caja` (algún día con saldo esperado < 0; causas = retiros del mes
   sobre lo usual al mismo día, exceso del pedido que vence ese día sobre lo que vendes de esa mercadería, fiados sin
   cobrar), `pedido_excesivo` (pedido a crédito > venta esperada hasta su vencimiento, §4.5), `retiro_excesivo` (retiros
   del mes > sueldo fijo esperado a la fecha, o > lo usual si no hay sueldo), `obligacion_proxima` (deuda o impuesto
-  impago que vence en ≤ 3 días).
-- `GET /alertas?estado=activa` primero evalúa las reglas (sin duplicar) y luego lista; otros estados: `atendida`,
-  `descartada`, `todas`. Una alerta ya atendida o descartada no se vuelve a crear al consultar.
-- Los textos (`titulo`, `titulo_corto`, `insight`, `resumen_causas`) se arman al leer. `accion.tipo`:
-  `abrir_simulador` (payload `pedido_id`), `ver_retiros`, `ver_cuentas`. Campos extra: `dias_para_evento`,
-  `titulo_corto`, `resumen_causas`, `enviada_en` (`null` = guardada sin notificar: horario silencioso o límite diario).
+  impago que vence en ≤ 3 días), y las nuevas `gasto_inusual` (lo que salió hoy en compras y gastos del negocio de
+  rutina —sin pedidos, impuestos ni programados— llega a 1.5 veces lo que sueles gastar por día; prioridad 5),
+  `fiado_vencido` (un aviso por cliente con fiados vencidos y riesgo alto; prioridad 6, acción `recordar_cliente`) y
+  `meta_lograda` (el acumulado de una meta llegó a su objetivo; prioridad 7, acción `ver_progreso`). `meta.modelo` /
+  `fallback_usado` / `fallback_motivo` de cada alerta reflejan el motor de forecast vigente (§4.1). `caida_ventas`
+  y `resumen_semanal` no tienen regla propia: se muestran si vienen guardadas.
+- **`GET /alertas` no escribe** (cambio de comportamiento). Con `estado=activa` (o `todas`) calcula las alertas vigentes
+  al momento: las ya guardadas (con `monto`, `causas`, nivel y probabilidad al día) más las que todavía no se
+  guardaron, marcadas **`persistida = false`** con un `alerta_id` estable `ALR-PEND.<empresa>.<tipo>.<entidad>.<fecha>`
+  (mismo ID mientras la alerta siga vigente). Las guardadas llevan `persistida = true` y su `ALR-0007`. Una alerta ya
+  atendida o descartada no vuelve a aparecer. Otros estados (`atendida`, `descartada`) solo leen lo guardado.
+- Se guardan en `POST /alertas/evaluar`, en el flujo de confirmar (§1.3, §4.3) y al accionar una alerta pendiente
+  (§6.2). Al reevaluar, la alerta activa de la misma entidad se **actualiza** (monto, causas…) y la que ya no aplica
+  se cierra (`estado = descartada`, `accion_tomada = ya_no_aplica`).
+- Los textos (`titulo`, `titulo_corto`, `insight`, `resumen_causas`) se arman al leer, para los 9 tipos. `accion.tipo` y
+  su `payload`: `abrir_simulador` (`pedido_id`), `ver_retiros` (el front va a `/movimientos?tipo=retiro_personal`),
+  `ver_cuentas` (`pedido_id` o `impuesto_id`), `recordar_cliente` (`fiado_id` y `cliente_id`), `ver_movimientos`
+  (`tipo`), `ver_progreso`, `ver_forecast`. Campos extra: `dias_para_evento`, `titulo_corto`, `resumen_causas`,
+  `persistida`, `enviada_en` (`null` = guardada sin notificar: horario silencioso o límite diario).
+- `causas` es siempre una lista de `{ "descripcion", "monto" }` con 1 o más elementos (el front y el backend nunca
+  asumen cuántas). `alertas.entidad_tipo` se escribe en plural como el DBML: `deudas`, `impuestos`, `cuaderno_fiado`,
+  `transacciones`, `reglas_meta`, y `mes` para lo agregado por periodo (`entidad_id = AAAA-MM`); al leer se aceptan
+  también los singulares antiguos (`deuda`, `impuesto`).
 
 ### 6.2 `POST /alertas/{alerta_id}/accion`
 ```json
 { "accion": "ejecutada", "detalle": "abrió simulador" }
 ```
 - `accion`: `ejecutada | descartada | posponer`
-- **Response 200** → `{ "estado": "atendida" }` (`ejecutada` → `atendida`, `descartada` → `descartada`, `posponer` →
-  `pospuesta`: sigue activa y se vuelve a notificar). Alerta inexistente → `404`.
+- **Response 200** → `{ "estado": "atendida", "alerta_id": "ALR-0007" }` (`ejecutada` → `atendida`, `descartada` →
+  `descartada`, `posponer` → `pospuesta`: sigue activa y se vuelve a notificar). `alerta_id` es el ID definitivo: si la
+  alerta era una pendiente (`ALR-PEND.…`), se guarda en ese momento. Alerta inexistente, o pendiente que ya no está
+  vigente → `404`.
 
 ### 6.3 `POST /empresas/{empresa_id}/alertas/evaluar` (interno)
-Se llama después de cada movimiento confirmado. Devuelve las alertas nuevas.
+Se llama después de cada movimiento confirmado y es la forma de **guardar** las alertas vigentes (el GET no escribe).
+Devuelve las alertas nuevas.
 - Respeta límites: máximo 2 notificaciones al día por empresa, horario silencioso (21:00–07:00), y ninguna alerta incluye enlaces que pidan credenciales.
 - Body opcional `{ "disparador": "compra_credito" | "<tipo_movimiento>" | null, "entidad_id": "PED-0013" }`. Reglas por
-  disparador: `compra_credito` → faltante + pedido excesivo; `retiro_personal` → faltante + retiro excesivo; otros
-  egresos → faltante; ingresos → ninguna; `null` → las 4. No se duplica una alerta activa (misma regla y entidad, y para
+  disparador: `compra_credito` → faltante + pedido excesivo; `retiro_personal` → faltante + retiro excesivo; `compra` /
+  `gasto_negocio` → faltante + gasto inusual; otros pagos → faltante; `cobro_fiado` → faltante + fiado vencido; otros
+  ingresos → no crean alertas, pero **refrescan** (monto, causas) o cierran las activas que ya existen (el faltante baja de
+  650 a 637 tras una venta de 13); `null` → todas. No se duplica una alerta activa (misma regla y entidad, y para
   el faltante la misma fecha). Toda alerta nueva se guarda y vuelve en la respuesta; queda `enviada_en = null` si es
   horario silencioso o ya se notificaron `max_por_dia` ese día (se evalúan por prioridad).
 
@@ -746,6 +800,8 @@ Se llama después de cada movimiento confirmado. Devuelve las alertas nuevas.
 }
 ```
 - `intencion`: `estado_caja | explicar_alerta | simular | concepto | crear_meta | prestamo | fuera_de_alcance | otro`
+- `acciones` (campo extra): lista de botones `{ "tipo", "texto" }`; `abrir_simulador` trae además `pedido_id` (el del pedido
+  que se explica o simula) para que el front abra el simulador con ese pedido.
 - Si alguna cifra no se puede verificar, `verificacion_cifras.ok = false` y la respuesta se reemplaza por la plantilla de fallback.
 - `otro` (saludo, gracias, despedida, charla o mensaje poco claro): con LLM, respuesta corta y natural dentro del
   alcance del negocio, **sin cifras** (el verificador solo admite las del propio mensaje) y con el historial reciente de
@@ -792,11 +848,41 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
   "metas_activas": [ { "meta_id": "MET-0001", "plantilla": "apartar_para_pedido", "titulo": "Apartar para el pedido", "detalle": "S/ 1 de cada S/ 10 que vendes", "acumulado": 420.0, "estado": "activa" } ],
   "consentimiento_compartir_historial": false,
   "fundamento": "Sale de 3 hábitos: anotar todos los días, ponerte un sueldo fijo (el que más cuenta) y tener tus impuestos al día.",
+  "score_crediticio": {
+    "disponible": true, "score": 90, "categoria": "Verde", "motivo": null,
+    "rangos": { "Rojo": "0-39", "Amarillo": "40-69", "Verde": "70-100" },
+    "features": { "antiguedad_meses": 2.0, "ingreso_mensual_prom": 17851.69, "pct_dias_con_venta": 1.0, "cv_ventas": 0.068,
+                  "pct_pagos_a_tiempo": 1.0, "dias_mora_promedio": 0.0, "dias_desde_ultimo_registro": 0.0,
+                  "pct_fiado_sobre_ventas": 0.0153, "pct_fiado_cobrado_a_tiempo": 0.6667, "n_alertas_quiebre_stock": 0.0,
+                  "n_trabajadores": 1.0, "tiene_ruc": 1.0, "usa_billetera_digital": 0.0, "rubro": "bodega" },
+    "features_imputados": [], "features_fuera_de_rango": ["ingreso_mensual_prom"], "ventana_dias": 92,
+    "fundamento": "Estimación de un modelo de regresión logística que mira …",
+    "limites": "Es una estimación de un modelo entrenado con datos sintéticos de bodegas, no una evaluación crediticia ni una oferta de crédito …",
+    "meta": { "modelo": "credit-scoring-logreg", "modelo_version": "logreg-auc0.7643", "fallback_usado": false }
+  },
   "meta": { "modelo": "score-reglas", "modelo_version": "0.1.0", "fallback_usado": false }
 }
 ```
+- **`score_crediticio` (extra, aditivo):** estimación del modelo de credit scoring del equipo de datos
+  (`modelo/artifacts/credit_scoring/`, regresión logística; en el diseño de datos es el subindicador `riesgo_pago_ml`).
+  **No reemplaza ni se mezcla con `score`** (los 3 hábitos que muestra la app). `score = round(predict_proba(scaler.transform(X))[:, 1] * 100)`;
+  `categoria`: Rojo 0–39 · Amarillo 40–69 · Verde 70–100. Los 16 features se calculan en el backend desde la BD a la fecha de
+  corte (ventana de 180 días o la historia que haya; ver `backend/README.md` §ML); `features` lista los usados (sin datos
+  de personas), `features_imputados` los que no tenían datos (se completan con la media de entrenamiento: aporte neutro) y
+  `features_fuera_de_rango` los que quedaron a más de 4 desviaciones de lo que vio el modelo (escala distinta a la del
+  entrenamiento). Nunca usa `pago_tardio`, `deficit_14d`, `eventos` ni `clientes.perfil_pago`. Es una estimación de un
+  modelo entrenado con datos sintéticos: **no es una evaluación crediticia ni una oferta de crédito** (`limites`).
+  Sin modelo (no carga) o sin historia (< 14 días de movimientos o < 7 días con venta): `disponible = false`,
+  `score = null`, `categoria = null`, `motivo`; `meta.fallback_usado = true` + `meta.fallback_motivo` solo si falló el
+  modelo. También viene en `POST /salud/recalcular`; no se guarda en `score_salud`.
 - El score es la suma ponderada de los subindicadores (determinístico y explicable). Los textos (`nombre`, `detalle`,
   `fundamento`) no usan porcentajes ni hablan de "la casa".
+- **`GET /salud` no escribe** (cambio de comportamiento): calcula el score del mes en curso al vuelo; los meses
+  anteriores salen de `score_salud`. El del mes en curso se guarda solo con una acción explícita:
+  `POST /empresas/{id}/salud/recalcular` (misma respuesta que el GET) o el cierre de mes.
+
+### 8.1.1 `POST /empresas/{empresa_id}/salud/recalcular`
+Calcula el score del mes en curso y lo guarda en `score_salud` (reemplaza el del mismo mes). Response 200 igual a §8.1.
 
 ### 8.2 `POST /empresas/{empresa_id}/metas`
 ```json
@@ -807,7 +893,9 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
 }
 ```
 - Plantillas: `registrar_30_dias | sueldo_fijo | colchon_caja | apartar_para_pedido | reservar_impuestos`
-- **Response 201** → `{ "meta_id": "MET-0004", "estado": "activa" }`
+- **Response 201** → `{ "meta_id": "MET-0004", "estado": "activa" }` (`sueldo_fijo` con regla `monto_fijo` agrega `programado_id`).
+- Datos inválidos → `400` con mensajes en español (p. ej. `regla.valor`: "debe ser mayor que 0"; `plantilla`: "valor no
+  permitido (usa: …)"). Si la categoría `retiro_personal` no existe en la BD → `400` claro (nunca `500`).
 
 ### 8.3 `PUT /empresas/{empresa_id}/consentimiento` (roadmap)
 ```json
@@ -828,11 +916,13 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
     "base_datos": "ok",
     "whisper": { "estado": "ok", "modelo": "faster-whisper-small" },
     "almacenamiento": { "estado": "ok", "bucket": "cajaclara-media" },
-    "llm": { "estado": "ok", "modelo": "qwen2.5-7b-instruct", "prompt_versions": { "extractor": "v3", "asistente": "v2", "cuaderno": "v2" } },
+    "llm": { "estado": "ok", "modelo": "openai/gpt-4o-mini", "prompt_versions": { "extractor": "extractor-v3", "asistente": "asistente-v3", "chat": "chat-router-v1", "cuaderno": "cuaderno-v2" } },
     "vlm": { "estado": "ok", "modelo": "openai/gpt-4o-mini", "proveedor": "openrouter" },
-    "forecast": { "estado": "baseline", "modelo": "forecast-naive-estacional", "modelo_version": "0.1.0",
-                  "ml": { "tipo": "lightgbm-quantile", "estado": "no_disponible", "artefactos": true,
-                          "motivo": "rubro: el modelo espera abarrotes, bebidas, mixto, panaderia; …" } },
+    "forecast": { "estado": "ok", "modelo": "forecast-lgbm-quantile", "modelo_version": "lgbm_cuantiles-1.0",
+                  "motor_configurado": "lightgbm",
+                  "ml": { "tipo": "lightgbm-quantile", "estado": "ok", "artefactos": true, "cargado": true, "motivo": null } },
+    "credit_scoring": { "estado": "ok", "modelo": "credit-scoring-logreg", "modelo_version": "logreg-auc0.7643",
+                        "ml": { "tipo": "logreg", "estado": "ok", "artefactos": true, "cargado": true, "motivo": null } },
     "riesgo_atraso": { "estado": "baseline", "modelo": "riesgo-atraso-baseline", "modelo_version": "0.1.0",
                        "ml": { "tipo": "clasificador", "estado": "no_disponible", "artefactos": false,
                                "motivo": "No hay artefactos de un clasificador de riesgo de atraso en modelo/artifacts/" } }
@@ -840,7 +930,11 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
 }
 ```
 - `forecast.estado` / `riesgo_atraso.estado`: `ok` (modelo de ML en uso) o `baseline` (responde el baseline
-  determinístico); `ml.motivo` dice por qué el modelo no está. No carga modelos: solo lee `metadata.json` (cacheado).
+  determinístico). `credit_scoring.estado`: `ok` o `no_disponible` (no tiene baseline: `score_crediticio` sale con
+  `disponible = false`). `ml.estado` ∈ `ok | no_disponible | desactivado` (`FORECAST_MOTOR=baseline`); `ml.motivo` dice por
+  qué el modelo no está. La primera consulta carga los artefactos (una sola vez por proceso, ~1–2 s); después `/health` no
+  vuelve a leerlos. Con el modelo cargado `forecast.modelo` es `forecast-lgbm-quantile` y `modelo_version` la de
+  `metadata.json`. `riesgo_atraso` sigue en baseline (no hay artefacto).
 
 ---
 
@@ -850,7 +944,7 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
 |---|---|---|
 | F1 Ingesta | `/webhooks/whatsapp`, `/media/subidas`, `/ingesta/*`, `/impuestos`, `/billeteras/movimientos` | Backend + GenAI |
 | F2 Resumen | `/resumen` | Backend |
-| F3 Forecast | `/forecast`, `/forecast/ajustes` | ML |
+| F3 Forecast | `/forecast`, `/forecast/ajustes` | ML (LightGBM integrado, baseline de respaldo) |
 | F4 Cuentas | `/fiados`, `/fiados/{id}/recordatorio`, `/pedidos`, `/pedidos/chequeo` | ML + Backend |
 | Simulador | `/simular` | Backend |
 | F5 Análisis | `/analisis` | Datos / BI |
@@ -925,3 +1019,95 @@ Query: `desde`, `hasta` (opcionales). `pct_fallback` = % de llamadas cuya salida
   "meta": { "request_id": "req_8f3a1c", "generado_en": "2026-11-14T10:42:06-05:00", "fallback_usado": false, "latencia_ms": 15 }
 }
 ```
+
+---
+
+## 12. Autenticación (login de las demos)
+
+Login básico **solo para entrar a las 3 demos**: no hay registro ni usuarios nuevos. Cada usuario ve **una** empresa. Las
+contraseñas no están en el repo (ni en el código ni en el bundle del front): en el servidor solo hay su hash scrypt con
+sal (`AUTH_CREDENCIALES`, credencial de `backend/.env` y del panel de Render). El front ya **no** lleva `VITE_API_KEY`:
+`X-API-Key` queda para el bot y la administración.
+
+| usuario | empresa (`AUTH_USUARIOS` en `parametros.env`) | demo del front |
+|---|---|---|
+| `demo1` | `EMP-0001` Bodega Don Pedro (3 meses) | `pedro` (no le alcanza el 30/11) |
+| `demo2` | `EMP-0003` Bodega Mi Barrio (provisional: la bodega sana del CSV la elige el equipo de datos) | `sano` |
+| `demo3` | `EMP-0002` Bodega Nueva Esperanza (día 3) | `nuevo` |
+
+### 12.1 `POST /auth/login` (pública)
+
+```json
+{ "usuario": "demo1", "contrasena": "<contraseña>" }
+```
+
+`usuario` 1–64 caracteres (no distingue mayúsculas ni espacios al borde), `contrasena` 1–128 (exacta). Respuesta `200`
+(con `Cache-Control: no-store`):
+
+```json
+{
+  "token": "<opaco>", "tipo": "Bearer", "expira_en": 28800, "expira": "2026-11-15T18:00:00-05:00",
+  "usuario": "demo1", "empresa_id": "EMP-0001", "negocio": { "nombre": "Bodega Don Pedro" }
+}
+```
+
+| HTTP | `codigo` | Cuándo |
+|---|---|---|
+| 401 | `CREDENCIALES_INVALIDAS` | "Usuario o contraseña incorrectos." Igual si el usuario no existe (sin enumeración; mismo costo de cálculo en los dos casos) |
+| 422 | `VALIDACION` | Body inválido: falta un campo, no es texto, es demasiado largo o el JSON no se puede leer |
+| 429 | `DEMASIADOS_INTENTOS` | Demasiados fallos desde esa IP (por defecto 10 en 10 min). Header `Retry-After` en segundos |
+| 503 | `SERVICIO_NO_DISPONIBLE` | El servidor no tiene `AUTH_SECRET`/`AUTH_CREDENCIALES`, o la empresa del usuario no está cargada en la BD |
+
+Render free "duerme" el backend: el primer login puede tardar ~30-50 s mientras despierta.
+
+### 12.2 `GET /auth/sesion` (Bearer)
+
+`200 {"usuario", "empresa_id", "expira", "negocio": {"nombre"}}` · `401 NO_AUTORIZADO` (falta o es inválido; también con
+solo `X-API-Key`) · `401 SESION_EXPIRADA`. No hay logout en el servidor: el token es sin estado y vence; el front lo
+borra al salir.
+
+### 12.3 Rutas protegidas (todas menos `/health` y `/auth/login`)
+
+- Aceptan `Authorization: Bearer <token>` **o** `X-API-Key`. Si viene `X-API-Key`, manda ella (una clave inválida es
+  `401` aunque también venga un Bearer válido). Sin ninguna de las dos: `401 NO_AUTORIZADO` (+ `WWW-Authenticate: Bearer`).
+- Token inválido, manipulado, firmado con otro secreto, con otro algoritmo o con una vigencia mayor a la configurada →
+  `401 NO_AUTORIZADO`; vencido → `401 SESION_EXPIRADA`. En cualquier `401` el front borra la sesión y vuelve al login.
+- **Alcance por empresa**: con Bearer, el token solo sirve para su `empresa_id`. Se revisa el path, la query y el body
+  (a cualquier profundidad: `correcciones`, `acciones[]`, `items[]`…) → `403 EMPRESA_NO_PERMITIDA` con
+  `detalles: [{"campo": "<campo>", "problema": "pertenece a otra empresa"}]` si algo apunta a otra empresa:
+
+| Campo | Cómo se verifica |
+|---|---|
+| `empresa_id` (path, query o body) | Se compara con el del token |
+| `borrador_id`, `fiado_id`, `fiado_ids`, `deuda_id`, `pedido_id`, `impuesto_id`, `alerta_id`, `producto_id`, `cliente_id`, `proveedor_id`, `movimiento_id`, `transaccion_id`, `programado_id`, `meta_id`, `ajuste_id` | Se busca la fila y se compara su `empresa_id` (un ID que no existe sigue dando el `404`/`400` de siempre) |
+| `alerta_id` `ALR-PEND.<empresa>.…` (alerta vigente aún no guardada) | La empresa que lleva el ID |
+| `conversacion_id` | Empresas con mensajes en esa conversación |
+| `media_url` `r2://empresas/<empresa>/…` | La empresa de la clave de R2 |
+| `entidad_id` (`/alertas/evaluar`) | Transacción, fiado, deuda, impuesto o meta con ese ID |
+| `{"tipo": "fiado"\|"pedido"\|"impuesto", "id"}` (`/cuentas/anular`) | La fila de ese tipo |
+| `telefono_hash` (`/webhooks/whatsapp` sin `empresa_id`) | La empresa a la que enruta el teléfono |
+
+  `X-API-Key` tiene acceso a todas las empresas (bot/administración).
+
+### 12.4 Límite de uso de las rutas de IA
+
+Con Bearer, las rutas que gastan LLM/VLM/Whisper/R2 (`POST /ingesta/interpretar`, `POST /ingesta/cuaderno`,
+`POST /media/subidas`, `POST /webhooks/whatsapp`, `POST /empresas/{id}/chat/mensajes`,
+`POST /empresas/{id}/asistente/mensajes`) admiten como mucho `AUTH_IA_MAX_POR_SESION` usos por sesión (60) y
+`AUTH_IA_MAX_POR_USUARIO` por usuario sumando todas sus sesiones (200) cada `AUTH_IA_VENTANA_S` (1 h). Al pasarse:
+`429 DEMASIADOS_INTENTOS` con `Retry-After` (segundos). Un `401`/`403` no gasta cupo; `X-API-Key` no tiene este límite.
+Los contadores viven en memoria (una instancia) y se reinician si el servicio se reinicia.
+
+### 12.5 Token
+
+Para el front es **opaco** (se guarda en `sessionStorage`, clave `tucaserito-sesion`). Por dentro es un JWT compacto
+HS256 firmado con `AUTH_SECRET` con los claims `sub` (usuario), `emp` (empresa), `iat`, `exp` (hora real, no
+`FECHA_DEMO`) y `jti` (id de la sesión, para el límite de uso). Vigencia `AUTH_TOKEN_TTL_S` (8 h). Cambiar
+`AUTH_SECRET` cierra todas las sesiones; cambiar la empresa de un usuario en `AUTH_USUARIOS` invalida sus tokens.
+
+### 12.6 CORS
+
+Orígenes: `http://localhost:5173`, `https://cclara.site`, `https://www.cclara.site` (`CORS_ORIGINS`; en local solo el
+primero). Métodos `GET, POST, PUT, DELETE, OPTIONS`. Headers permitidos: `Authorization`, `Content-Type`,
+`Idempotency-Key`, `X-API-Key`. Sin cookies (`allow_credentials` falso). Headers expuestos: `X-Request-ID` y
+`Retry-After`.

@@ -118,7 +118,7 @@ def test_prestamo_recibido_y_pago_de_cuota(db):
                      monto_cuota=40, contraparte="Prestamista (gota a gota)")  # fmt: skip
     tx = _tx(db, res)
     deuda = db.get(m.Deuda, tx.deuda_id)
-    assert tx.afecta_caja is True and tx.categoria_id == "CAT-08"
+    assert tx.afecta_caja is True and tx.categoria_id == "CAT-15"
     assert (deuda.tipo, deuda.proveedor_id, deuda.frecuencia_cuota, deuda.fecha_vencimiento) == (
         "prestamo_informal", None, "diaria", date(2026, 12, 14))
     pago = _registrar(db, tipo="pago_prestamo", monto=40)
@@ -132,7 +132,7 @@ def test_prestamo_familiar_por_acreedor(db):
 
 def test_retiro_del_sueldo_se_vincula_al_programado(db):
     sueldo = _registrar(db, tipo="retiro_personal", monto=400)
-    assert _tx(db, sueldo).programado_id == "PRG-0002" and _tx(db, sueldo).categoria_id == "CAT-15"
+    assert _tx(db, sueldo).programado_id == "PRG-0002" and _tx(db, sueldo).categoria_id == "CAT-13"
     extra = _registrar(db, tipo="retiro_personal", monto=400)
     assert _tx(db, extra).programado_id is None  # ya se pagó el sueldo de esta semana
     otro = _registrar(db, tipo="retiro_personal", monto=50)
@@ -142,9 +142,9 @@ def test_retiro_del_sueldo_se_vincula_al_programado(db):
 def test_gasto_recurrente_se_vincula(db):
     res = _registrar(db, tipo="gasto_negocio", monto=180, categoria="servicios", descripcion="Pagué la luz")
     tx = _tx(db, res)
-    assert tx.programado_id == "PRG-0001" and tx.categoria_id == "CAT-11"
+    assert tx.programado_id == "PRG-0001" and tx.categoria_id == "CAT-08"
     otro = _registrar(db, tipo="gasto_negocio", monto=8, descripcion="Mototaxi")
-    assert _tx(db, otro).programado_id is None and _tx(db, otro).categoria_id == "CAT-17"
+    assert _tx(db, otro).programado_id is None and _tx(db, otro).categoria_id == "CAT-16"
 
 
 def test_pago_de_impuesto_marca_el_periodo(db):

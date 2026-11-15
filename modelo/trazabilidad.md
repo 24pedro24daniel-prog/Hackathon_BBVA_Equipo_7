@@ -31,7 +31,7 @@ rastrear hasta el supuesto que lo justifica y la línea de código que lo implem
 | Criterio 4 — % de fiado sobre ventas y su cobro | `pct_fiado_sobre_ventas`, `pct_fiado_cobrado_a_tiempo` | `N(0.20,0.12)` clip [0,0.7]; `N(0.70,0.20)` clip [0,1]. La segunda se usa **solo agregada**, nunca el campo individual `pago_tardio` |
 | Criterio 5 — antigüedad del negocio | `antiguedad_meses` | `rng.integers(1,200)` |
 | `n_alertas_quiebre_stock` no tiene tipo propio en `tipo_alerta` | `n_alertas_quiebre_stock` | proxy vía `alertas.tipo_alerta = caida_ventas`; agregar un tipo nuevo queda como mejora opcional |
-| El ground truth debe depender de los 5 criterios, con ruido | `buen_pagador` | `logit = -7.61 + 1.5*(Σ pesos*criterios) + N(0,0.4)`; `buen_pagador ~ Bernoulli(sigmoid(logit))` |
+| El ground truth debe depender de los 5 criterios, con ruido | `buen_pagador` | `logit = -5.93 + 1.5*(Σ pesos*criterios) + N(0,0.4)` (constante del notebook); `buen_pagador ~ Bernoulli(sigmoid(logit))` |
 | `rubro`/`n_trabajadores` alineados con la BD real | `rubro`, `n_trabajadores` | mismos valores y regla que en el notebook de forecast |
 
 ## C. `motor_recomendaciones.ipynb` (capa de recomendación)
@@ -50,3 +50,14 @@ explícitamente qué variable la dispara (campo `causas`, igual formato que la t
 Todos los umbrales están centralizados en `UMBRALES` (celda de código del notebook) y exportados
 en `modelo/artifacts/motor_recomendaciones/config.json` — cambiar un umbral no requiere tocar la
 lógica de las reglas.
+
+**Integración en el backend:** `motor_recomendaciones` **no se integra** como motor aparte: sus ideas útiles ya están
+implementadas como reglas en `backend/app/services/alertas/reglas.py` (`gasto_inusual`, `fiado_vencido`, `meta_lograda`).
+
+## D. Trazabilidad de las llamadas a LLM en producción (fuera de `modelo/`)
+
+Los notebooks de esta carpeta no llaman a ningún LLM. Las llamadas del backend (extractor, clasificador del chat, lectura
+de la foto del cuaderno y asistente) se registran una por una en la tabla `llm_llamadas` (modelo, versión del prompt, tokens,
+costo, latencia, estado, si las cifras se verificaron y si se usó el fallback); ver `backend/app/services/ingesta/traza_llm.py`
+y `GET /empresas/{id}/llm/llamadas` y `/llm/resumen`. Los modelos de ML integrados (`forecast-lgbm-quantile`, `credit-scoring-logreg`)
+devuelven su `meta` (modelo, versión, `fallback_usado`, `fallback_motivo`) en cada respuesta.

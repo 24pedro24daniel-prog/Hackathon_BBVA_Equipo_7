@@ -29,6 +29,9 @@ def test_score_de_pedro_con_tres_subindicadores(client_db, db):
     assert d["score"] == esperado and d["score_anterior"] == 64 and d["etapa_actual"] == score.etapa(esperado)
     assert [h["mes"] for h in d["historial"]] == ["2026-08", "2026-09", "2026-10", "2026-11"]
     assert d["historial"][-1]["score"] == esperado
+    assert db.get(m.ScoreSalud, ("EMP-0001", "2026-11")) is None  # GET no escribe: el mes en curso se calcula al vuelo
+    rec = client_db.post(f"{EMP}/salud/recalcular")  # la persistencia es una acción explícita
+    assert rec.status_code == 200 and rec.json()["score"] == esperado
     guardado = db.get(m.ScoreSalud, ("EMP-0001", "2026-11"))
     assert guardado.score == esperado and guardado.version_formula == "score-v1"
     assert {r["tipo"] for r in d["rachas"]} == {"semanas_registrando", "dias_seguidos"}
@@ -44,7 +47,10 @@ def test_score_de_pedro_con_tres_subindicadores(client_db, db):
 def test_score_es_idempotente(client_db, db):
     a = client_db.get(f"{EMP}/salud").json()["score"]
     b = client_db.get(f"{EMP}/salud").json()["score"]
-    assert a == b and db.query(m.ScoreSalud).filter_by(empresa_id="EMP-0001").count() == 4
+    assert a == b and db.query(m.ScoreSalud).filter_by(empresa_id="EMP-0001").count() == 3  # el GET no guarda
+    assert client_db.post(f"{EMP}/salud/recalcular").json()["score"] == a
+    assert client_db.post(f"{EMP}/salud/recalcular").json()["score"] == a
+    assert db.query(m.ScoreSalud).filter_by(empresa_id="EMP-0001").count() == 4  # recalcular reemplaza, no duplica
 
 
 def test_sin_sueldo_fijo_baja_la_separacion(db):

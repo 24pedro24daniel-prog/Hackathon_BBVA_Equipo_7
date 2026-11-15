@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.schemas.common import (
     Canal,
+    Cantidad,
     Dinero,
     Frecuencia,
     Meta,
@@ -25,7 +26,7 @@ class ItemMovimiento(BaseModel):
 
     producto_id: str | None = None
     producto: str | None = None
-    cantidad: Decimal = Field(gt=0)
+    cantidad: Cantidad = Field(gt=0)
     precio_unitario: Dinero = Field(ge=0)
     subtotal: Dinero = Field(ge=0)
 

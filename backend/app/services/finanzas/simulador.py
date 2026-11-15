@@ -205,9 +205,9 @@ def simular(db: Session, empresa_id: str, acciones: list[Accion], fecha_corte: d
         con_acciones=ResultadoSaldo(saldo_minimo=con.p50, fecha=con.fecha, estado_caja=proy.estado_caja(con.p50)),
         mejora=con.p50 - sin.p50,
         serie_con_acciones=[PuntoSimulado(fecha=p.fecha, p50=p.p50) for p in puntos],
-        fundamento=(f"Cálculo sobre tu proyección (ventas y gastos de las últimas 4 semanas y tus pagos con fecha): "
-                    f"se compara el saldo más bajo hasta el {fecha_corta(fin_con)}."),
+        fundamento=(f"Cálculo sobre tu proyección ({'ventas y gastos estimados con un modelo' if proy.ml is not None else 'ventas y gastos de las últimas 4 semanas'} "
+                    f"y tus pagos con fecha): se compara el saldo más bajo hasta el {fecha_corta(fin_con)}."),
         limites=limites, confianza=fc.confianza(proy), ventana_hasta=fin_con, notas=list(dict.fromkeys(esc.notas)),
-        meta=meta_b(MODELO, VERSION, fallback=True,
-                    motivo="La serie base es el baseline naive estacional (el modelo LightGBM no es integrable)."),
+        # El simulador es determinístico: su `meta` marca fallback cuando la serie base sale del baseline
+        meta=meta_b(MODELO, VERSION, fallback=proy.motor.fallback, motivo=proy.motor.motivo),
     )  # fmt: skip

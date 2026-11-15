@@ -1,0 +1,32 @@
+# Contexto de build = raíz del repo (ver backend/Dockerfile). Solo entra lo que la imagen del backend necesita:
+# backend/ y los artefactos de ML. Lista blanca: todo lo demás (front, data, media, docs, .git...) se excluye.
+*
+!backend/
+!modelo/artifacts/
+!modelo/artifacts/prediccion_ingreso_egreso/
+!modelo/artifacts/credit_scoring/
+
+# Credenciales: entran por env_file de docker compose, nunca a la imagen
+backend/.env
+backend/.env.*
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+
+# Caches y entornos locales
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.venv/
+**/venv/
+**/*.egg-info/
+
+# Docker y archivos que la imagen no usa (el código se copia, no el compose ni el initdb)
+backend/docker-compose.yml
+backend/docker/
+**/*.log
+**/.DS_Store
+**/Thumbs.db

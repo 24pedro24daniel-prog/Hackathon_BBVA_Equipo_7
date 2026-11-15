@@ -47,6 +47,7 @@ CASOS = [
     ("get", f"{EMP}/salud", None, 200,
      {"score", "score_anterior", "etapa_actual", "subindicadores", "historial", "rachas",
       "consentimiento_compartir_historial", "meta"}),
+    ("post", f"{EMP}/salud/recalcular", None, 200, {"score", "etapa_actual", "subindicadores", "historial", "meta"}),
     ("post", f"{EMP}/metas",
      {"plantilla": "apartar_para_pedido", "regla": {"tipo": "porcentaje_de_venta", "valor": 0.10,
       "destino": "fondo_pedidos"}, "recordatorio": {"frecuencia": "semanal", "dia": "lunes"}}, 201,
@@ -107,7 +108,8 @@ def test_todas_las_rutas_del_plan_tienen_caso():
     probadas = {("POST", f"{P}/ingesta/confirmar"),  # cubierto en tests/test_a_ingesta_flujo.py
                 ("POST", f"{P}/media/subidas"),  # cubierto en tests/test_a_media.py (necesita R2 falso)
                 ("GET", f"{P}/empresas/{{empresa_id}}/llm/llamadas"),  # cubiertos en tests/test_a_llm_trazas.py
-                ("GET", f"{P}/empresas/{{empresa_id}}/llm/resumen")}
+                ("GET", f"{P}/empresas/{{empresa_id}}/llm/resumen"),
+                ("POST", f"{P}/auth/login"), ("GET", f"{P}/auth/sesion")}  # cubiertos en tests/test_e_auth_login.py
     for metodo, ruta, *_ in CASOS:
         path = ruta.split("?")[0].replace("EMP-0001", "{empresa_id}").replace("FIA-0045", "{fiado_id}")
         probadas.add((metodo.upper(), path.replace("ALR-0007", "{alerta_id}")))

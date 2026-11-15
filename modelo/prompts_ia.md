@@ -5,9 +5,12 @@ notebooks de forecast y credit scoring, motor de recomendación, documentación 
 trazabilidad) fue construida por **Pedro**, con asistencia de un agente de IA (Claude, vía Claude
 Code) como herramienta de prompt engineering y generación de código bajo su dirección y revisión
 directa. El resto del equipo documentará sus propios prompts/agentes para sus componentes
-respectivos (p. ej. el extractor de borradores por voz/foto, el asistente conversacional del
-chat — `backend/app/services/ingesta/llm_consultas.py`, `traza_llm.py` — que sí usan LLM en
-producción).
+respectivos (p. ej. el extractor de borradores por voz/foto, el clasificador del chat y el asistente
+conversacional, que sí usan LLM en producción). Los prompts reales viven en
+`backend/app/services/ingesta/extractor.py` (`extractor-v3`), `ingesta/vision.py` (`cuaderno-v2`),
+`ingesta/enrutador.py` (`chat-router-v1`) y `asistente/orquestador.py` (`asistente-v3`); la trazabilidad de cada
+llamada (tokens, costo, estado) queda en la tabla `llm_llamadas` (`ingesta/traza_llm.py`, consultas en
+`ingesta/llm_consultas.py`, no son prompts).
 
 ## Por qué esto es "evidencia técnica" válida
 

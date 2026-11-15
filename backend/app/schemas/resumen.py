@@ -22,6 +22,8 @@ class IndRetiros(BaseModel):
     promedio_historico: Dinero | None = None
     sueldo_frecuencia: str | None = None     # EXT: frecuencia del sueldo fijo (semanal, mensual…)
     exceso_vs_promedio: Dinero | None = None  # EXT: valor − promedio_historico (si es positivo)
+    sueldo_esperado_a_la_fecha: Dinero | None = None  # EXT: lo que te tocaba sacar este mes hasta hoy (según tu sueldo fijo)
+    exceso_vs_sueldo: Dinero | None = None   # EXT: valor − sueldo_esperado_a_la_fecha (si es positivo)
 
 
 class IndPendienteCobro(BaseModel):
@@ -45,8 +47,13 @@ class Indicadores(BaseModel):
     pagos_pendientes: IndPagosPendientes
 
 
+class Negocio(BaseModel):
+    nombre: str
+
+
 class ResumenResponse(BaseModel):
     empresa_id: str
+    negocio: Negocio | None = None               # EXT: nombre del negocio (empresas.nombre_ficticio)
     periodo: str
     corte: date
     dias_con_datos: int | None = None            # EXT: estado "día 3"

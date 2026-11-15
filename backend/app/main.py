@@ -1,6 +1,7 @@
-"""TuCaserito API. Arranque: uvicorn app.main:app --port 8000 --reload
+"""TuCaserito API. Arranque: uvicorn app.main:app --port 8000 --reload --no-proxy-headers
 
-Registra TODOS los routers desde el inicio (también los de Dev A): nadie vuelve a tocar este archivo.
+Registra TODOS los routers. Autenticación (contract.md §0 y §12): /health y /auth/login son públicas; el resto exige
+`Authorization: Bearer <token>` (sesión de una empresa) o `X-API-Key` (bot/admin), ver app/core/auth.py.
 """
 import logging
 
@@ -8,12 +9,12 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from app.core.auth import verificar_api_key
+from app.core.auth import verificar_acceso
 from app.core.config import settings
 from app.core.errors import registrar_handlers
 from app.core.meta import iniciar_request
 from app.routers import (
-    alertas, analisis, asistente, chat, fiados, forecast, health, ingesta,
+    alertas, analisis, asistente, auth, chat, fiados, forecast, health, ingesta,
     impuestos, llm_trazas, media, movimientos, pedidos, resumen, salud, simulador, webhooks,
 )
 
@@ -46,24 +47,15 @@ class RequestIdMiddleware:
 
 
 logging.basicConfig(level=settings.LOG_LEVEL)
-app = FastAPI(title="TuCaserito API", version=settings.API_VERSION, docs_url="/docs", redoc_url=None)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["X-Request-ID"],
-)
-app.add_middleware(RequestIdMiddleware)
+# CORS (contract.md §12): sin cookies; el front manda el token en Authorization. Retry-After se expone para que el front
+# pueda leerlo en los 429.
+CORS_METODOS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+CORS_HEADERS = ["Authorization", "Content-Type", "Idempotency-Key", "X-API-Key"]
+CORS_EXPUESTOS = ["X-Request-ID", "Retry-After"]
 
-registrar_handlers(app)
-
-# Público (monitoreo)
-app.include_router(health.router, prefix=PREFIJO)
-
-# Protegidos con X-API-Key
-protegidos = [
+# Protegidas: Bearer (solo su empresa) o X-API-Key
+PROTEGIDOS = [
     # Dev A
     webhooks.router, ingesta.router, chat.router, media.router, impuestos.router, movimientos.router, asistente.router, salud.router,
     # Dev B
@@ -72,5 +64,28 @@ protegidos = [
     # Observabilidad interna
     llm_trazas.router,
 ]
-for r in protegidos:
-    app.include_router(r, prefix=PREFIJO, dependencies=[Depends(verificar_api_key)])
+
+
+def crear_app(cors_origenes: list[str] | None = None) -> FastAPI:
+    aplicacion = FastAPI(title="TuCaserito API", version=settings.API_VERSION, docs_url="/docs", redoc_url=None)
+    aplicacion.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins if cors_origenes is None else cors_origenes,
+        allow_methods=CORS_METODOS,
+        allow_headers=CORS_HEADERS,
+        allow_credentials=False,
+        expose_headers=CORS_EXPUESTOS,
+        max_age=600,
+    )
+    aplicacion.add_middleware(RequestIdMiddleware)
+    registrar_handlers(aplicacion)
+
+    # Públicas: monitoreo y login (GET /auth/sesion exige Bearer por su cuenta)
+    aplicacion.include_router(health.router, prefix=PREFIJO)
+    aplicacion.include_router(auth.router, prefix=PREFIJO)
+    for r in PROTEGIDOS:
+        aplicacion.include_router(r, prefix=PREFIJO, dependencies=[Depends(verificar_acceso)])
+    return aplicacion
+
+
+app = crear_app()

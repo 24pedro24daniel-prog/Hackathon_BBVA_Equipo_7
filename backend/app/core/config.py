@@ -59,6 +59,22 @@ class Settings(BaseSettings):
     R2_ACCESS_KEY_ID: SecretStr = SecretStr("")
     R2_SECRET_ACCESS_KEY: SecretStr = SecretStr("")
 
+    # Login de las demos (contract.md §12). Credenciales en .env: AUTH_SECRET (firma HMAC de los tokens, ≥ 32
+    # caracteres aleatorios) y AUTH_CREDENCIALES ("USR-01:<login>:<hash scrypt>,…"; ver app/core/claves_demo.py).
+    # Parámetros en parametros.env: usuario interno → empresa, vigencia del token y límites.
+    AUTH_SECRET: SecretStr = SecretStr("")
+    AUTH_CREDENCIALES: SecretStr = SecretStr("")
+    AUTH_USUARIOS: str = ""
+    AUTH_TOKEN_TTL_S: int = Field(default=28800, ge=60, le=7 * 86400)
+    AUTH_LOGIN_MAX_FALLOS: int = Field(default=10, ge=1)
+    AUTH_LOGIN_VENTANA_S: int = Field(default=600, ge=1)
+    AUTH_IA_MAX_POR_SESION: int = Field(default=60, ge=1)
+    AUTH_IA_MAX_POR_USUARIO: int = Field(default=200, ge=1)
+    AUTH_IA_VENTANA_S: int = Field(default=3600, ge=1)
+    # Cabecera con la IP real del cliente puesta por el proxy de confianza (Render: CF-Connecting-IP, que Cloudflare
+    # sobreescribe siempre). Vacío = IP de la conexión TCP (local: nadie puede falsificarla con una cabecera).
+    IP_CLIENTE_CABECERA: str = ""
+
     # LLM (OpenRouter)
     LLM_BASE_URL: str = "https://openrouter.ai/api/v1"
     LLM_MODEL: str = "openai/gpt-4o-mini"
@@ -99,9 +115,15 @@ class Settings(BaseSettings):
     # Artefactos de los modelos de ML del equipo de datos (solo lectura). Vacío = ../modelo/artifacts (fuera de docker);
     # en docker compose se monta en /app/ml/artifacts.
     ML_ARTIFACTS_DIR: str | None = None
+    # Motor del forecast: "lightgbm" (modelo de modelo/artifacts, si carga y hay historia suficiente) o "baseline"
+    # (naive estacional, determinístico). Si el LightGBM falla se usa el baseline con meta.fallback_usado = true.
+    FORECAST_MOTOR: str = "lightgbm"
+    # Carpeta con los CSV del equipo de datos (para `python -m app.db.cargar_csv`). Vacío = ../data/csv (fuera de docker);
+    # en docker compose se monta ../data/csv en /app/data_csv (solo lectura).
+    DATA_CSV_DIR: str | None = None
 
     @field_validator("FECHA_DEMO", "DATABASE_URL", "TEST_DATABASE_URL", "WHISPER_CACHE_DIR", "ML_ARTIFACTS_DIR",
-                     mode="before")  # fmt: skip
+                     "DATA_CSV_DIR", mode="before")  # fmt: skip
     @classmethod
     def _vacio_es_none(cls, v):
         return None if isinstance(v, str) and not v.strip() else v
@@ -112,6 +134,13 @@ class Settings(BaseSettings):
             ruta = Path(self.ML_ARTIFACTS_DIR)
             return ruta if ruta.is_absolute() else (BACKEND_DIR / ruta).resolve()
         return (BACKEND_DIR.parent / "modelo" / "artifacts").resolve()
+
+    @property
+    def data_csv_dir(self) -> Path:
+        if self.DATA_CSV_DIR:
+            ruta = Path(self.DATA_CSV_DIR)
+            return ruta if ruta.is_absolute() else (BACKEND_DIR / ruta).resolve()
+        return (BACKEND_DIR.parent / "data" / "csv").resolve()
 
     @property
     def cors_origins(self) -> list[str]:

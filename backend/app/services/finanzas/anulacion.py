@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core import reloj
+from app.core.categorias import buscar_categoria
 from app.core.errors import Conflicto, NoEncontrado
 from app.core.ids import nuevo_id
 from app.db import models as m
@@ -34,7 +35,7 @@ def _fiado(db: Session, empresa_id: str, fiado_id: str) -> None:
     if not filas:
         # Fiado sin venta de origen (no lo crea la app): se deja una venta fiada ya anulada que lo marca como anulado.
         db.add(Tx(transaccion_id=_nuevo_mov(db), empresa_id=empresa_id, fecha_hora=reloj.inicio_del_dia(fiado.fecha_fiado),
-                  tipo=T.venta, categoria_id=_categoria(db, "otros ingresos"), descripcion="Fiado anulado",
+                  tipo=T.venta, categoria_id=_categoria(db, "otros_ingresos"), descripcion="Fiado anulado",
                   monto=fiado.monto, metodo_pago="credito", afecta_caja=False, canal=fiado.canal, fiado_id=fiado_id,
                   anulada=True, creado_en=reloj.ahora()))  # fmt: skip
         return
@@ -52,7 +53,7 @@ def _pedido(db: Session, empresa_id: str, deuda_id: str) -> None:
         es_proveedor = deuda.tipo == TipoDeuda.proveedor
         db.add(Tx(transaccion_id=_nuevo_mov(db), empresa_id=empresa_id,
                   fecha_hora=reloj.inicio_del_dia(deuda.fecha_inicio), tipo=T.compra if es_proveedor else T.prestamo_recibido,
-                  categoria_id=_categoria(db, "mercaderia" if es_proveedor else "prestamos recibidos"),
+                  categoria_id=_categoria(db, "mercaderia" if es_proveedor else "prestamos_recibidos"),
                   descripcion="Pedido anulado", monto=deuda.monto_recibido,
                   metodo_pago="credito" if es_proveedor else "efectivo", afecta_caja=not es_proveedor, canal=deuda.canal,
                   deuda_id=deuda_id, anulada=True, creado_en=reloj.ahora()))  # fmt: skip
@@ -85,8 +86,8 @@ def _nuevo_mov(db: Session) -> str:
 
 
 def _categoria(db: Session, nombre: str) -> str:
-    cid = db.scalar(select(m.Categoria.categoria_id).where(m.Categoria.nombre == nombre))
-    return cid or db.scalar(select(m.Categoria.categoria_id).order_by(m.Categoria.categoria_id))
+    cat = buscar_categoria(db, nombre)
+    return cat.categoria_id if cat else db.scalar(select(m.Categoria.categoria_id).order_by(m.Categoria.categoria_id))
 
 
 ANULADORES = {"fiado": _fiado, "pedido": _pedido, "impuesto": _impuesto}

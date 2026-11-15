@@ -10,6 +10,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.categorias import categoria_o_400
 from app.core.ids import nuevo_id
 from app.core.reloj import hoy
 from app.db import models as m
@@ -63,7 +64,7 @@ def _crear_sueldo(db: Session, empresa_id: str, monto: Decimal, frecuencia: Frec
         anterior.activo = False
         anterior.fecha_fin = max(anterior.fecha_inicio, dia_hoy - timedelta(days=1))
     db.flush()
-    categoria = db.scalars(select(m.Categoria).where(m.Categoria.nombre == "retiro personal")).first()
+    categoria = categoria_o_400(db, "retiro_personal")
     prog = m.MovimientoProgramado(
         programado_id=nuevo_id(db, m.MovimientoProgramado, "PRG"), empresa_id=empresa_id,
         categoria_id=categoria.categoria_id, tipo=TipoFlujo.egreso, descripcion="Sueldo del dueño", monto=monto,

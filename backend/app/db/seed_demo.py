@@ -74,27 +74,31 @@ PRV_ANDINA = "PRV-0001"
 
 RUBROS = [("RUB-01", "bodega"), ("RUB-02", "restaurante"), ("RUB-03", "taller"), ("RUB-04", "distribuidora")]
 
-# (id, nombre, tipo, es_del_negocio)
+# (id, nombre, tipo, es_del_negocio): catálogo canónico de 16 categorías (CONVENCIONES), idéntico al de data/csv.
 CATEGORIAS = [
     ("CAT-01", "bebidas", TipoFlujo.ingreso, True),
     ("CAT-02", "abarrotes", TipoFlujo.ingreso, True),
-    ("CAT-03", "lacteos", TipoFlujo.ingreso, True),
-    ("CAT-04", "panaderia", TipoFlujo.ingreso, True),
-    ("CAT-05", "limpieza", TipoFlujo.ingreso, True),
-    ("CAT-06", "golosinas", TipoFlujo.ingreso, True),
-    ("CAT-07", "cobro de fiados", TipoFlujo.ingreso, True),
-    ("CAT-08", "prestamos recibidos", TipoFlujo.ingreso, True),
-    ("CAT-09", "otros ingresos", TipoFlujo.ingreso, True),
-    ("CAT-10", "mercaderia", TipoFlujo.egreso, True),
-    ("CAT-11", "servicios", TipoFlujo.egreso, True),
-    ("CAT-12", "transporte", TipoFlujo.egreso, True),
-    ("CAT-13", "alquiler", TipoFlujo.egreso, True),
-    ("CAT-14", "impuestos", TipoFlujo.egreso, True),
-    ("CAT-15", "retiro personal", TipoFlujo.egreso, False),
-    ("CAT-16", "pago de prestamos", TipoFlujo.egreso, True),
-    ("CAT-17", "otros gastos", TipoFlujo.egreso, True),
+    ("CAT-03", "lacteos_panaderia", TipoFlujo.ingreso, True),
+    ("CAT-04", "limpieza_aseo", TipoFlujo.ingreso, True),
+    ("CAT-05", "snacks_golosinas", TipoFlujo.ingreso, True),
+    ("CAT-06", "otros_ingresos", TipoFlujo.ingreso, True),
+    ("CAT-07", "mercaderia", TipoFlujo.egreso, True),
+    ("CAT-08", "servicios", TipoFlujo.egreso, True),
+    ("CAT-09", "alquiler_local", TipoFlujo.egreso, True),
+    ("CAT-10", "transporte_flete", TipoFlujo.egreso, True),
+    ("CAT-11", "impuestos", TipoFlujo.egreso, True),
+    ("CAT-12", "financiamiento", TipoFlujo.egreso, True),
+    ("CAT-13", "retiro_personal", TipoFlujo.egreso, False),
+    ("CAT-14", "cobro_fiados", TipoFlujo.ingreso, True),
+    ("CAT-15", "prestamos_recibidos", TipoFlujo.ingreso, True),
+    ("CAT-16", "otros_gastos", TipoFlujo.egreso, True),
 ]
-CAT = {nombre: cid for cid, nombre, _, _ in CATEGORIAS}
+# Familias finas del generador (pan/lácteos, limpieza, golosinas) → categoría canónica. Los pesos de venta siguen
+# usando las familias finas para que la historia generada (y sus números) no cambie.
+_FAMILIA = {"panaderia": "lacteos_panaderia", "lacteos": "lacteos_panaderia", "limpieza": "limpieza_aseo",
+            "golosinas": "snacks_golosinas"}  # fmt: skip
+CAT = {nombre: cid for cid, nombre, _, _ in CATEGORIAS} | {f: next(c for c, n, _, _ in CATEGORIAS if n == n_)
+                                                           for f, n_ in _FAMILIA.items()}  # fmt: skip
 
 # (nombre, categoría, precio, costo o None, alias). IDs desde PRD-0021: la cerveza queda en PRD-0031 (contrato).
 PRODUCTOS = [
@@ -281,23 +285,23 @@ class _Generador:
     def gastos_del_dia(self, d: date) -> None:
         wd = d.weekday()
         if wd in (0, 2, 4):
-            self._agregar(_Mov(_dt(d, 6, 20), TipoMovimiento.gasto_negocio, "transporte",
+            self._agregar(_Mov(_dt(d, 6, 20), TipoMovimiento.gasto_negocio, "transporte_flete",
                                Decimal(self.rng.choice([6, 7, 8, 10])), descripcion="Mototaxi al mercado"))  # fmt: skip
         if wd == 0:
-            self._agregar(_Mov(_dt(d, 9, 0), TipoMovimiento.gasto_negocio, "otros gastos",
+            self._agregar(_Mov(_dt(d, 9, 0), TipoMovimiento.gasto_negocio, "otros_gastos",
                                Decimal(self.rng.choice([15, 18, 20, 25])), descripcion="Bolsas y descartables"))  # fmt: skip
         if (d - INICIO).days % 21 == 10:
-            self._agregar(_Mov(_dt(d, 11, 0), TipoMovimiento.gasto_negocio, "otros gastos", Decimal("48.00"),
+            self._agregar(_Mov(_dt(d, 11, 0), TipoMovimiento.gasto_negocio, "otros_gastos", Decimal("48.00"),
                                descripcion="Balón de gas"))  # fmt: skip
 
     def retiros_del_dia(self, d: date) -> None:
         if d.weekday() == 5:
             es_sueldo = d >= INICIO_SUELDO
-            self._agregar(_Mov(_dt(d, 20, 30), TipoMovimiento.retiro_personal, "retiro personal", SUELDO_SEMANAL,
+            self._agregar(_Mov(_dt(d, 20, 30), TipoMovimiento.retiro_personal, "retiro_personal", SUELDO_SEMANAL,
                                descripcion="Sueldo de la semana" if es_sueldo else "Retiro de la semana",
                                programado_id=PRG_SUELDO if es_sueldo else None))  # fmt: skip
         if d in RETIROS_EXTRA:
-            self._agregar(_Mov(_dt(d, 20, 45), TipoMovimiento.retiro_personal, "retiro personal",
+            self._agregar(_Mov(_dt(d, 20, 45), TipoMovimiento.retiro_personal, "retiro_personal",
                                Decimal(RETIROS_EXTRA[d]), descripcion="Saqué de la caja"))  # fmt: skip
 
     # ── obligaciones ──
@@ -367,7 +371,7 @@ class _Generador:
             mitad = fecha + (pago - fecha) / 2
             cobros = [(mitad, primera), (pago, monto - primera)]
         for dia, importe in cobros:
-            self._agregar(_Mov(_dt(dia, 17, 30), TipoMovimiento.cobro_fiado, "cobro de fiados", importe,
+            self._agregar(_Mov(_dt(dia, 17, 30), TipoMovimiento.cobro_fiado, "cobro_fiados", importe,
                                descripcion=f"{nombre} pagó su fiado", fiado_id=fiado_id))  # fmt: skip
 
     def fiados_historicos(self) -> None:
@@ -478,7 +482,7 @@ MOVS_DIA3 = [
      Canal.billetera_api, "Ventas por billetera", []),
     (date(2026, 11, 12), 19, 40, TipoMovimiento.venta, "abarrotes", "310.00", MetodoPago.efectivo, Canal.voz,
      "Ventas de la tarde", []),
-    (date(2026, 11, 13), 8, 0, TipoMovimiento.gasto_negocio, "otros gastos", "60.00", MetodoPago.efectivo, Canal.texto,
+    (date(2026, 11, 13), 8, 0, TipoMovimiento.gasto_negocio, "otros_gastos", "60.00", MetodoPago.efectivo, Canal.texto,
      "Bolsas y envases", []),
     (date(2026, 11, 13), 11, 20, TipoMovimiento.venta, "abarrotes", "250.00", MetodoPago.efectivo, Canal.voz,
      "Ventas de la mañana", []),
@@ -584,7 +588,7 @@ def construir_objetos(semilla: int = SEMILLA) -> list:
                                        tipo=TipoFlujo.egreso, descripcion="Luz y agua", monto=LUZ_AGUA,
                                        frecuencia=Frecuencia.mensual, dia_mes=16, fecha_inicio=INICIO))  # fmt: skip
     objs.append(m.MovimientoProgramado(programado_id=PRG_SUELDO, empresa_id=EMPRESA_ID,
-                                       categoria_id=CAT["retiro personal"], tipo=TipoFlujo.egreso,
+                                       categoria_id=CAT["retiro_personal"], tipo=TipoFlujo.egreso,
                                        descripcion="Sueldo de Pedro", monto=SUELDO_SEMANAL,
                                        frecuencia=Frecuencia.semanal, dia_semana=6, es_sueldo=True,
                                        fecha_inicio=INICIO_SUELDO))  # fmt: skip

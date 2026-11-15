@@ -1,4 +1,5 @@
 # CajaClara — Blueprint de Render (backend). Render lo lee al crear el servicio desde "New > Blueprint".
+# El front ya no va aquí: se despliega en Vercel con el dominio cclara.site (ver frontend/README.md).
 # Los parámetros no secretos salen de backend/parametros.env (va dentro de la imagen); aquí solo se sobreescribe
 # lo que cambia en el despliegue. Las variables con `sync: false` se llenan en el panel y Render no las pisa.
 
@@ -9,13 +10,18 @@ services:
     plan: free
     # Misma región que la BD de producción (oregon-postgres.render.com)
     region: oregon
-    dockerContext: ./backend
+    # Contexto = raíz del repo: la imagen lleva el código de backend/ y los artefactos de ML de modelo/artifacts/
+    # (los lee el forecast LightGBM y el score crediticio). El .dockerignore de la raíz deja pasar solo eso.
+    # Local construye lo mismo (backend/docker-compose.yml: context "..").
+    dockerContext: .
     dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /api/v1/health
-    # Solo redespliega cuando cambia el backend (no con cambios del front o de docs)
+    # Solo redespliega cuando cambia el backend o los modelos (no con cambios del front o de docs)
     buildFilter:
       paths:
         - backend/**
+        - modelo/artifacts/**
+        - .dockerignore
     envVars:
       - key: APP_ENV
         value: produccion
@@ -24,9 +30,18 @@ services:
       # Local sigue con "small" (parametros.env); en Render "base" para entrar en los 512 MB del plan free
       - key: WHISPER_MODEL
         value: base
-      # URL del front desplegado (varias separadas por coma). Mientras no exista: http://localhost:5173
+      # Orígenes permitidos (separados por coma, sin barra final): el dev server local y el front en Vercel (cclara.site).
+      # Sin cookies: el front manda Authorization: Bearer (contract.md §12).
       - key: CORS_ORIGINS
-        sync: false
+        value: http://localhost:5173,https://cclara.site,https://www.cclara.site
+      # IP real del cliente para el límite de intentos de login: Cloudflare (delante de Render) pone y sobreescribe
+      # CF-Connecting-IP; X-Forwarded-For no sirve (Render agrega a lo que mande el cliente).
+      - key: IP_CLIENTE_CABECERA
+        value: CF-Connecting-IP
+      # Forecast con el LightGBM de modelo/artifacts (lightgbm) o el baseline determinístico (baseline). Si el modelo no
+      # carga, el backend cae solo al baseline y lo dice en meta.fallback_motivo (y en /health).
+      - key: FORECAST_MOTOR
+        value: lightgbm
       # Credenciales: mismos valores que backend/.env
       - key: DATABASE_URL_PRODUCCION
         sync: false
@@ -37,4 +52,9 @@ services:
       - key: R2_ACCESS_KEY_ID
         sync: false
       - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      # Login de las demos (contract.md §12): secreto de firma de los tokens y usuarios con el hash de su contraseña
+      - key: AUTH_SECRET
+        sync: false
+      - key: AUTH_CREDENCIALES
         sync: false

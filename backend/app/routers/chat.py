@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.meta import construir_meta
 from app.db import models as m
 from app.db.session import get_db
-from app.routers._comun import EmpresaId, router_protegido
+from app.routers._comun import CON_LIMITE_IA, EmpresaId, router_protegido
 from app.schemas.chat import ChatMensajeRequest, ChatMensajeResponse
 from app.schemas.common import Canal
 from app.schemas.ingesta import InterpretarRequest
@@ -19,7 +19,7 @@ from app.services.ingesta import enrutador, servicio
 router = router_protegido("chat")
 
 
-@router.post("/empresas/{empresa_id}/chat/mensajes", response_model=ChatMensajeResponse,
+@router.post("/empresas/{empresa_id}/chat/mensajes", response_model=ChatMensajeResponse, dependencies=CON_LIMITE_IA,
              responses={422: {"description": "NO_INTERPRETABLE (audio no encontrado)"},
                         503: {"description": "SERVICIO_NO_DISPONIBLE (no se pudo escuchar el audio)"}})  # fmt: skip
 def enviar(empresa_id: EmpresaId, body: ChatMensajeRequest, db: Session = Depends(get_db)):

@@ -1,7 +1,9 @@
 """Score de salud (A12): constancia de registro, sueldo fijo (retiros vs sueldo), impuestos al día.
 
-Suma ponderada, determinística y explicable. El resultado del mes en curso se guarda en `score_salud` (resultado
-versionado, permitido por PLAN §8); los meses anteriores se leen de ahí para el historial.
+Suma ponderada, determinística y explicable. `calcular_score` calcula al vuelo y NO escribe (lo usa GET /salud): el
+resultado del mes en curso se guarda en `score_salud` (resultado versionado, permitido por PLAN §8) solo con una acción
+explícita (`persistir=True`: POST /salud/recalcular o el cierre de mes); los meses anteriores se leen de ahí para el
+historial.
 """
 
 import logging
@@ -14,8 +16,9 @@ from sqlalchemy.orm import Session
 from app.core.meta import construir_meta
 from app.core.reloj import hoy, inicio_del_dia
 from app.db import models as m
-from app.schemas.common import Frecuencia, TipoMovimiento
+from app.schemas.common import TipoMovimiento
 from app.services import finanzas
+from app.services.finanzas import consultas
 from app.services.ingesta.texto import soles
 from app.services.salud.metas import resumen_metas
 
@@ -60,23 +63,6 @@ def _constancia(db: Session, empresa_id: str, corte: date) -> tuple[int, str]:
     return min(valor, 100), f"{con} de {evaluados} días anotando este mes"
 
 
-def _ocurrencias_sueldo(prog: m.MovimientoProgramado, desde: date, hasta: date) -> int:
-    inicio = max(desde, prog.fecha_inicio)
-    fin = min(hasta, prog.fecha_fin) if prog.fecha_fin else hasta
-    n, d = 0, inicio
-    while d <= fin:
-        if prog.frecuencia == Frecuencia.diaria:
-            n += 1
-        elif prog.frecuencia == Frecuencia.semanal and d.isoweekday() == (prog.dia_semana or 6):
-            n += 1
-        elif prog.frecuencia == Frecuencia.quincenal and d.day in ((prog.dia_mes or 1), (prog.dia_mes or 1) + 15):
-            n += 1
-        elif prog.frecuencia == Frecuencia.mensual and d.day == (prog.dia_mes or 1):
-            n += 1
-        d += timedelta(days=1)
-    return n
-
-
 def _separacion(db: Session, empresa_id: str, corte: date) -> tuple[int, str]:
     inicio = corte.replace(day=1)
     retiros = Decimal(db.scalar(select(func.coalesce(func.sum(m.Transaccion.monto), 0)).where(
@@ -88,7 +74,7 @@ def _separacion(db: Session, empresa_id: str, corte: date) -> tuple[int, str]:
     vigente = next((s for s in sueldos if s.activo), None)
     if vigente is None:
         return 30, f"Aún no defines un sueldo fijo; este mes sacaste {soles(retiros)} de la caja"
-    esperado = sum((s.monto * _ocurrencias_sueldo(s, inicio, corte) for s in sueldos), Decimal("0"))
+    esperado = consultas.sueldo_esperado(db, empresa_id, inicio, corte) or Decimal("0")
     base = f"Sueldo fijo de {soles(vigente.monto)} {_FRECUENCIA_TXT[vigente.frecuencia.value]}"
     if retiros <= esperado:
         return 100, f"{base}; este mes lo respetaste"
@@ -124,7 +110,7 @@ def _rachas(db: Session, empresa_id: str, corte: date) -> list[dict]:
     return [{"tipo": "semanas_registrando", "valor": semanas}, {"tipo": "dias_seguidos", "valor": seguidos}]
 
 
-def calcular_score(db: Session, empresa_id: str, fecha_corte: date | None = None, persistir: bool = True) -> dict:
+def calcular_score(db: Session, empresa_id: str, fecha_corte: date | None = None, persistir: bool = False) -> dict:
     corte = fecha_corte or hoy()
     mes = corte.strftime("%Y-%m")
     calculos = {"constancia_registro": _constancia(db, empresa_id, corte),

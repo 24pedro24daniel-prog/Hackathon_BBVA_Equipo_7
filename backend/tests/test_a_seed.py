@@ -146,7 +146,7 @@ def test_sueldo_programado_y_retiros(db):
     sueldos = db.query(m.MovimientoProgramado).filter_by(es_sueldo=True, activo=True).all()
     assert len(sueldos) == 1
     s = sueldos[0]
-    assert (s.monto, s.frecuencia, s.dia_semana, s.categoria_id) == (Decimal("400.00"), "semanal", 6, "CAT-15")
+    assert (s.monto, s.frecuencia, s.dia_semana, s.categoria_id) == (Decimal("400.00"), "semanal", 6, "CAT-13")
 
     def retiros(desde, hasta):
         return _escalar(db, """SELECT COALESCE(SUM(monto), 0) FROM transacciones WHERE tipo = 'retiro_personal'

@@ -1,6 +1,7 @@
 """Borra y recrea el esquema y siembra la demo de Pedro.
 
-    python -m app.db.reset              # BD principal (POSTGRES_DB)
+    python -m app.db.reset              # BD principal (POSTGRES_DB), con la demo de Pedro (seed_demo)
+    python -m app.db.reset --fuente csv # BD principal cargada desde data/csv (igual que producción; ver cargar_csv)
     python -m app.db.reset --test       # BD de pruebas (POSTGRES_TEST_DB)
     python -m app.db.reset --sin-seed   # solo tablas vacías
 
@@ -39,7 +40,12 @@ def recrear_esquema(engine: Engine) -> None:
     Base.metadata.create_all(engine)
 
 
-def resetear(engine: Engine, con_seed: bool = True) -> int:
+def resetear(engine: Engine, con_seed: bool = True, fuente: str = "seed") -> int:
+    """`fuente = seed` siembra la demo de Pedro (fixture de los tests); `csv` carga data/csv con el cargador."""
+    if fuente == "csv" and con_seed:
+        from app.db.cargar_csv import cargar
+
+        return cargar(engine).filas
     recrear_esquema(engine)
     if not con_seed:
         return 0
@@ -53,12 +59,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Recrea la BD de TuCaserito y siembra la demo de Pedro.")
     parser.add_argument("--test", action="store_true", help="usar la BD de pruebas (POSTGRES_TEST_DB)")
     parser.add_argument("--sin-seed", action="store_true", help="crear las tablas sin datos")
+    parser.add_argument("--fuente", choices=("seed", "csv"), default="seed",
+                        help="con qué se llena: seed (demo de Pedro) o csv (data/csv, igual que producción)")
     args = parser.parse_args()
 
     url = settings.test_database_url if args.test else settings.database_url
     engine = crear_engine(url)
     inicio = time.perf_counter()
-    filas = resetear(engine, con_seed=not args.sin_seed)
+    filas = resetear(engine, con_seed=not args.sin_seed, fuente=args.fuente)
     destino = make_url(url).render_as_string(hide_password=True)
     print(f"BD recreada en {destino}: {len(Base.metadata.tables)} tablas, {filas} filas "
           f"({time.perf_counter() - inicio:.1f} s)")  # fmt: skip

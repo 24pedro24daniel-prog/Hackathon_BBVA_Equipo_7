@@ -26,6 +26,7 @@ from app.schemas.resumen import (
     IndPendienteCobro,
     IndRetiros,
     IndSaldo,
+    Negocio,
     ResumenResponse,
 )
 from app.services.finanzas import consultas as q
@@ -122,6 +123,7 @@ def resumen(db: Session, empresa_id: str, periodo: str, fecha_corte: date | None
 
     ret = q.retiros_del_mes(db, empresa, corte) if rango else q.Retiros(q.CERO, None, 0)
     sueldo = q.sueldo_vigente(db, empresa_id, corte)
+    esperado = q.sueldo_esperado(db, empresa_id, corte.replace(day=1), corte) if rango else None
     fiados = q.fiados_pendientes(db, empresa_id, corte)
     deudas = [d for d in q.cuentas_deuda(db, empresa_id, corte) if d.pendiente > 0]
     impuestos = [i for i in q.cuentas_impuesto(db, empresa_id, corte) if not i.pagado]
@@ -129,7 +131,7 @@ def resumen(db: Session, empresa_id: str, periodo: str, fecha_corte: date | None
                                                                 i.impuesto.regimen for i in impuestos]))  # fmt: skip
     dias = q.dias_con_datos(db, empresa_id, corte)
     return ResumenResponse(
-        empresa_id=empresa_id, periodo=periodo, corte=corte, dias_con_datos=dias, dias_requeridos_forecast=DIAS_REQUERIDOS,
+        empresa_id=empresa_id, negocio=Negocio(nombre=empresa.nombre_ficticio), periodo=periodo, corte=corte, dias_con_datos=dias, dias_requeridos_forecast=DIAS_REQUERIDOS,
         indicadores=Indicadores(
             saldo_caja_negocio=IndSaldo(valor=saldo, variacion_pct=_variacion(saldo, saldo_previo)),
             ingresos_mes=IndSaldo(valor=ingresos, variacion_pct=_variacion(ingresos, ing_p)),
@@ -139,7 +141,9 @@ def resumen(db: Session, empresa_id: str, periodo: str, fecha_corte: date | None
             retiros_personales=IndRetiros(valor=ret.mes, sueldo_fijo_definido=sueldo.monto if sueldo else None,
                                           promedio_historico=ret.promedio_historico,
                                           sueldo_frecuencia=sueldo.frecuencia if sueldo else None,
-                                          exceso_vs_promedio=ret.exceso if ret.promedio_historico is not None else None),
+                                          exceso_vs_promedio=ret.exceso if ret.promedio_historico is not None else None,
+                                          sueldo_esperado_a_la_fecha=esperado,
+                                          exceso_vs_sueldo=max(q.CERO, redondear(ret.mes - esperado)) if esperado is not None else None),
             pendiente_cobro=IndPendienteCobro(valor=sum((f.pendiente for f in fiados), q.CERO), n_fiados=len(fiados)),
             pagos_pendientes=IndPagosPendientes(
                 valor=sum((d.pendiente for d in deudas), q.CERO) + sum((i.impuesto.monto for i in impuestos), q.CERO),

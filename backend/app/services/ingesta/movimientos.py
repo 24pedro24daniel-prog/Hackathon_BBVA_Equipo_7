@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.orm import Session, aliased
 
+from app.core.categorias import buscar_categoria
 from app.core.errors import Validacion
 from app.core.paginacion import Pagina, recortar
 from app.core.reloj import a_lima, inicio_del_dia
@@ -54,8 +55,8 @@ def listar(db: Session, empresa_id: str, pagina: Pagina, *, desde: date | None =
     if canal:
         q = q.where(base.c.canal == canal)
     if categoria:
-        clave = categoria.replace("_", " ").lower()
-        q = q.where(or_(base.c.categoria_id == categoria, func.lower(base.c.categoria) == clave))
+        cat = buscar_categoria(db, categoria)  # tolerante: mayúsculas, tildes y `_` ≡ espacio
+        q = q.where(base.c.categoria_id == (cat.categoria_id if cat else categoria))
     if pagina.cursor:
         try:
             f_cursor = datetime.fromisoformat(pagina.cursor["f"])

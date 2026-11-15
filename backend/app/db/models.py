@@ -1,4 +1,6 @@
-"""Las 25 tablas de modelo_datos.dbml (+ las tablas técnicas idempotency_keys y llm_llamadas).
+"""Las 27 tablas del esquema: las 25 del modelo de negocio de modelo_datos.dbml + las 2 técnicas (idempotency_keys y llm_llamadas).
+
+data/schema.sql y data/schema_esquema.json se GENERAN desde este archivo (data/pipeline_python/generar_schema.py).
 
 Reglas: dinero Numeric(12,2) → Decimal; probabilidades y confianzas Numeric(4,3); fecha-hora timestamptz.
 Nada calculado se guarda (saldo, pendiente, atraso, estados): sale de services/finanzas/consultas.py.
@@ -100,6 +102,8 @@ class Empresa(Base):
     __table_args__ = (
         CheckConstraint("n_trabajadores >= 1", name="n_trabajadores_positivo"),
         CheckConstraint("minimo_operativo >= 0", name="minimo_operativo_no_negativo"),
+        CheckConstraint("saldo_inicial >= 0", name="saldo_inicial_no_negativo"),
+        CheckConstraint("ruc IS NULL OR ruc ~ '^10[0-9]{9}$'", name="ruc_formato"),
     )
 
     empresa_id: Mapped[str] = _id()
@@ -109,6 +113,8 @@ class Empresa(Base):
     zona: Mapped[str] = mapped_column(String(50))
     n_trabajadores: Mapped[int] = mapped_column(SmallInteger, default=1, server_default=text("1"))
     tiene_ruc: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    # RUC de persona natural (10 + 9 dígitos). Viene de data/csv; el backend no lo usa.
+    ruc: Mapped[str | None] = mapped_column(String(11), unique=True)
     regimen_tributario: Mapped[str | None] = mapped_column(String(20))
     saldo_inicial: Mapped[Decimal]
     fecha_saldo_inicial: Mapped[date]
@@ -259,6 +265,7 @@ class DetalleTransaccion(Base):
         CheckConstraint("cantidad > 0", name="cantidad_positiva"),
         CheckConstraint("precio_unitario >= 0", name="precio_no_negativo"),
         CheckConstraint("subtotal >= 0", name="subtotal_no_negativo"),
+        CheckConstraint("costo_unitario IS NULL OR costo_unitario >= 0", name="costo_no_negativo"),
     )
 
     detalle_id: Mapped[str] = _id()
@@ -300,6 +307,7 @@ class Deuda(Base):
         CheckConstraint("(tipo = 'proveedor') = (proveedor_id IS NOT NULL)", name="proveedor_segun_tipo"),
         CheckConstraint("monto_recibido > 0", name="monto_recibido_positivo"),
         CheckConstraint("monto_total_a_pagar > 0", name="monto_total_positivo"),
+        CheckConstraint("monto_total_a_pagar >= monto_recibido", name="total_mayor_o_igual_recibido"),
         CheckConstraint("monto_cuota IS NULL OR monto_cuota > 0", name="cuota_positiva"),
         CheckConstraint("fecha_vencimiento >= fecha_inicio", name="vencimiento_tras_inicio"),
         Index(None, "empresa_id", "fecha_vencimiento"),

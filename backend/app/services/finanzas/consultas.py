@@ -404,15 +404,49 @@ def sueldo_vigente(db: Session, empresa_id: str, d: date) -> m.MovimientoProgram
     return next((p for p in programados(db, empresa_id) if p.es_sueldo and vigente_en(p, d)), None)
 
 
+def _largo_periodo(p: m.MovimientoProgramado, d: date) -> int:
+    """Días del periodo de pago de un sueldo mensual (el mes) o quincenal (la quincena en que cae `d`)."""
+    ultimo = ultimo_dia_mes(d.year, d.month)
+    if Frecuencia(p.frecuencia) == Frecuencia.mensual:
+        return ultimo
+    return 15 if d.day <= 15 else ultimo - 15
+
+
+def sueldo_a_la_fecha(p: m.MovimientoProgramado, desde: date, hasta: date) -> Decimal:
+    """Lo que le toca al dueño por este sueldo en [desde, hasta], según su frecuencia.
+
+    Diario y semanal: las veces que cae en el rango (sale solo el día de pago). Mensual y quincenal: se prorratea por
+    día dentro del periodo (un sueldo mensual de 1 350 pagado el día 30 vale 45 por día a mitad de mes); si no, a
+    mitad de mes el esperado sería 0 y cualquier retiro parecería excesivo. Pero un sueldo que ya cayó en el periodo
+    (p. ej. el día 1) ya es del dueño completo: en cada periodo el esperado es max(prorrateo, sueldo ya vencido), así
+    cobrarse el sueldo al inicio del periodo no parece un retiro excesivo."""
+    frecuencia = Frecuencia(p.frecuencia)
+    if frecuencia in (Frecuencia.diaria, Frecuencia.semanal):
+        return Decimal(p.monto) * len(ocurrencias(p, desde, hasta))
+    prorrateo: dict[tuple[date, date], Decimal] = defaultdict(lambda: CERO)
+    d = max(desde, p.fecha_inicio)
+    fin = min(hasta, p.fecha_fin) if p.fecha_fin else hasta
+    while d <= fin:
+        if vigente_en(p, d):
+            prorrateo[periodo_de(p, d)] += Decimal(p.monto) / _largo_periodo(p, d)
+        d += timedelta(days=1)
+    total = CERO
+    for (ini, fin_periodo), parte in prorrateo.items():
+        vencido = Decimal(p.monto) * len(ocurrencias(p, max(ini, desde, p.fecha_inicio), min(fin_periodo, fin)))
+        total += max(parte, vencido)
+    return total
+
+
 def sueldo_esperado(db: Session, empresa_id: str, desde: date, hasta: date) -> Decimal | None:
-    """Σ de las ocurrencias del sueldo fijo en el rango (None si nunca hubo sueldo fijo en ese rango)."""
+    """Lo que le tocaba sacar al dueño en el rango (suma de todos los sueldos fijos, prorrateando los mensuales y
+    quincenales). None si nunca hubo sueldo fijo en ese rango."""
     sueldos = [p for p in programados(db, empresa_id) if p.es_sueldo]
     total, alguno = CERO, False
     for p in sueldos:
-        n = len(ocurrencias(p, desde, hasta))
-        if n or any(vigente_en(p, d) for d in (desde, hasta)):
+        parte = sueldo_a_la_fecha(p, desde, hasta)
+        if parte or any(vigente_en(p, d) for d in (desde, hasta)):
             alguno = True
-        total += Decimal(p.monto) * n
+        total += parte
     return redondear(total) if alguno else None
 
 

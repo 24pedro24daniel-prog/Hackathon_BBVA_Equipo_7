@@ -140,6 +140,7 @@ def test_anular_fiado_deja_de_contar(client_db, db, reloj_fijo):
 
 
 def test_anular_pedido_lo_saca_del_forecast_y_alertas(client_db, db, reloj_fijo):
+    client_db.post(f"{EMP}/alertas/evaluar", json={})  # el GET no guarda: se guardan para ver cómo se descartan
     alertas = client_db.get(f"{EMP}/alertas").json()["items"]
     assert any(a["accion"]["payload"].get("pedido_id") == "PED-0012" for a in alertas)
     r = _anular(client_db, "pedido", "PED-0012")

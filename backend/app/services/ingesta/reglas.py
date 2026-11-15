@@ -81,10 +81,10 @@ _GASTO_VERBO = re.compile(r"\b(pague|gaste|pagamos|pago)\b")
 # (patrón, categoría)
 _GASTOS = [
     (re.compile(r"\b(luz|agua|internet|telefono|cable|recibo|celular|recarga)\b"), "servicios"),
-    (re.compile(r"\b(mototaxi|taxi|flete|pasaje|pasajes|movilidad|combi|carrera|delivery)\b"), "transporte"),
-    (re.compile(r"\b(alquiler|local|renta del local)\b"), "alquiler"),
+    (re.compile(r"\b(mototaxi|taxi|flete|pasaje|pasajes|movilidad|combi|carrera|delivery)\b"), "transporte_flete"),
+    (re.compile(r"\b(alquiler|local|renta del local)\b"), "alquiler_local"),
     (re.compile(r"\b(gas|balon|bolsas|descartables|focos?|escoba|reparacion|arreglo|pintura|municipalidad|"
-                r"licencia|limpieza|tecnico|candado|vitrina|congeladora|refrigeradora)\b"), "otros gastos"),
+                r"licencia|limpieza|tecnico|candado|vitrina|congeladora|refrigeradora)\b"), "otros_gastos"),
 ]  # fmt: skip
 
 _METODOS = [
@@ -236,7 +236,7 @@ def _categoria_gasto(t: str) -> str:
     for patron, categoria in _GASTOS:
         if patron.search(t):
             return categoria
-    return "otros gastos"
+    return "otros_gastos"
 
 
 def _roles_de_numeros(t: str, nums: list[Numero], coincidencias, fecha: ResultadoFecha):

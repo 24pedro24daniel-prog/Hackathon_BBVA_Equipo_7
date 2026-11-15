@@ -14,10 +14,17 @@ Proyección central (p50) de la caja del negocio, día a día desde mañana:
   z = 1.2816 (80 %). La p90 suma además los fiados ponderados ya esperados. Siempre p10 ≤ p50 ≤ p90.
 - `dia_critico`: primer día con p50 < 0 (déficit); si no hay, el día más bajo si queda bajo el mínimo operativo.
 
-Modelo de ML: los artefactos LightGBM de modelo/artifacts/forecast/ no son integrables (features sin equivalente en la
-BD, ver modelo_ml.py), así que la serie siempre sale del baseline con `meta.fallback_usado = true`.
+Motores (`FORECAST_MOTOR`, ver modelo_ml.py / forecast_ml.py):
+- `lightgbm` (por defecto): el ingreso y el egreso ORDINARIOS de cada día salen del LightGBM por cuantiles del equipo de datos
+  (predicción recursiva) en lugar de la media del mismo día de la semana; los eventos con fecha, los fiados ponderados, los
+  ajustes y el saldo se tratan igual (los pagos conocidos se suman encima del flujo ordinario, sin doble conteo: el modelo
+  nunca ve los pagos de deudas/impuestos/programados en su historia). La banda p10/p90 sale de los cuantiles del modelo
+  acumulados por √h, no de σ·√h del baseline. `meta.modelo = "forecast-lgbm-quantile"`.
+- `baseline` (o fallback si el modelo no carga, la historia es corta o algo falla): lo descrito arriba, con
+  `meta.fallback_usado = true` y `meta.fallback_motivo` concreto.
 """
 
+import logging
 import math
 from dataclasses import dataclass, field, replace
 from datetime import date, timedelta
@@ -30,8 +37,19 @@ from app.db import models as m
 from app.schemas.common import Confianza, redondear
 from app.schemas.forecast import DiaCritico, ObligacionAsociada, PuntoSerie
 from app.services.finanzas import consultas as q
+from app.services.finanzas import forecast_ml as fml
 from app.services.finanzas import riesgo as rsg
+from app.services.finanzas.modelo_ml import (
+    MODELO_FORECAST,
+    MOTOR_BASELINE,
+    Motor,
+    motivo_fallback_forecast,
+    motor_baseline,
+    motor_configurado,
+)
 from app.services.ingesta.texto import normalizar
+
+log = logging.getLogger("cajaclara.forecast")
 
 MODELO = "forecast-naive-estacional"
 VERSION = "0.1.0"
@@ -85,6 +103,10 @@ class Proyeccion:
     riesgos: dict[str, rsg.Riesgo] = field(default_factory=dict)
     deudas: list[q.DeudaCalc] = field(default_factory=list)
     impuestos: list[q.ImpuestoCalc] = field(default_factory=list)
+    ml: fml.PrediccionML | None = None  # serie del LightGBM; None = flujo ordinario del baseline
+    motor: Motor | None = None
+    cobertura_ml: float | None = None
+    mae_ml: float | None = None
 
     @property
     def fechas(self) -> list[date]:
@@ -101,20 +123,30 @@ class Proyeccion:
         for ev in eventos:
             por_dia.setdefault(ev.fecha, []).append(ev)
         saldo, salida = self.saldo_actual, []
-        for d in self.fechas:
+        for i, d in enumerate(self.fechas):
             wd = d.weekday()
-            ing = self.media_ing[wd] + sum((e.monto for e in por_dia.get(d, []) if e.monto > 0), CERO)
-            egr = self.media_egr[wd] - (menos_egreso_diario or {}).get(wd, CERO)
+            if self.ml is not None:  # flujo ordinario del día según el LightGBM
+                ing, egr = self.ml.ingreso[i], max(CERO, self.ml.egreso[i] - (menos_egreso_diario or {}).get(wd, CERO))
+            else:
+                ing, egr = self.media_ing[wd], self.media_egr[wd] - (menos_egreso_diario or {}).get(wd, CERO)
+            ing += sum((e.monto for e in por_dia.get(d, []) if e.monto > 0), CERO)
             egr += sum((-e.monto for e in por_dia.get(d, []) if e.monto < 0), CERO)
             saldo += ing - egr
             salida.append(Punto(d, redondear(ing), redondear(egr), redondear(saldo)))
         return salida
 
-    def ancho(self, h: int) -> Decimal:
-        return redondear(Z80 * self.sigma * math.sqrt(h))
+    def sigma_h(self, h: int) -> float:
+        """σ del saldo a h días: la del LightGBM (cuantiles acumulados) o σ·√h del baseline."""
+        return self.ml.sigma_h(h) if self.ml is not None else self.sigma * math.sqrt(h)
+
+    def ancho_bajo(self, h: int) -> Decimal:
+        return self.ml.ancho_bajo(h) if self.ml is not None else redondear(Z80 * self.sigma * math.sqrt(h))
+
+    def ancho_alto(self, h: int) -> Decimal:
+        return self.ml.ancho_alto(h) if self.ml is not None else redondear(Z80 * self.sigma * math.sqrt(h))
 
     def prob_deficit(self, p50: Decimal, h: int) -> float:
-        s = self.sigma * math.sqrt(h)
+        s = self.sigma_h(h)
         if s <= 0:
             return 1.0 if p50 < 0 else 0.0
         return round(0.5 * (1 + math.erf((0 - float(p50)) / (s * math.sqrt(2)))), 2)
@@ -290,16 +322,32 @@ def _aplicar_ajustes(db: Session, empresa_id: str, corte: date, hasta: date, eve
     return eventos, aplicados
 
 
+def _motor(db: Session, empresa: m.Empresa, flujos: dict[date, q.FlujoDia], corte: date, horizonte: int,
+           fiados: list[q.FiadoCalc], motor: str | None) -> tuple[fml.PrediccionML | None, Motor]:  # fmt: skip
+    """Elige el motor de la serie: LightGBM si está configurado y puede correr; si no, baseline con el motivo."""
+    elegido = (motor or motor_configurado()).strip().lower()
+    if elegido == MOTOR_BASELINE:
+        return None, motor_baseline("FORECAST_MOTOR=baseline: el LightGBM está desactivado por configuración")
+    try:
+        ml, motivo = fml.predecir_empresa(db, empresa, flujos, corte, horizonte, fiados)
+    except Exception as exc:  # noqa: BLE001 - el forecast nunca debe tumbar la app: cae al baseline y lo dice
+        log.exception("El forecast LightGBM falló; se usa el baseline")
+        ml, motivo = None, f"El LightGBM falló al predecir ({type(exc).__name__}: {str(exc)[:160]})"
+    if ml is None:
+        return None, motor_baseline(motivo or motivo_fallback_forecast())
+    return ml, Motor(MODELO_FORECAST, ml.version, False)
+
+
 def proyectar(db: Session, empresa_id: str, corte: date | None = None, horizonte: int = 30,
-              excluir_deudas: set[str] | frozenset = frozenset()) -> Proyeccion:  # fmt: skip
+              excluir_deudas: set[str] | frozenset = frozenset(), motor: str | None = None) -> Proyeccion:  # fmt: skip
     corte = q.corte_de(corte)
     horizonte = max(1, min(int(horizonte), HORIZONTE_MAX))
     empresa = q.empresa_o_404(db, empresa_id)
     hasta = corte + timedelta(days=horizonte)
     primer = q.primer_dia_con_datos(db, empresa_id, corte)
     semanas = 0 if primer is None else min(SEMANAS, (corte - primer).days // 7)
-    flujos = q.flujos_ordinarios(db, empresa_id, corte - timedelta(days=7 * SEMANAS * 2), corte - timedelta(days=1),
-                                 corte)  # fmt: skip
+    # 62 días: el baseline usa 8 semanas (4 de media + 4 de backtest) y el LightGBM 30 días de historia por día probado
+    flujos = q.flujos_ordinarios(db, empresa_id, corte - timedelta(days=62), corte - timedelta(days=1), corte)  # fmt: skip
     if primer is not None:  # días anteriores al primer registro no son "días sin ventas"
         flujos = {d: f for d, f in flujos.items() if d >= primer}
     ing, egr, ret, sigma = _medias(flujos, corte, semanas)
@@ -312,12 +360,15 @@ def proyectar(db: Session, empresa_id: str, corte: date | None = None, horizonte
     eventos, ajustes = _aplicar_ajustes(db, empresa_id, corte, hasta, eventos)
     eventos.sort(key=lambda e: (e.fecha, e.monto))
     mae, cobertura = backtest_baseline(flujos, corte, sigma=sigma)
+    ml, info = _motor(db, empresa, flujos, corte, horizonte, fiados, motor)
     return Proyeccion(
         empresa=empresa, corte=corte, horizonte=horizonte, saldo_actual=q._saldo(db, empresa, corte),
         minimo=redondear(empresa.minimo_operativo), media_ing=ing, media_egr=egr, media_ret=ret, eventos=eventos,
         cobros_fiado=_cobros_fiado(fiados, riesgos, corte, hasta), sigma=sigma, semanas=semanas,
         dias_con_datos=q.dias_con_datos(db, empresa_id, corte), ajustes=ajustes, mae_baseline=mae,
-        cobertura=cobertura, fiados=fiados, riesgos=riesgos, deudas=deudas, impuestos=impuestos,
+        cobertura=cobertura, fiados=fiados, riesgos=riesgos, deudas=deudas, impuestos=impuestos, ml=ml, motor=info,
+        mae_ml=ml.metricas["mae"] if ml and ml.metricas else None,
+        cobertura_ml=ml.metricas["cobertura"] if ml and ml.metricas else None,
     )  # fmt: skip
 
 
@@ -350,9 +401,9 @@ def serie(proy: Proyeccion, puntos: list[Punto]) -> list[PuntoSerie]:
         cobros[ev.fecha] = cobros.get(ev.fecha, CERO) + ev.monto
     for h, p in enumerate(puntos, start=1):
         fiado_acum += cobros.get(p.fecha, CERO)
-        ancho = proy.ancho(h)
         salida.append(PuntoSerie(fecha=p.fecha, ingresos_esperados=p.ingresos, egresos_esperados=p.egresos,
-                                 p10=p.p50 - ancho, p50=p.p50, p90=p.p50 + ancho + fiado_acum))  # fmt: skip
+                                 p10=p.p50 - proy.ancho_bajo(h), p50=p.p50,
+                                 p90=p.p50 + proy.ancho_alto(h) + fiado_acum))  # fmt: skip
     return salida
 
 

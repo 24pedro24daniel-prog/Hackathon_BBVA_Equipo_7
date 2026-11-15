@@ -1,7 +1,8 @@
 """B3/B5 — Forecast F3 (GET /forecast) y ajustes manuales (POST /forecast/ajustes).
 
-El cálculo vive en proyeccion.py (baseline naive estacional + eventos con fecha + ajustes; ver su docstring).
-Los artefactos LightGBM de modelo/artifacts/forecast/ no son integrables (modelo_ml.py): `meta.fallback_usado = true`.
+El cálculo vive en proyeccion.py: flujo ordinario del LightGBM por cuantiles (forecast_ml.py) o, si no puede correr o
+`FORECAST_MOTOR=baseline`, el baseline naive estacional (`meta.fallback_usado = true` + `meta.fallback_motivo`); encima van
+los eventos con fecha y los ajustes. `GET` solo calcula: nada escribe `predicciones_saldo`.
 """
 
 from datetime import date
@@ -11,9 +12,16 @@ from sqlalchemy.orm import Session
 from app.core import reloj
 from app.core.ids import nuevo_id
 from app.db import models as m
-from app.schemas.forecast import AjusteRequest, AjusteResponse, Baseline, ForecastResponse, ProximoEvento
+from app.schemas.forecast import (
+    AjusteRequest,
+    AjusteResponse,
+    Baseline,
+    ForecastResponse,
+    ModeloMetricas,
+    ProximoEvento,
+)
 from app.services.finanzas import consultas as q
-from app.services.finanzas.modelo_ml import meta_b, motivo_fallback_forecast
+from app.services.finanzas.modelo_ml import meta_de
 from app.services.finanzas.proyeccion import (
     DIAS_REQUERIDOS,
     MODELO,
@@ -27,6 +35,20 @@ from app.services.finanzas.proyeccion import (
 )
 
 __all__ = ["forecast", "crear_ajuste", "MODELO", "VERSION", "DIAS_REQUERIDOS"]
+
+
+FUNDAMENTO_BASELINE = ("Tus ventas y gastos de las últimas 4 semanas (mismo día de la semana), tus pagos con fecha "
+                       "(pedidos a crédito, sueldo, servicios, impuestos) y tus ajustes.")
+FUNDAMENTO_ML = ("Un modelo de aprendizaje automático (LightGBM) estima tus ventas y gastos de cada día con lo que anotaste "
+                 "en el último mes y el calendario (día de la semana, quincena, fin de mes); encima se suman tus pagos con "
+                 "fecha (pedidos a crédito, sueldo, servicios, impuestos) y tus ajustes.")
+LIMITES_BASELINE = ("Los fiados no se cuentan en la línea esperada (sí en el rango optimista y en lo que puedes gastar), "
+                    "porque cobrarlos a tiempo es incierto. No considera ventas o gastos que no hayas anotado. Mientras "
+                    "más lejos el día, más ancho el rango.")
+LIMITES_ML = ("Es una estimación: el modelo se entrenó con datos sintéticos de bodegas, no con el historial de tu negocio. "
+              "Los fiados no se cuentan en la línea esperada (sí en el rango optimista y en lo que puedes gastar), porque "
+              "cobrarlos a tiempo es incierto. No considera ventas o gastos que no hayas anotado. Mientras más lejos el "
+              "día, más ancho el rango.")
 
 
 def forecast(db: Session, empresa_id: str, horizonte_dias: int = 30, fecha_corte: date | None = None) -> ForecastResponse:
@@ -44,15 +66,13 @@ def forecast(db: Session, empresa_id: str, horizonte_dias: int = 30, fecha_corte
                                         ponderado=e.ponderado or None, ref_id=e.ref_id) for e in eventos],
         ajustes_manuales_aplicados=proy.ajustes,
         baseline=Baseline(nombre="naive_estacional", mae_backtest=proy.mae_baseline),
-        modelo_metricas=None,
-        fundamento=("Tus ventas y gastos de las últimas 4 semanas (mismo día de la semana), tus pagos con fecha "
-                    "(pedidos a crédito, sueldo, servicios, impuestos) y tus ajustes."),
-        limites=("Los fiados no se cuentan en la línea esperada (sí en el rango optimista y en lo que puedes gastar), "
-                 "porque cobrarlos a tiempo es incierto. No considera ventas o gastos que no hayas anotado. Mientras "
-                 "más lejos el día, más ancho el rango."),
+        modelo_metricas=(ModeloMetricas(mae_backtest=proy.mae_ml, cobertura_p10_p90=proy.cobertura_ml)
+                         if proy.ml is not None else None),
+        fundamento=FUNDAMENTO_ML if proy.ml is not None else FUNDAMENTO_BASELINE,
+        limites=LIMITES_ML if proy.ml is not None else LIMITES_BASELINE,
         confianza=confianza(proy), disponible=proy.dias_con_datos >= DIAS_REQUERIDOS,
         dias_con_datos=proy.dias_con_datos, dias_requeridos=DIAS_REQUERIDOS,
-        meta=meta_b(MODELO, VERSION, fallback=True, motivo=motivo_fallback_forecast()),
+        meta=meta_de(proy.motor),
     )  # fmt: skip
 
 

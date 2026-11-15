@@ -1,8 +1,12 @@
 // TuCaserito — Modelo de datos (v2)
 // Visualizar en https://dbdiagram.io (pegar este archivo).
 // Diccionario de datos: diccionario_datos.md
+// Fuente de verdad del esquema en la BD: backend/app/db/models.py (27 tablas: las 25 de este modelo + idempotency_keys
+// y llm_llamadas). data/schema.sql y data/schema_esquema.json se GENERAN desde models.py; los CSV de data/csv se cargan con
+// data/load_postgres.py o con `python -m app.db.cargar_csv`.
 // Todos los datos son sintéticos. Montos en PEN con DECIMAL(12,2). Fechas con hora en timestamptz (America/Lima).
-// Campos calculados (saldo, monto pendiente, días de atraso, estados por vencer/vencido) NO se guardan: salen de vistas.
+// Campos calculados (saldo, monto pendiente, días de atraso, estados por vencer/vencido) NO se guardan y TAMPOCO hay
+// vistas en la BD: el backend los calcula en Python (backend/app/services/finanzas/consultas.py).
 
 Project TuCaserito {
   database_type: 'PostgreSQL'
@@ -152,7 +156,7 @@ Enum tipo_evento {
 
 Table rubros {
   rubro_id varchar(20) [pk]
-  nombre varchar(50) [not null, unique, note: 'bodega, restaurante, taller, distribuidora']
+  nombre varchar(50) [not null, unique, note: 'bodega, restaurante, taller, distribuidora (los rubros de los modelos de ML)']
 }
 
 Table empresas {
@@ -160,18 +164,21 @@ Table empresas {
   rubro_id varchar(20) [not null, ref: > rubros.rubro_id]
   nombre_ficticio varchar(100) [not null]
   telefono_whatsapp varchar(20) [not null, unique, note: 'Ficticio. Enruta los mensajes del webhook a la empresa']
-  zona varchar(50) [not null]
-  n_trabajadores smallint [not null, default: 1]
+  zona varchar(50) [not null, note: 'Zona o distrito: Lima Este, Lima Norte, Lima Sur, Callao…']
+  n_trabajadores smallint [not null, default: 1, note: '1 a 5 (CHECK >= 1)']
   tiene_ruc boolean [not null, default: false, note: 'Estadio 3: formalización']
+  ruc varchar(11) [unique, note: 'RUC de persona natural: 10 + 9 dígitos (CHECK ^10[0-9]{9}$). Null si no tiene. No lo usa el backend']
   regimen_tributario varchar(20) [note: 'nuevo_rus, null si es informal']
-  saldo_inicial decimal(12,2) [not null]
+  saldo_inicial decimal(12,2) [not null, note: 'CHECK >= 0']
   fecha_saldo_inicial date [not null]
   minimo_operativo decimal(12,2) [not null]
   fecha_alta timestamptz [not null]
   Note: '''
   El sueldo fijo NO vive aquí: es un movimiento_programado con es_sueldo = true.
   usa_fiado y usa_billetera_digital (features del modelo de ML de forecast) NO se guardan aquí:
-  se calculan en la vista v_empresas_flags.
+  se calculan en el backend (regla: >= 1 registro en los últimos 90 días; ver el final de este archivo).
+  CHECKs: n_trabajadores >= 1, minimo_operativo >= 0, saldo_inicial >= 0, ruc IS NULL OR ruc ~ '^10[0-9]{9}$'.
+  Todos los RUC de data/csv pasan el dígito verificador módulo 11 de SUNAT.
   '''
 }
 
@@ -186,10 +193,16 @@ Table preferencias_alertas {
 
 Table categorias {
   categoria_id varchar(20) [pk]
-  nombre varchar(50) [not null, unique, note: 'bebidas, abarrotes, servicios, impuestos, retiro personal…']
+  nombre varchar(50) [not null, unique, note: 'snake_case: bebidas, abarrotes, servicios, impuestos, retiro_personal, cobro_fiados, prestamos_recibidos, otros_gastos… (16 en total)']
   tipo tipo_flujo [not null]
-  es_del_negocio boolean [not null, default: true, note: 'false para retiro personal (no cuenta como gasto del negocio)']
-  Note: 'No hay categorías de gastos del hogar: lo único personal que se registra es el retiro personal desde la caja del negocio (context.md §3, Alcance).'
+  es_del_negocio boolean [not null, default: true, note: 'false para retiro_personal (no cuenta como gasto del negocio)']
+  Note: '''
+  No hay categorías de gastos del hogar: lo único personal que se registra es el retiro personal desde la caja del negocio (context.md §3, Alcance).
+  Catálogo (16): CAT-01 bebidas, CAT-02 abarrotes, CAT-03 lacteos_panaderia, CAT-04 limpieza_aseo, CAT-05 snacks_golosinas,
+  CAT-06 otros_ingresos, CAT-14 cobro_fiados, CAT-15 prestamos_recibidos (ingresos) · CAT-07 mercaderia, CAT-08 servicios,
+  CAT-09 alquiler_local, CAT-10 transporte_flete, CAT-11 impuestos, CAT-12 financiamiento, CAT-13 retiro_personal, CAT-16 otros_gastos (egresos).
+  El backend compara los nombres sin tildes, en minúsculas y con "_" igual a espacio.
+  '''
 }
 
 Table productos {
@@ -232,7 +245,7 @@ Table borradores {
   canal canal_registro [not null]
   media_url varchar(255) [note: 'Audio o foto. Null si es texto o formulario']
   texto_original text [note: 'Texto escrito o transcripción de Whisper']
-  payload_propuesto json [not null, note: 'Lo que entendió el extractor. Una foto del cuaderno puede traer varios fiados']
+  payload_propuesto json [not null, note: 'Lo que entendió el extractor. Una foto del cuaderno trae la clave `fiados` (lista de {cliente, detalle, monto, fecha, confianza}); un movimiento trae tipo, items, monto…']
   origen_monto origen_monto
   confianza decimal(4,3) [note: '0 a 1']
   campos_faltantes json
@@ -282,6 +295,10 @@ Table transacciones {
   - a lo más una de fiado_id, deuda_id, impuesto_id, programado_id puede estar llena
   - tipo IN (cobro_fiado) → fiado_id NOT NULL; tipo IN (pago_proveedor, pago_prestamo, prestamo_recibido) → deuda_id NOT NULL; tipo = pago_impuesto → impuesto_id NOT NULL
   - tipo = venta y metodo_pago = credito → fiado_id NOT NULL; tipo = compra y metodo_pago = credito → deuda_id NOT NULL
+  - moneda = 'PEN'; confianza_extraccion entre 0 y 1
+  Categoría por defecto según el tipo cuando no hay producto ni categoría explícita: venta → otros_ingresos, cobro_fiado → cobro_fiados,
+  prestamo_recibido → prestamos_recibidos, otro_ingreso → otros_ingresos, compra y pago_proveedor → mercaderia, gasto_negocio → otros_gastos,
+  retiro_personal → retiro_personal, pago_prestamo → financiamiento, pago_impuesto → impuestos.
   '''
 }
 
@@ -290,10 +307,10 @@ Table detalle_transaccion {
   transaccion_id varchar(20) [not null, ref: > transacciones.transaccion_id]
   producto_id varchar(20) [ref: > productos.producto_id, note: 'Null si el producto no está en el catálogo']
   descripcion varchar(100) [note: 'Texto libre si no hay producto_id']
-  cantidad decimal(10,3) [not null]
+  cantidad decimal(10,3) [not null, note: 'Entera en data/csv (CHECK > 0); la columna admite fracciones (kilos) para registros reales']
   precio_unitario decimal(12,2) [not null]
-  costo_unitario decimal(12,2) [note: 'Copia del costo al momento de la venta (margen histórico)']
-  subtotal decimal(12,2) [not null]
+  costo_unitario decimal(12,2) [note: 'Copia del costo al momento de la venta (margen histórico). CHECK >= 0']
+  subtotal decimal(12,2) [not null, note: 'cantidad × precio_unitario']
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -317,7 +334,7 @@ Table cuaderno_fiado {
     (empresa_id, cliente_id)
   }
 
-  Note: 'monto_pendiente y dias_atraso se calculan en la vista v_fiados (a una fecha de corte).'
+  Note: 'monto_pendiente, dias_atraso y estado se calculan en el backend a una fecha de corte (consultas.cuentas_fiado): monto − Σ cobro_fiado; sin fecha_compromiso se asumen 14 días.'
 }
 
 Table deudas {
@@ -342,8 +359,8 @@ Table deudas {
   }
 
   Note: '''
-  CHECK: (tipo = 'proveedor') = (proveedor_id IS NOT NULL).
-  monto_pendiente y estado (pendiente / por_vencer / vencido / pagado) se calculan en la vista v_deudas.
+  CHECKs: (tipo = 'proveedor') = (proveedor_id IS NOT NULL); monto_total_a_pagar >= monto_recibido; fecha_vencimiento >= fecha_inicio.
+  monto_pendiente y estado (pendiente / por_vencer / vencido / pagado) se calculan en el backend (consultas.cuentas_deuda); por_vencer = vence en <= 3 días.
   '''
 }
 
@@ -377,7 +394,7 @@ Table impuestos {
     (empresa_id, regimen, periodo) [unique]
   }
 
-  Note: 'Semáforo al_dia / vencido calculado en la vista v_impuestos.'
+  Note: 'Semáforo al_dia / vencido calculado en el backend (consultas.cuentas_impuesto).'
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -394,13 +411,14 @@ Table movimientos_programados {
   frecuencia frecuencia [not null]
   dia_semana smallint [note: '1 = lunes … 7 = domingo. Para semanal']
   dia_mes smallint [note: '1 a 31. Para quincenal (primer día) y mensual']
-  es_sueldo boolean [not null, default: false, note: 'Sueldo fijo del dueño (egreso, categoría retiro personal)']
+  es_sueldo boolean [not null, default: false, note: 'Sueldo fijo del dueño (egreso, categoría retiro_personal). Puede ser semanal, quincenal o mensual']
   fecha_inicio date [not null]
   fecha_fin date [note: 'Null si sigue vigente. Cambiar el sueldo = cerrar este y abrir otro']
   activo boolean [not null, default: true]
 
   Note: '''
   Única fuente del sueldo fijo y de los ingresos/egresos recurrentes. El forecast los proyecta.
+  El sueldo semanal/diario se compara por ocurrencias; el mensual/quincenal se prorratea por día al evaluar retiro_excesivo (consultas.sueldo_esperado).
   Índice único parcial: un solo sueldo activo por empresa → UNIQUE (empresa_id) WHERE es_sueldo AND activo.
   '''
 }
@@ -409,9 +427,9 @@ Table reglas_meta {
   meta_id varchar(20) [pk]
   empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
   plantilla plantilla_meta [not null]
-  programado_id varchar(20) [ref: > movimientos_programados.programado_id, note: 'Para sueldo_fijo: el sueldo que se compromete a respetar']
+  programado_id varchar(20) [ref: > movimientos_programados.programado_id, note: 'Para sueldo_fijo: el movimiento programado (es_sueldo = true) que se compromete a respetar']
   tipo_regla tipo_regla
-  valor decimal(12,4) [note: '0.10 = 10% de cada venta, o monto fijo']
+  valor decimal(12,4) [note: '0.10 = 10% de cada venta, o monto fijo (sueldo_fijo: tipo_regla = monto_fijo y valor = monto del sueldo)']
   destino varchar(30) [note: 'fondo_pedidos, fondo_impuestos, colchon']
   objetivo decimal(12,2) [note: 'Monto o días meta. Null si no aplica']
   acumulado decimal(12,2) [not null, default: 0, note: 'Apartado virtual: no sale de la caja']
@@ -439,25 +457,25 @@ Table forecast_ajustes {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Table alertas {
-  alerta_id varchar(20) [pk]
+  alerta_id varchar(20) [pk, note: 'ALR-0007']
   empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
   tipo tipo_alerta [not null]
-  prioridad smallint [not null, note: '1 (faltante de caja) a 8 (resumen semanal)']
+  prioridad smallint [not null, note: '1 (faltante de caja) a 8 (resumen semanal). CHECK entre 1 y 8']
   fecha_evento date [not null, note: 'Cuándo ocurriría el problema']
   monto decimal(12,2)
   probabilidad decimal(4,3)
   nivel_riesgo nivel_riesgo
-  causas json [note: '[{"causa": "retiro_mayor_al_usual", "impacto": 700}]']
-  accion_sugerida varchar(50) [note: 'ajustar_pedido, recordar_cliente, ver_por_que']
-  entidad_tipo varchar(30) [note: 'cuaderno_fiado, deudas, impuestos, transacciones, reglas_meta']
-  entidad_id varchar(20) [note: 'Registro que causa la alerta (lo usa el botón de acción)']
+  causas json [note: 'Lista de {descripcion, monto}: [{"descripcion": "Sacaste más de la caja de lo usual", "monto": 700}]. pedido_excesivo trae 2 (lo que pediste y lo que sueles vender); retiro_excesivo trae 2 (lo que sacaste y la referencia); faltante_caja trae 1 o más: nadie debe asumir un índice']
+  accion_sugerida varchar(50) [note: 'Valores del backend: abrir_simulador, ver_retiros, ver_cuentas, recordar_cliente…']
+  entidad_tipo varchar(30) [note: 'Tabla en plural: cuaderno_fiado, deudas, impuestos, transacciones, reglas_meta; o `mes` para alertas agregadas por periodo (retiro_excesivo, con entidad_id = AAAA-MM)']
+  entidad_id varchar(20) [note: 'Registro que causa la alerta (lo usa el botón de acción) o el mes AAAA-MM']
   canal canal_notificacion [not null]
   estado estado_alerta [not null, default: 'activa']
   accion_tomada varchar(50) [note: 'Null si no tomó ninguna. Base de la métrica % alertas con acción']
   fecha_accion timestamptz
   creada_en timestamptz [not null]
   enviada_en timestamptz [note: 'Null si quedó retenida por max_por_dia u horario silencioso']
-  modelo_version varchar(30)
+  modelo_version varchar(30) [note: 'lgbm_cuantiles-1.0 (forecast) o reglas-alertas-0.1.0 (reglas determinísticas)']
 }
 
 Table conversaciones {
@@ -468,7 +486,7 @@ Table conversaciones {
   canal canal_notificacion [not null]
   texto text
   media_url varchar(255)
-  intencion varchar(50)
+  intencion varchar(50) [note: 'Valores de IntencionAsistente: estado_caja, explicar_alerta, simular, concepto, crear_meta, prestamo, fuera_de_alcance, otro']
   herramientas_llamadas json [note: 'Function calls del LLM y sus resultados']
   cifras_verificadas boolean [note: 'true si todas las cifras de la respuesta existen en los datos']
   fallback_usado boolean [not null, default: false]
@@ -500,7 +518,7 @@ Table saldo_diario {
   empresa_id varchar(20) [ref: > empresas.empresa_id]
   fecha date
   saldo_cierre decimal(12,2) [not null, note: 'Materializado desde transacciones; se regenera si llega un registro con fecha pasada']
-  deficit_14d boolean [note: 'ETIQUETA: target de la alerta de faltante. Nunca es feature']
+  deficit_14d boolean [note: 'ETIQUETA: true si en los 14 días siguientes el saldo cae bajo el mínimo operativo. Nunca es feature. NULL cuando la ventana de 14 días pasa de la fecha de corte (no se conoce)']
 
   indexes {
     (empresa_id, fecha) [pk]
@@ -512,9 +530,9 @@ Table eventos {
   empresa_id varchar(20) [not null, ref: > empresas.empresa_id]
   tipo_evento tipo_evento [not null]
   fecha_inicio date [not null]
-  fecha_fin date
+  fecha_fin date [note: 'Null = evento en curso']
   descripcion varchar(255)
-  Note: 'ETIQUETA (toda la tabla): shocks insertados por el generador. Ground truth, nunca feature.'
+  Note: 'ETIQUETA (toda la tabla): shocks insertados por el generador. Ground truth, nunca feature. fecha_fin NULL = evento en curso a la fecha de corte.'
 }
 
 Table predicciones_saldo {
@@ -525,7 +543,7 @@ Table predicciones_saldo {
   p10 decimal(12,2) [not null]
   p50 decimal(12,2) [not null]
   p90 decimal(12,2) [not null]
-  modelo_version varchar(30) [not null, note: 'naive_estacional-1.0, lgbm_cuantiles-0.3…']
+  modelo_version varchar(30) [not null, note: 'naive_estacional-1.0, lgbm_cuantiles-1.0 (metadata.json del artefacto)']
   creado_en timestamptz [not null]
 
   indexes {
@@ -539,8 +557,8 @@ Table predicciones_fiado {
   fecha_corte date [not null]
   prob_atraso decimal(4,3) [not null]
   prob_pago_14d decimal(4,3) [note: 'Pondera el cobro esperado en el forecast']
-  nivel_riesgo nivel_riesgo [not null]
-  modelo_version varchar(30) [not null]
+  nivel_riesgo nivel_riesgo [not null, note: 'prob_atraso >= 0.6 alto, >= 0.3 medio, si no bajo (backend/app/services/finanzas/riesgo.py)']
+  modelo_version varchar(30) [not null, note: 'baseline_historial-1.0 (tasa del cliente suavizada) o el clasificador cuando exista']
   creado_en timestamptz [not null]
 
   indexes {
@@ -552,8 +570,8 @@ Table score_salud {
   empresa_id varchar(20) [ref: > empresas.empresa_id]
   mes char(7) [note: 'AAAA-MM']
   score smallint [not null, note: '0 a 100']
-  subindicadores json [not null, note: '{"constancia_registro": 80, "separacion_personal": 55, …}']
-  version_formula varchar(30) [not null]
+  subindicadores json [not null, note: '{"constancia_registro": 80, "separacion_personal": 55, "impuestos_al_dia": 100}: los 3 subindicadores del backend']
+  version_formula varchar(30) [not null, note: 'score-v1: round(0.35·constancia_registro + 0.40·separacion_personal + 0.25·impuestos_al_dia) (services/salud/score.py)']
 
   indexes {
     (empresa_id, mes) [pk]
@@ -608,8 +626,23 @@ TableGroup etiquetas_y_resultados {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// TÉCNICA (observabilidad; no es parte del modelo de negocio, igual que idempotency_keys)
+// TÉCNICA (no son parte del modelo de negocio): llm_llamadas e idempotency_keys
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Respuesta guardada por la cabecera Idempotency-Key (contrato §0): repetir la misma petición devuelve la misma respuesta.
+Table idempotency_keys {
+  clave varchar(100) [not null]
+  endpoint varchar(120) [not null]
+  empresa_id varchar(20) [note: 'Sin FK: es solo trazabilidad']
+  payload_hash varchar(64) [not null, note: 'sha256 del cuerpo de la petición']
+  status_code int [not null]
+  respuesta json [not null]
+  creado_en timestamptz [not null]
+
+  indexes {
+    (clave, endpoint) [pk]
+  }
+}
 
 Table llm_llamadas {
   llamada_id varchar(20) [pk, note: 'LLM-000001']
@@ -642,15 +675,22 @@ Table llm_llamadas {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// VISTAS (campos calculados; no se guardan en tablas, ver convención en el header del archivo)
+// CAMPOS CALCULADOS EN EL BACKEND (no hay vistas en la BD; esto es solo la definición de referencia)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// DBML no soporta CREATE VIEW: se documenta aquí como referencia junto a v_fiados, v_deudas,
-// v_impuestos (ya mencionadas en las notas de sus tablas).
+// v_saldo_caja, v_fiados, v_deudas, v_impuestos, v_resumen_mes y v_disponible_gastar se calculan en Python
+// (backend/app/services/finanzas/), a la fecha de corte que corresponda: saldo = saldo_inicial + Σ movimientos con
+// afecta_caja; por_vencer = vence en <= 3 días; un fiado sin fecha_compromiso vence a los 14 días.
+// data/schema.sql ya no define ninguna vista.
+//
+// Las dos "vistas" de abajo (v_empresas_flags y v_empresas_credit_features) son las FEATURES de los modelos de ML:
+// TAMBIÉN se calculan en el backend (Python), no en SQL. El SQL de abajo es documentación de la regla acordada con el
+// equipo de modelos; la implementación vive en el código de los modelos/backend.
 //
 // v_empresas_flags: usa_fiado / usa_billetera_digital para el modelo de ML de forecast
 // (modelo/artifacts/prediccion_ingreso_egreso/). Regla acordada con el equipo de ML: true si
 // hay >=1 registro en los últimos 90 días.
 //
+// (definición de referencia, no se crea en la BD)
 // CREATE VIEW v_empresas_flags AS
 // SELECT
 //   e.empresa_id,
@@ -671,6 +711,7 @@ Table llm_llamadas {
 // es texto libre en la BD y todavía no tiene regla de mapeo acordada (el notebook de credit
 // scoring aún simula zona con categorías propias, pendiente de alinear).
 //
+// (definición de referencia, no se crea en la BD)
 // CREATE VIEW v_empresas_credit_features AS
 // SELECT
 //   e.empresa_id,

@@ -68,13 +68,13 @@ def test_transaccion_valida_se_guarda_con_decimal(db):
                      id="credito_que_afecta_caja"),
         pytest.param({"afecta_caja": False}, id="efectivo_que_no_afecta_caja"),
         pytest.param({"metodo_pago": MetodoPago.credito, "afecta_caja": False}, id="venta_fiada_sin_fiado"),
-        pytest.param({"tipo": TipoMovimiento.compra, "categoria_id": "CAT-10", "metodo_pago": MetodoPago.credito,
+        pytest.param({"tipo": TipoMovimiento.compra, "categoria_id": "CAT-07", "metodo_pago": MetodoPago.credito,
                       "afecta_caja": False}, id="compra_credito_sin_deuda"),
-        pytest.param({"tipo": TipoMovimiento.cobro_fiado, "categoria_id": "CAT-07"}, id="cobro_sin_fiado"),
-        pytest.param({"tipo": TipoMovimiento.pago_proveedor, "categoria_id": "CAT-10"}, id="pago_proveedor_sin_deuda"),
-        pytest.param({"tipo": TipoMovimiento.prestamo_recibido, "categoria_id": "CAT-08"}, id="prestamo_sin_deuda"),
-        pytest.param({"tipo": TipoMovimiento.pago_impuesto, "categoria_id": "CAT-14"}, id="impuesto_sin_impuesto"),
-        pytest.param({"tipo": TipoMovimiento.cobro_fiado, "categoria_id": "CAT-07", "fiado_id": "FIA-0045",
+        pytest.param({"tipo": TipoMovimiento.cobro_fiado, "categoria_id": "CAT-14"}, id="cobro_sin_fiado"),
+        pytest.param({"tipo": TipoMovimiento.pago_proveedor, "categoria_id": "CAT-07"}, id="pago_proveedor_sin_deuda"),
+        pytest.param({"tipo": TipoMovimiento.prestamo_recibido, "categoria_id": "CAT-15"}, id="prestamo_sin_deuda"),
+        pytest.param({"tipo": TipoMovimiento.pago_impuesto, "categoria_id": "CAT-11"}, id="impuesto_sin_impuesto"),
+        pytest.param({"tipo": TipoMovimiento.cobro_fiado, "categoria_id": "CAT-14", "fiado_id": "FIA-0045",
                       "deuda_id": "PED-0012"}, id="dos_vinculos"),
         pytest.param({"moneda": "USD"}, id="moneda_no_pen"),
         pytest.param({"confianza_extraccion": Decimal("1.500")}, id="confianza_mayor_a_1"),
@@ -89,10 +89,10 @@ def test_check_de_transacciones_rechaza(db, cambios):
 def test_casos_validos_del_diccionario(db):
     db.add_all([
         _tx(transaccion_id="MOV-900002", metodo_pago=MetodoPago.credito, afecta_caja=False, fiado_id="FIA-0045"),
-        _tx(transaccion_id="MOV-900003", tipo=TipoMovimiento.cobro_fiado, categoria_id="CAT-07", fiado_id="FIA-0045"),
-        _tx(transaccion_id="MOV-900004", tipo=TipoMovimiento.pago_proveedor, categoria_id="CAT-10",
+        _tx(transaccion_id="MOV-900003", tipo=TipoMovimiento.cobro_fiado, categoria_id="CAT-14", fiado_id="FIA-0045"),
+        _tx(transaccion_id="MOV-900004", tipo=TipoMovimiento.pago_proveedor, categoria_id="CAT-07",
             deuda_id="PED-0012"),
-        _tx(transaccion_id="MOV-900005", tipo=TipoMovimiento.retiro_personal, categoria_id="CAT-15",
+        _tx(transaccion_id="MOV-900005", tipo=TipoMovimiento.retiro_personal, categoria_id="CAT-13",
             programado_id="PRG-0002"),
     ])  # fmt: skip
     db.flush()
@@ -129,7 +129,7 @@ def test_deuda_proveedor_segun_tipo(db):
 
 
 def _sueldo(pid: str, activo: bool = True, es_sueldo: bool = True) -> m.MovimientoProgramado:
-    return m.MovimientoProgramado(programado_id=pid, empresa_id="EMP-0001", categoria_id="CAT-15",
+    return m.MovimientoProgramado(programado_id=pid, empresa_id="EMP-0001", categoria_id="CAT-13",
                                   tipo=TipoFlujo.egreso, descripcion="Sueldo", monto=Decimal("500"),
                                   frecuencia=Frecuencia.semanal, dia_semana=6, es_sueldo=es_sueldo,
                                   fecha_inicio=date(2026, 11, 14), activo=activo)  # fmt: skip

@@ -15,6 +15,7 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.categorias import CATEGORIA_POR_TIPO, buscar_categoria, categoria_por_tipo
 from app.core.errors import Conflicto, NoEncontrado, Validacion
 from app.core.ids import nuevo_id
 from app.core.reloj import a_lima, ahora
@@ -30,12 +31,6 @@ _ANULADO = "anulado_"  # mismo prefijo que finanzas.consultas.PREFIJO_ANULADO (i
 T = TipoMovimiento
 CERO = Decimal("0")
 
-CATEGORIA_POR_TIPO = {
-    T.venta: "otros ingresos", T.cobro_fiado: "cobro de fiados", T.prestamo_recibido: "prestamos recibidos",
-    T.otro_ingreso: "otros ingresos", T.compra: "mercaderia", T.gasto_negocio: "otros gastos",
-    T.retiro_personal: "retiro personal", T.pago_proveedor: "mercaderia", T.pago_prestamo: "pago de prestamos",
-    T.pago_impuesto: "impuestos",
-}  # fmt: skip
 DIAS_POR_FRECUENCIA = {Frecuencia.diaria: 1, Frecuencia.semanal: 7, Frecuencia.quincenal: 15, Frecuencia.mensual: 30}
 PLAZO_PROVEEDOR_NUEVO = 15
 
@@ -71,15 +66,15 @@ class _Registro:
             prod = self.db.get(m.Producto, self.mov.items[0].producto_id) if self.mov.items[0].producto_id else None
             if prod:
                 return prod.categoria_id
-        nombre = nombre or CATEGORIA_POR_TIPO[self.tipo]
-        clave = nombre.replace("_", " ")
-        cat = self.db.scalars(select(m.Categoria).where(
-            (m.Categoria.categoria_id == nombre) | (func.lower(m.Categoria.nombre) == clave.lower()))).first()  # fmt: skip
-        if cat is None:
-            cat = self.db.scalars(select(m.Categoria).where(m.Categoria.nombre == CATEGORIA_POR_TIPO[self.tipo])).first()
-        if cat is None:
-            raise Validacion(f"No existe la categoría '{nombre}'.", [{"campo": "categoria", "problema": "no existe"}])
-        return cat.categoria_id
+        if nombre and (cat := buscar_categoria(self.db, nombre)) is not None:
+            return cat.categoria_id
+        # Categoría pedida que no existe: se cae a la del tipo; si tampoco existe, 400 claro (nunca 500).
+        if nombre:
+            por_tipo = buscar_categoria(self.db, CATEGORIA_POR_TIPO[self.tipo])
+            if por_tipo is None:
+                raise Validacion(f"No existe la categoría '{nombre}'.", [{"campo": "categoria", "problema": "no existe"}])
+            return por_tipo.categoria_id
+        return categoria_por_tipo(self.db, self.tipo).categoria_id
 
     # ── clientes y proveedores ──
     def cliente(self) -> m.Cliente:

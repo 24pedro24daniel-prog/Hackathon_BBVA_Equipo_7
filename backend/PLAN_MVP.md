@@ -30,16 +30,17 @@ Por qué así no se chocan:
 | ORM | SQLAlchemy 2.0 (estilo `Mapped[]`) + `psycopg` 3. Dinero siempre `Numeric(12,2)` → `Decimal`, nunca `float`. |
 | Migraciones | Sin Alembic en el hackathon: `python -m app.db.reset` borra, crea (`create_all`) y siembra. Evita conflictos de migraciones entre los dos. |
 | Vistas derivadas | Funciones Python con `fecha_corte` (no vistas SQL), en `services/finanzas/consultas.py`. Más fácil de testear y de reutilizar en el forecast. |
-| Config | `pydantic-settings` (`core/config.py`) lee 3 archivos de `backend/`: **`parametros.env`** (no secretos, versionado: host/puerto/BD, `FECHA_DEMO`, `TZ=America/Lima`, `LLM_*`, `WHISPER_*`, `UMBRAL_CONFIANZA`), **`.env`** (solo credenciales, NO versionado: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `API_KEY`, `OPENROUTER_API_KEY`) y **`example.env`** (plantilla versionada de `.env`). Las variables de entorno reales tienen prioridad. `DATABASE_URL` se compone de las partes (override opcional con `DATABASE_URL`). |
+| Config | `pydantic-settings` (`core/config.py`) lee 3 archivos de `backend/`: **`parametros.env`** (no secretos, versionado: host/puerto/BD, `FECHA_DEMO`, `TZ=America/Lima`, `LLM_*`, `WHISPER_*`, `UMBRAL_CONFIANZA`), **`.env`** (solo credenciales, NO versionado: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `API_KEY`, `OPENROUTER_API_KEY`, `R2_*`, `DATABASE_URL_PRODUCCION`, `AUTH_SECRET`, `AUTH_CREDENCIALES`) y **`example.env`** (plantilla versionada de `.env`). Las variables de entorno reales tienen prioridad. `DATABASE_URL` se compone de las partes (override opcional con `DATABASE_URL`). |
 | Media (audio/foto) | Subida directa del front a **Cloudflare R2** con URL PUT prefirmada (`POST /media/subidas`); `media_url = "r2://<clave>"`, clave `empresas/{empresa_id}/{audios o fotos}/AAAA/MM/uuid.ext`. Lectura con `boto3` solo de claves de la empresa (anti-SSRF), tipo/tamaño verificados con HEAD y temporal borrado. Config: `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_PRESIGN_TTL_S`, `MEDIA_MAX_*_BYTES`, `MEDIA_TIPOS_*` en `parametros.env`; `R2_ACCESS_KEY_ID` y `R2_SECRET_ACCESS_KEY` en `.env`. `file://`/`demo://` se mantienen para demo y tests. |
 | LLM y voz | LLM por **OpenRouter** (API compatible con OpenAI, `/chat/completions` con `tools`), cliente `httpx` en `services/ingesta/llm_client.py`. Whisper con **faster-whisper local** (`small`, CPU, `int8`), carga perezosa. |
 | Docker | `backend/Dockerfile` (`python:3.12.15-slim`, usuario no root) + `docker-compose.yml` (`db` + `backend`, `env_file: [parametros.env, .env]`, volumen de caché de Whisper). |
-| Puerto | `uvicorn app.main:app --port 8000` (el front ya proxea `/api` a `localhost:8000`). Prefijo `/api/v1`. |
+| Puerto | `uvicorn app.main:app --port 8000 --no-proxy-headers` (el front ya proxea `/api` a `localhost:8000`). Prefijo `/api/v1`. |
+| Autenticación | `POST /auth/login` (3 usuarios de demo, hash scrypt en `AUTH_CREDENCIALES`) → token HS256 de 8 h con `AUTH_SECRET`; las rutas protegidas aceptan `Authorization: Bearer` (solo su empresa: `core/alcance.py` revisa path, query y body → `403 EMPRESA_NO_PERMITIDA`) o `X-API-Key` (bot/admin). Límites en memoria: logins fallidos por IP y usos de IA por sesión/usuario (`429` + `Retry-After`). CORS `localhost:5173`, `cclara.site`, `www.cclara.site`, sin cookies. Ver `contract.md` §12. |
 | Fecha "hoy" | Variable `FECHA_DEMO=2026-11-14` en `.env`: todos los cálculos usan `core/reloj.py::hoy()`, no `date.today()`. Así la demo de Pedro es reproducible. |
 | Ramas | `back/base` (Fase 0) → luego `back/ingesta` (A) y `back/motores` (B). Merge a `main` en cada checkpoint (§6). |
 | Tests | `pytest` + BD de prueba. Archivos `tests/test_a_*.py` (A) y `tests/test_b_*.py` (B). |
 
-Dependencias (`requirements.txt`, todas con versión exacta `==`): `fastapi`, `uvicorn[standard]`, `python-multipart`, `sqlalchemy` 2.x, `psycopg[binary]` 3.x, `pydantic` 2.x, `pydantic-settings`, `tzdata`, `httpx` (OpenRouter), `faster-whisper`, `boto3` (R2), `pytest`. Opcional para B: `lightgbm`, `pandas`, `joblib`.
+Dependencias (`requirements.txt`, todas con versión exacta `==`): `fastapi`, `uvicorn[standard]`, `python-multipart`, `sqlalchemy` 2.x, `psycopg[binary]` 3.x, `pydantic` 2.x, `pydantic-settings`, `tzdata`, `httpx` (OpenRouter), `faster-whisper`, `boto3` (R2), `pytest`, y para los modelos de ML del equipo de datos `lightgbm`, `scikit-learn`, `pandas`, `numpy`, `scipy`, `joblib` (+ `libgomp1` en la imagen).
 
 ---
 
@@ -56,7 +57,10 @@ backend/
 │   ├── main.py                       F0 (B) — registra TODOS los routers desde el inicio
 │   ├── core/                         F0 (B) — compartido, se congela tras F0
 │   │   ├── config.py                 settings desde .env
-│   │   ├── auth.py                   dependencia X-API-Key
+│   │   ├── auth.py                   Bearer (sesión de una empresa) o X-API-Key; límite de uso de IA
+│   │   ├── alcance.py                alcance por empresa del Bearer (path, query y body)
+│   │   ├── tokens.py, claves_demo.py token HS256 y hash scrypt de las contraseñas de demo (CLI para regenerarlo)
+│   │   ├── limites.py                ventanas deslizantes en memoria e IP real del cliente
 │   │   ├── errors.py                 handler → formato { "error": {codigo, mensaje, detalles, request_id} }
 │   │   ├── ids.py                    nuevo_id(db, Modelo, "MOV", ancho=6) → "MOV-000123"
 │   │   ├── meta.py                   construye el bloque `meta` (request_id, latencia, versión, fallback)
@@ -119,9 +123,10 @@ backend/
 │       │   ├── __init__.py           ★ INTERFAZ B: re-exporta las funciones públicas (§4.2)
 │       │   ├── consultas.py          v_saldo_caja, v_fiados, v_deudas, v_impuestos (a fecha de corte)
 │       │   ├── resumen.py            F2
-│       │   ├── proyeccion.py         motor de proyección (baseline naive estacional + pagos con fecha + ajustes)
+│       │   ├── proyeccion.py         motor de proyección (flujo ordinario LightGBM o baseline naive estacional + pagos con fecha + ajustes)
 │       │   ├── forecast.py           GET /forecast y ajustes (usa proyeccion.py)
-│       │   ├── modelo_ml.py          diagnóstico de los artefactos de ML (metadata.json) → integrable o fallback
+│       │   ├── modelo_ml.py          carga perezosa/cacheada de los artefactos de ML, diagnóstico y `meta` del motor vigente
+│       │   ├── forecast_ml.py        features desde la BD + predicción recursiva del LightGBM + banda
 │       │   ├── riesgo.py             riesgo de atraso de fiados (baseline) + recordatorio
 │       │   ├── disponible.py         "disponible para gastar"
 │       │   ├── chequeo.py            chequeo antes del pedido (F4)
@@ -253,7 +258,7 @@ Los mocks de la Fase 0 se eliminaron (`app/mocks/` ya no existe): todo B calcula
 |---|---|---|
 | B1 | ✅ real | `consultas.py`: filtra `creado_en`/`fecha_hora` < fin del día de corte (Lima), excluye anuladas, `afecta_caja`; fiados/deudas/impuestos con estados calculados; cronograma de cuotas |
 | B2 | ✅ real | variación vs mes anterior al mismo día; ganancia como rango con el margen de los productos con costo |
-| B3 | ✅ baseline | naive estacional (4 semanas) + pagos con fecha + ajustes; banda ±z·σ·√h; día crítico = 1.er día con p50 < 0. **LightGBM no integrable** (features `rubro`, `zona`, `usa_fiado`, `usa_billetera_digital` sin equivalente en la BD): `meta.fallback_usado = true` con motivo. Fiados ponderados fuera del p50 (en p90, disponible y "Lo que viene") |
+| B3 | ✅ LightGBM + baseline | flujo ordinario diario con el LightGBM por cuantiles (`FORECAST_MOTOR=lightgbm`, recursivo) + pagos con fecha + ajustes; banda desde los cuantiles del modelo (con piso en su error de 1 paso); día crítico = 1.er día con p50 < 0. Si el modelo no carga, hay < 30 días de historia o `FORECAST_MOTOR=baseline`: naive estacional (4 semanas, banda ±z·σ·√h) con `meta.fallback_usado = true` y `fallback_motivo`. Eval: `tests/eval_forecast.py` compara ambos motores. Fiados ponderados fuera del p50 (en p90, disponible y "Lo que viene"). |
 | B4 | ✅ real | `disponible.py` con `componentes` y `mensaje` |
 | B5 | ✅ real | `forecast_ajustes`: reemplaza la partida que coincide o suma un egreso extra |
 | B6 | ✅ baseline | tasa histórica de atraso del cliente (suavizada); sin clasificador de ML entregado → pendiente de data |
@@ -262,7 +267,7 @@ Los mocks de la Fase 0 se eliminaron (`app/mocks/` ya no existe): todo B calcula
 | B9 | ✅ real | 6 acciones; ventana hasta el día crítico (se alarga si un pago movido cae en el horizonte) |
 | B10 | ✅ real | prioridades 1–4, causas cuantificadas, 2/día, silencio, sin duplicar, acción; `GET /alertas` evalúa antes de listar |
 | B11 | ✅ real | `PUT /preferencias-alertas` (tabla `preferencias_alertas`) |
-| B12 | ✅ real | `forecast`/`riesgo_atraso` = `baseline` con el motivo del ML (lee solo `metadata.json`) |
+| B12 | ✅ real | `forecast` y `credit_scoring` con el estado real del modelo cargado (`ok` / `baseline` / `no_disponible` + motivo); `riesgo_atraso` = `baseline` |
 | B13 | 🟡 simplificado | 6 agrupaciones; comparación con pares calculada con empresas del mismo rubro en la BD → `null` en la demo (solo hay 1 bodega): pendiente de data |
 | B14 | ✅ | `python -m tests.eval_forecast` (MAE/MAPE/cobertura y precision/recall vs `deficit_14d`) |
 
@@ -310,45 +315,54 @@ Antes de cada merge: `pytest` en verde y `python -m app.db.reset` funcionando de
 - `pago_tardio`, `deficit_14d`, `eventos` y `clientes.perfil_pago` **nunca** se usan como feature ni en reglas.
 - Toda respuesta con salida de modelo lleva `meta`; toda recomendación lleva `fundamento`, `limites` y `confianza`.
 - El LLM **no calcula cifras**: solo llama funciones de B.
-- Secretos solo en `.env`. Datos solo sintéticos.
+- Secretos solo en `.env` (y el panel de Render). Contraseñas nunca en texto plano: solo su hash. Datos solo sintéticos.
+- Toda ruta nueva se registra con `verificar_acceso` (lo hace `main.py`) y todo campo `*_id` nuevo de un request necesita su
+  regla en `core/alcance.py` (`tests/test_e_auth_alcance.py` lo exige).
 
 ---
 
 ## 9. Lo que falta (al 14/11/2026) y por qué
 
-Estado: A1–A13 y B1–B14 implementados; 538 tests en verde. Lo que sigue **no** está hecho o está simplificado.
+Estado: A1–A13 y B1–B14 implementados; ~850 tests en verde (incluida la suite sobre `data/csv`). Lo que sigue **no** está hecho o está simplificado. Marcado ✅ = resuelto en la integración con el modelo de datos (rama `feat/integracion-modelo-datos`).
 
 ### 9.1 Depende del equipo de data
 
 | Pendiente | Por qué no está | Qué se necesita |
 |---|---|---|
-| Forecast con LightGBM (B3) | Los 6 `.joblib` de `modelo/artifacts/prediccion_ingreso_egreso/` cargan. El equipo de ML ya resolvió `rubro` (taxonomía real: bodega/restaurante/taller/distribuidora) y `zona` (reemplazada por `n_trabajadores`, que existe directo en `empresas`). Quedan `usa_fiado` y `usa_billetera_digital` sin definición acordada (propuesta en `metadata.json`: ">=1 registro en los últimos 90 días"), y el chequeo automático de `modelo_ml.py` (`_CONSTRUIBLE`) todavía no reconoce `rubro`/`n_trabajadores`/`antiguedad_meses` como construibles aunque sí lo sean (solo matchea lags/medias/calendario). Hoy se usa el baseline con `meta.fallback_usado = true`. | Confirmar la regla de `usa_fiado`/`usa_billetera_digital` con el equipo de ML, y actualizar `_CONSTRUIBLE`/`MOTIVOS_FEATURE` en `modelo_ml.py` para reflejar que `rubro`, `n_trabajadores` y `antiguedad_meses` sí son construibles vía join/columna directa. Al integrarlo hay que agregar `lightgbm==4.7.0`, `scikit-learn==1.9.1` y `libgomp1` en la imagen. |
+| Forecast con LightGBM (B3) ✅ | Integrado: los 6 `.joblib` cargan (carga perezosa y cacheada, validada contra `metadata.json`); `FORECAST_MOTOR=lightgbm` por defecto, con baseline y `meta.fallback_motivo` si no carga, hay < 30 días de historia o falla. Features construidos desde la BD (rubro, `n_trabajadores`, antigüedad, `usa_fiado`/`usa_billetera_digital` = ≥ 1 registro en 90 días, lags/medias/std/calendario como el notebook) sobre el flujo **ordinario**; recursivo; eventos con fecha encima (sin doble conteo). | **Skew conocido** (datos de entrenamiento sintéticos y de otra escala; ver `README.md` §Modelos de ML): en Pedro el modelo subestima su egreso ordinario ≈ 35 % y el MAE del saldo es peor que el baseline; en las 29 empresas con historia queda a la par (933 vs 948 a 7 días). La historia de la demo en `data/csv` se calibra contra el motor final. `usa_billetera_digital` mira `billeteras_digitales`, que el backend no escribe: las ventas con billetera registradas por la app no la activan. |
 | Riesgo de atraso de fiados (B6) | No hay artefacto de clasificador. | Entregar el modelo o aceptar el baseline (tasa histórica del cliente). |
-| Score de salud con credit scoring (A12) | `modelo/artifacts/credit_scoring/` existe, pero no se revisó si sus 17 features salen de la BD; A12 usa 3 subindicadores por reglas. | Confirmar que los features se pueden construir sin supuestos (mismo criterio que el forecast). |
-| Comparación con pares (B13) | El cálculo existe, pero la BD solo tiene a Pedro → `comparacion_pares = null` con motivo. | Cargar las 28 bodegas de `data/csv/` en la BD (cargador desde CSV). |
+| Score de salud con credit scoring (A12) ✅ | Integrado como bloque **adicional** `score_crediticio` en `GET /salud` (no reemplaza el score de 3 hábitos): regresión logística + scaler, 16 features calculados en Python desde el ORM con las definiciones del notebook (las vistas del DBML son comentarios con errores) y propuesta `riesgo_pago_ml` del equipo de datos como nombre de referencia. | Estimación de un modelo entrenado con datos sintéticos, no una evaluación crediticia. Features sin datos se imputan con la media de entrenamiento; `n_alertas_quiebre_stock` es un proxy calculado desde las ventas (el backend no genera `caida_ventas`). `motor_recomendaciones` **no se integra**: sus ideas útiles ya son las reglas `gasto_inusual`, `fiado_vencido` y `meta_lograda`. |
+| Comparación con pares (B13) ✅ | El cálculo existe; con solo Pedro daba `comparacion_pares = null`. | Resuelto en local: `python -m app.db.cargar_csv` (o `reset --fuente csv`) carga las 30 empresas de `data/csv/`. |
 | Recall de `faltante_caja` (B14) | La historia sintética no tiene ningún día con `deficit_14d` positivo: no se puede medir. | Un dataset con episodios de déficit. |
 
 ### 9.2 Dev A — ingesta y conversación
 
 | Pendiente | Por qué |
 |---|---|
-| Registrar de nuevo "pedí 2 400 a Andina para el 30" crea un segundo pedido (PED-0013) y la alerta sale con faltante 3 050 en vez de 650 | PED-0012 ya está en el seed y `confirmar` no detecta pedidos iguales ya registrados. La demo de 6 pasos no lo registra, pero si se dice en vivo, el número sale mal. Arreglo propuesto: avisar "ya está registrado" si coincide proveedor, monto y vencimiento con una deuda pendiente (como los duplicados del cuaderno). |
-| Pregunta por voz ("¿cómo va mi caja?" en audio) no llega al asistente | El webhook manda todo audio a registro; solo el texto cae al asistente si no se puede interpretar. |
-| "Dame un reporte" responde la ayuda genérica | La palabra "reporte" no está en los regex de intención (A10 clasifica por reglas). |
+| Registrar de nuevo "pedí 2 400 a Andina para el 30" crea un segundo pedido (PED-0013) y la alerta sale con faltante 3 050 en vez de 650 (sigue pendiente: varios tests documentan ese comportamiento; con `data/csv` la demo no trae el pedido repetido) | PED-0012 ya está en el seed y `confirmar` no detecta pedidos iguales ya registrados. La demo de 6 pasos no lo registra, pero si se dice en vivo, el número sale mal. Arreglo propuesto: avisar "ya está registrado" si coincide proveedor, monto y vencimiento con una deuda pendiente (como los duplicados del cuaderno). |
+| ✅ Pregunta por voz ("¿cómo va mi caja?" en audio) no llegaba al asistente | Resuelto: el webhook transcribe primero y usa el mismo enrutador que el chat (pregunta → asistente, movimiento → registro). |
+| ✅ "Dame un reporte" respondía la ayuda genérica | Resuelto: "reporte", "cómo me fue", "cómo van mis ventas" → `estado_caja`. Los chips "Sí/No, salió de la caja" ya no quedan en bucle. |
 | Asistente sin function calling del LLM (A10, simplificado) | Decisión del hackathon: la intención se clasifica por regex y cada una tiene un plan fijo de funciones de B; el LLM solo redacta y el verificador descarta cifras inventadas. |
 | Foto que no es del cuaderno (boleta, recibo) | Toda imagen se trata como cuaderno de fiados; no hay ruta para comprobantes. |
 | Whisper real sin probar (A4) | El código está listo, pero no se descargó el modelo `small` (~480 MB) ni se probó con audio real. |
 | VLM probado solo con una imagen sintética (A11) | No hay fotos reales de cuaderno; las fotos no se redimensionan (hasta 8 MB, más latencia). |
 | Ruta LLM del extractor sin medir (A13) | `eval_extractor.py --llm` hace 1 llamada por frase; solo se midió el fallback por reglas (84 % de frases exactas en holdout). |
-| Anular un movimiento | `anular_movimiento()` existe, pero el contrato no tiene endpoint. |
+| Anular un movimiento | `anular_movimiento()` existe, pero el contrato no tiene endpoint (sin cambios). |
 | Trazas LLM perdidas en errores 500 | Si el request termina en 500 y hace rollback, su fila de `llm_llamadas` se pierde (los errores controlados sí quedan). |
+
+### 9.2.1 Resuelto en la integración con el modelo de datos
+
+- ✅ Categorías canónicas `snake_case` (16) con comparación tolerante y error 400 claro; `seed_demo.py` usa el mismo catálogo y rubros que `data/csv`.
+- ✅ Alertas: sin `IndexError` con 1 causa, `entidad_tipo` en plural (acepta singular), render de los 9 tipos, refresco de la alerta activa tras cada movimiento, sueldo mensual/quincenal prorrateado, y reglas nuevas `gasto_inusual`, `fiado_vencido` por cliente y `meta_lograda`.
+- ✅ `items[].cantidad` sale como número; `/health` lee las versiones de prompts de las constantes; mensajes de validación en español; `negocio.nombre` en `/resumen`; `pedido_id` en las acciones del asistente.
+- ✅ Cargador `python -m app.db.cargar_csv`, `reset --fuente seed|csv` y suite `tests/integracion_csv/` (BD `cajaclara_csv`); la historia de la demo sobre el CSV queda como `xfail` "pendiente de calibración".
 
 ### 9.3 Dev B — motores financieros
 
 | Pendiente | Por qué |
 |---|---|
 | Fiados fuera de la proyección p50 | Decisión para cuadrar la historia (−650 el 30/11); si entraran ponderados daría ≈ −485. Entran en p90, disponible y "Lo que viene". Revisar con el equipo. |
-| `GET /alertas` escribe en la tabla `alertas` | Evalúa las reglas antes de listar porque el seed no trae alertas; un GET con efecto lateral. |
+| ✅ `GET /alertas` escribía en la tabla `alertas` (y `GET /salud` en `score_salud`) | Resuelto: los GET calculan sin escribir (alertas pendientes con `persistida = false` e ID estable `ALR-PEND.…`); se guardan en `POST /alertas/evaluar`, al confirmar y al accionar; el score se guarda con `POST /salud/recalcular`. |
 | Simulador mide el mínimo solo hasta el día crítico | Si la 2.ª cuota cae dentro del horizonte (p. ej. 10/12), el resultado es −712: el baseline proyecta ≈ −250 por semana. |
 | Forecast sobreestima ≈ +200 a 7–14 días | Los pedidos que se hacen después del corte no se pueden prever con el baseline. |
 
@@ -361,6 +375,9 @@ Estado: A1–A13 y B1–B14 implementados; 538 tests en verde. Lo que sigue **no
 | Despliegue del backend en producción | No está definido dónde corre ni dónde se fija `APP_ENV=produccion`. |
 | R2 sin prueba de punta a punta | Las credenciales y el bucket ya están configurados, pero falta probar el PUT desde el navegador, la regla CORS del bucket (`PUT` desde el origen del front con header `Content-Type`) y la regla de vida para borrar audios. El tamaño máximo no va firmado en el PUT (se valida al pedir la URL y con HEAD antes de leer). |
 | Cambios de columnas en producción | Sin Alembic: `app.db.migrar` solo crea tablas nuevas; un cambio de columnas en una tabla existente se hace a mano. |
+| Login de las demos ✅ | `POST /auth/login` + `GET /auth/sesion`, Bearer con alcance por empresa en todas las rutas, límites de login por IP y de IA por sesión/usuario, CORS para `cclara.site`. Falta en Render: llenar `AUTH_SECRET` y `AUTH_CREDENCIALES` en el panel y agregar `https://cclara.site` y `https://www.cclara.site` a la regla CORS del bucket de R2. Los límites viven en memoria (se pierden al reiniciar; una sola instancia). |
+| IP real detrás de Render | Se toma de `CF-Connecting-IP` (`IP_CLIENTE_CABECERA` en `render.yaml`), según la documentación de la comunidad de Render (Cloudflare delante de todos los servicios). Verificar en los logs de Render que los "Login fallido desde <ip>" muestran IPs públicas distintas; si todas son iguales, el límite de login se comparte entre todos. |
+| Restaurar una demo ✅ | `python -m app.db.restaurar_demo --empresa EMP-0001` vuelve una empresa al estado de `data/csv` sin tocar las demás ni `llm_llamadas` (bloqueado en producción salvo `--produccion --confirmar <BD>`). |
 | Dependencias transitivas sin fijar | `requirements.txt` fija solo las directas; un lock completo saldría de `pip freeze` dentro del contenedor. |
 
 ### 9.5 Front (no es del backend, pero lo bloquea en la demo)

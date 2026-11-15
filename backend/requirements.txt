@@ -15,5 +15,14 @@ httpx==0.28.1
 faster-whisper==1.2.1
 # Media en Cloudflare R2 (S3-compatible)
 boto3==1.43.127
+# Modelos de ML del equipo de datos (modelo/artifacts): LightGBM por cuantiles (forecast) y regresión logística (score
+# crediticio). Las versiones son las que cargan los .joblib sin warnings; numpy/scipy/joblib se fijan porque el formato
+# del pickle depende de ellos. LightGBM necesita libgomp1 en la imagen (ver Dockerfile).
+numpy==2.5.4
+scipy==1.18.1
+joblib==1.6.0
+pandas==3.1.1
+scikit-learn==1.9.1
+lightgbm==4.7.0
 # Pruebas
 pytest==9.2.0

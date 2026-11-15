@@ -38,6 +38,7 @@ class Alerta(BaseModel):
     canales: list[str] = ["app"]
     estado: str = "activa"
     enviada_en: datetime | None = None    # null = guardada por horario silencioso
+    persistida: bool = True               # EXT: false = vigente pero aún sin guardar (alerta_id `ALR-PEND.…`, estable)
     meta: Meta | None = None
 
 
@@ -52,6 +53,7 @@ class AccionAlertaRequest(BaseModel):
 
 class AccionAlertaResponse(BaseModel):
     estado: str  # atendida | descartada | pospuesta
+    alerta_id: str | None = None  # EXT: id definitivo (si la alerta estaba pendiente de guardar, ya quedó guardada)
 
 
 class PreferenciasAlertas(BaseModel):

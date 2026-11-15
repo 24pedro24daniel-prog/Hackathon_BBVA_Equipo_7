@@ -1,5 +1,5 @@
 """B10 — Reglas de alerta por prioridad (context.md F6): 1 faltante_caja · 2 pedido_excesivo · 3 retiro_excesivo ·
-4 obligacion_proxima. Cada regla recibe el contexto de evaluación y devuelve candidatas con monto, fecha, nivel de
+4 obligacion_proxima · 5 gasto_inusual · 6 fiado_vencido · 7 meta_lograda. Cada regla recibe el contexto de evaluación y devuelve candidatas con monto, fecha, nivel de
 riesgo y causas cuantificadas. Solo usan datos a la fecha de corte; nunca etiquetas (`deficit_14d`, `eventos`…).
 
 - faltante_caja: el forecast tiene un día con saldo esperado < 0. Causas (cada una es lo que mejoraría ese día):
@@ -8,22 +8,47 @@ riesgo y causas cuantificadas. Solo usan datos a la fecha de corte; nunca etique
 - pedido_excesivo: un pedido a crédito supera lo que sueles vender de lo que te trae ese proveedor hasta que vence.
 - retiro_excesivo: retiros del mes por encima del sueldo fijo esperado a la fecha (o, sin sueldo, del promedio usual).
 - obligacion_proxima: una deuda o impuesto impago vence dentro de 3 días.
+- gasto_inusual: lo que salió hoy en compras y gastos del negocio "de rutina" (sin vínculo a pedidos, impuestos ni
+  movimientos programados) llega a 1.5 veces lo que sueles gastar por día (media de los 30 días anteriores).
+- fiado_vencido: por cliente, fiados vencidos con riesgo de atraso alto (suma lo que debe).
+- meta_lograda: una meta cuyo acumulado ya llegó al objetivo.
+`entidad_tipo` se escribe en plural como en el DBML (`deudas`, `impuestos`, `cuaderno_fiado`, `transacciones`,
+`reglas_meta`) y `mes` para lo agregado por periodo; al leer se aceptan también los singulares antiguos.
 """
 
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
 from functools import cached_property
 
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core import reloj
 from app.db import models as m
-from app.schemas.common import NivelRiesgo, TipoAlerta, redondear
+from app.schemas.common import EstadoCuenta, EstadoMeta, NivelRiesgo, TipoAlerta, TipoMovimiento, redondear
 from app.services.finanzas import chequeo as chq
 from app.services.finanzas import consultas as q
 from app.services.finanzas import proyeccion as fc
+from app.services.ingesta.texto import fecha_corta
 
 DIAS_OBLIGACION = 3
+FACTOR_GASTO_INUSUAL = Decimal("1.5")
+VENTANA_GASTO_DIAS = 30
+MIN_DIAS_HISTORIAL_GASTO = 14
+MIN_EXCESO_GASTO = Decimal("30")
+DIAS_META_LOGRADA = 7
+
+# entidad_tipo canónico (plural, como el DBML) y los singulares antiguos que se aceptan al leer.
+ENTIDAD_CANONICA = {"deuda": "deudas", "pedido": "deudas", "impuesto": "impuestos", "fiado": "cuaderno_fiado",
+                    "transaccion": "transacciones", "movimiento": "transacciones", "meta": "reglas_meta",
+                    "regla_meta": "reglas_meta"}  # fmt: skip
+
+
+def entidad_canonica(valor: str | None) -> str | None:
+    return ENTIDAD_CANONICA.get(valor, valor) if valor else None
+
 DIAS_PEDIDO_RECIENTE = 7
 CAUSA_RETIROS = "Sacaste más de la caja de lo usual"
 CAUSA_PEDIDO = "Pediste más de lo que vendes"
@@ -105,7 +130,7 @@ def faltante_caja(ctx: Contexto) -> list[Candidata]:
     if fiados > 0:
         causas.append({"descripcion": CAUSA_FIADOS, "monto": float(fiados)})
     return [Candidata(TipoAlerta.faltante_caja, critico.fecha, -critico.saldo_p50,
-                      nivel_por_probabilidad(critico.probabilidad_deficit), "deuda" if entidad else None, entidad,
+                      nivel_por_probabilidad(critico.probabilidad_deficit), "deudas" if entidad else None, entidad,
                       "abrir_simulador", probabilidad=critico.probabilidad_deficit, causas=causas)]  # fmt: skip
 
 
@@ -123,7 +148,7 @@ def pedido_excesivo(ctx: Contexto) -> list[Candidata]:
         if exceso <= 0:
             continue
         salida.append(Candidata(TipoAlerta.pedido_excesivo, dc.deuda.fecha_vencimiento, exceso,
-                                nivel_por_proporcion(exceso, dc.deuda.monto_total_a_pagar), "deuda", dc.deuda.deuda_id,
+                                nivel_por_proporcion(exceso, dc.deuda.monto_total_a_pagar), "deudas", dc.deuda.deuda_id,
                                 "abrir_simulador",
                                 causas=[{"descripcion": "Lo que pediste", "monto": float(dc.deuda.monto_total_a_pagar)},
                                         {"descripcion": f"Lo que sueles vender de eso hasta el "
@@ -162,14 +187,81 @@ def obligacion_proxima(ctx: Contexto) -> list[Candidata]:
     for dc in ctx.proy.deudas:
         if dc.pendiente > 0 and ctx.corte <= dc.deuda.fecha_vencimiento <= limite:
             salida.append(Candidata(TipoAlerta.obligacion_proxima, dc.deuda.fecha_vencimiento, dc.pendiente,
-                                    nivel(dc.deuda.fecha_vencimiento), "deuda", dc.deuda.deuda_id, "ver_cuentas",
+                                    nivel(dc.deuda.fecha_vencimiento), "deudas", dc.deuda.deuda_id, "ver_cuentas",
                                     causas=[{"descripcion": f"Pago a {dc.nombre}", "monto": float(dc.pendiente)}]))  # fmt: skip
     for ic in ctx.proy.impuestos:
         imp = ic.impuesto
         if not ic.pagado and ctx.corte <= imp.fecha_vencimiento <= limite:
             salida.append(Candidata(TipoAlerta.obligacion_proxima, imp.fecha_vencimiento, Decimal(imp.monto),
-                                    nivel(imp.fecha_vencimiento), "impuesto", imp.impuesto_id, "ver_cuentas",
+                                    nivel(imp.fecha_vencimiento), "impuestos", imp.impuesto_id, "ver_cuentas",
                                     causas=[{"descripcion": ic.nombre, "monto": float(imp.monto)}]))  # fmt: skip
+    return salida
+
+
+def gasto_inusual(ctx: Contexto) -> list[Candidata]:
+    """Gasto "de rutina" de hoy (compras al contado y gastos del negocio, sin pedidos, impuestos ni programados) muy
+    por encima de lo que sueles gastar por día."""
+    primero = q.primer_dia_con_datos(ctx.db, ctx.empresa_id, ctx.corte)
+    if primero is None or (ctx.corte - primero).days < MIN_DIAS_HISTORIAL_GASTO:
+        return []
+    tx = m.Transaccion
+    base = [*q.vigentes(ctx.empresa_id, ctx.corte), tx.afecta_caja, q.SIN_VINCULO,
+            tx.tipo.in_([TipoMovimiento.compra, TipoMovimiento.gasto_negocio])]
+    inicio_hoy, fin_hoy = reloj.inicio_del_dia(ctx.corte), q.fin_del_dia(ctx.corte)
+    hoy = ctx.db.execute(select(tx.transaccion_id, tx.monto).where(*base, tx.fecha_hora >= inicio_hoy,
+                                                                   tx.fecha_hora < fin_hoy)
+                         .order_by(tx.monto.desc(), tx.transaccion_id)).all()  # fmt: skip
+    if not hoy:
+        return []
+    total_hoy = redondear(sum((Decimal(mo) for _, mo in hoy), q.CERO))
+    dias = min(VENTANA_GASTO_DIAS, (ctx.corte - primero).days)
+    desde = ctx.corte - timedelta(days=dias)
+    previo = ctx.db.scalar(select(func.coalesce(func.sum(tx.monto), 0)).where(
+        *base, tx.fecha_hora >= reloj.inicio_del_dia(desde), tx.fecha_hora < inicio_hoy))  # fmt: skip
+    media = redondear(Decimal(previo) / dias)
+    exceso = redondear(total_hoy - media)
+    if media <= 0 or total_hoy < media * FACTOR_GASTO_INUSUAL or exceso < MIN_EXCESO_GASTO:
+        return []
+    nivel = NivelRiesgo.alto if total_hoy >= media * 3 else NivelRiesgo.medio
+    return [Candidata(TipoAlerta.gasto_inusual, ctx.corte, exceso, nivel, "transacciones", hoy[0][0], "ver_movimientos",
+                      causas=[{"descripcion": "Lo que salió hoy en compras y gastos", "monto": float(total_hoy)},
+                              {"descripcion": "Lo que sueles gastar por día", "monto": float(media)}])]  # fmt: skip
+
+
+def fiado_vencido(ctx: Contexto) -> list[Candidata]:
+    """Un aviso por cliente con fiados vencidos y riesgo de atraso alto (acción: recordarle)."""
+    por_cliente: dict[str, list[q.FiadoCalc]] = defaultdict(list)
+    for f in ctx.proy.fiados:
+        riesgo = ctx.proy.riesgos.get(f.fiado.fiado_id)
+        if f.pendiente > 0 and f.estado == EstadoCuenta.vencido and riesgo and riesgo.nivel == NivelRiesgo.alto:
+            por_cliente[f.fiado.cliente_id].append(f)
+    salida = []
+    for fiados in por_cliente.values():
+        fiados.sort(key=lambda f: (f.fiado.fecha_fiado, f.fiado.fiado_id))
+        total = sum((f.pendiente for f in fiados), q.CERO)
+        prob = max(ctx.proy.riesgos[f.fiado.fiado_id].probabilidad for f in fiados)
+        salida.append(Candidata(
+            TipoAlerta.fiado_vencido, ctx.corte, total, NivelRiesgo.alto, "cuaderno_fiado", fiados[0].fiado.fiado_id,
+            "recordar_cliente", probabilidad=prob,
+            causas=[{"descripcion": f"Fiado del {fecha_corta(f.fiado.fecha_fiado)}", "monto": float(f.pendiente)}
+                    for f in fiados]))  # fmt: skip
+    salida.sort(key=lambda c: (-c.monto, c.entidad_id))
+    return salida
+
+
+def meta_lograda(ctx: Contexto) -> list[Candidata]:
+    metas = ctx.db.scalars(select(m.ReglaMeta).where(
+        m.ReglaMeta.empresa_id == ctx.empresa_id, m.ReglaMeta.estado != EstadoMeta.pausada,
+        m.ReglaMeta.objetivo.is_not(None), m.ReglaMeta.acumulado >= m.ReglaMeta.objetivo)
+        .order_by(m.ReglaMeta.meta_id)).all()  # fmt: skip
+    salida = []
+    for meta in metas:
+        if meta.fecha_logro and (ctx.corte - meta.fecha_logro).days > DIAS_META_LOGRADA:
+            continue
+        salida.append(Candidata(TipoAlerta.meta_lograda, meta.fecha_logro or ctx.corte, Decimal(meta.acumulado), None,
+                                "reglas_meta", meta.meta_id, "ver_progreso",
+                                causas=[{"descripcion": "Lo que llevas", "monto": float(meta.acumulado)},
+                                        {"descripcion": "Tu objetivo", "monto": float(meta.objetivo)}]))  # fmt: skip
     return salida
 
 
@@ -178,4 +270,7 @@ REGLAS = {
     TipoAlerta.pedido_excesivo: pedido_excesivo,
     TipoAlerta.retiro_excesivo: retiro_excesivo,
     TipoAlerta.obligacion_proxima: obligacion_proxima,
+    TipoAlerta.gasto_inusual: gasto_inusual,
+    TipoAlerta.fiado_vencido: fiado_vencido,
+    TipoAlerta.meta_lograda: meta_lograda,
 }

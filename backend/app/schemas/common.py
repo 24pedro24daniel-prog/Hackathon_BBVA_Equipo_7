@@ -24,6 +24,10 @@ Dinero = Annotated[
     AfterValidator(redondear),
     PlainSerializer(lambda d: float(d), return_type=float, when_used="json"),
 ]
+Cantidad = Annotated[  # unidades de un producto (puede ser fraccionaria): en JSON sale como número, no como texto
+    Decimal,
+    PlainSerializer(lambda d: float(d), return_type=float, when_used="json"),
+]
 Probabilidad = Annotated[
     Decimal,
     Field(ge=0, le=1),

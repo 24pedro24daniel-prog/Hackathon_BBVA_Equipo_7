@@ -17,9 +17,9 @@ E = "EMP-0001"
 HOY = date(2026, 11, 14)
 P = settings.API_PREFIX
 EMP = f"{P}/empresas/{E}"
-CATEGORIA = {"venta": "CAT-01", "cobro_fiado": "CAT-07", "prestamo_recibido": "CAT-08", "otro_ingreso": "CAT-09",
-             "compra": "CAT-10", "gasto_negocio": "CAT-17", "retiro_personal": "CAT-15", "pago_proveedor": "CAT-10",
-             "pago_prestamo": "CAT-16", "pago_impuesto": "CAT-14"}  # fmt: skip
+CATEGORIA = {"venta": "CAT-01", "cobro_fiado": "CAT-14", "prestamo_recibido": "CAT-15", "otro_ingreso": "CAT-06",
+             "compra": "CAT-07", "gasto_negocio": "CAT-16", "retiro_personal": "CAT-13", "pago_proveedor": "CAT-07",
+             "pago_prestamo": "CAT-12", "pago_impuesto": "CAT-11"}  # fmt: skip
 
 
 def dt(d: date, h: int = 12, mi: int = 0) -> datetime:

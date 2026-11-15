@@ -8,7 +8,7 @@ from pydantic import Field
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.routers._comun import router_protegido
+from app.routers._comun import CON_LIMITE_IA, router_protegido
 from app.schemas.common import ModeloContrato, ModeloEntrada
 from app.services.ingesta import almacenamiento
 from app.services.ingesta.servicio import empresa_o_404
@@ -33,6 +33,7 @@ class SubidaResponse(ModeloContrato):
 
 
 @router.post("/media/subidas", status_code=status.HTTP_201_CREATED, response_model=SubidaResponse,
+             dependencies=CON_LIMITE_IA,
              responses={503: {"description": "SERVICIO_NO_DISPONIBLE (R2 sin configurar)"}})  # fmt: skip
 def pedir_subida(body: SubidaRequest, db: Session = Depends(get_db)):
     empresa_o_404(db, body.empresa_id)

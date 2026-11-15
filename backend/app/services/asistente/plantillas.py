@@ -98,6 +98,11 @@ def estado_caja(resumen: dict, forecast: dict) -> Borrador:
     return b
 
 
+def _abrir_simulador(texto: str, pedido_id: str | None) -> dict:
+    """Acción del asistente que lleva al simulador; con `pedido_id` el front abre ese pedido."""
+    return {"tipo": "abrir_simulador", "texto": texto, **({"pedido_id": pedido_id} if pedido_id else {})}
+
+
 def explicar_alerta(alerta: dict | None, simulacion: dict | None, nuevo_monto) -> Borrador:
     if alerta is None:
         return Borrador("No tienes alertas activas ahora. Si quieres, te digo cómo va tu caja.")
@@ -119,7 +124,8 @@ def explicar_alerta(alerta: dict | None, simulacion: dict | None, nuevo_monto) -
                       f"y pagas en 2 partes, el {_fecha(con['fecha'])} tendrías "
                       f"{b.cifra(con['saldo_minimo'], 'simular.con_acciones.saldo_minimo')}.")  # fmt: skip
     b.texto = " ".join(partes)
-    b.extras["acciones"] = [{"tipo": "abrir_simulador", "texto": "Ver qué puedo hacer"}]
+    pedido_id = ((alerta.get("accion") or {}).get("payload") or {}).get("pedido_id")
+    b.extras["acciones"] = [_abrir_simulador("Ver qué puedo hacer", pedido_id)]
     return b
 
 
@@ -127,7 +133,7 @@ _ESTADO_TXT = {"te_alcanza": "Te alcanza.", "justo": "Te alcanza justo, sin colc
                "no_te_alcanza": "Todavía no te alcanzaría."}  # fmt: skip
 
 
-def simular(simulacion: dict, descripcion: str, con_partes: bool) -> Borrador:
+def simular(simulacion: dict, descripcion: str, con_partes: bool, pedido_id: str | None = None) -> Borrador:
     b = Borrador("")
     con, sin = simulacion["con_acciones"], simulacion["sin_acciones"]
     texto = (f"Si {descripcion}, el {_fecha(con['fecha'])} tendrías "
@@ -137,11 +143,11 @@ def simular(simulacion: dict, descripcion: str, con_partes: bool) -> Borrador:
     if con_partes:
         texto += " Pagar en partes depende de que el proveedor acepte."
     b.texto = texto.strip()
-    b.extras["acciones"] = [{"tipo": "abrir_simulador", "texto": "Probar opciones"}]
+    b.extras["acciones"] = [_abrir_simulador("Probar opciones", pedido_id)]
     return b
 
 
-def prestamo(ejemplo: dict, simulacion: dict | None) -> Borrador:
+def prestamo(ejemplo: dict, simulacion: dict | None, pedido_id: str | None = None) -> Borrador:
     b = Borrador("No te puedo recomendar un préstamo ni una entidad, pero sí mostrarte cuánto cuesta uno informal:",
                  ofrecer_humano=True)  # fmt: skip
     for clave in ("recibes", "devuelves", "dias", "cuota_diaria", "costo", "costo_pct"):
@@ -156,6 +162,6 @@ def prestamo(ejemplo: dict, simulacion: dict | None) -> Borrador:
                  f"{b.cifra(con['saldo_minimo'], 'simular.con_acciones.saldo_minimo')}.")  # fmt: skip
     b.extras["ejemplo_prestamo_informal"] = {k: ejemplo[k] for k in ("recibes", "devuelves", "dias", "cuota_diaria")}
     b.extras["respuesta_post"] = post
-    b.extras["acciones"] = [{"tipo": "abrir_simulador", "texto": "Ver mi plan"},
+    b.extras["acciones"] = [_abrir_simulador("Ver mi plan", pedido_id),
                             {"tipo": "hablar_humano", "texto": "Hablar con una persona"}]  # fmt: skip
     return b

@@ -1,4 +1,4 @@
-"""Formato de error del contrato (§0) y autenticación X-API-Key."""
+"""Formato de error del contrato (§0) y autenticación X-API-Key (el Bearer de las demos: test_e_auth*.py)."""
 
 import re
 
@@ -120,7 +120,7 @@ _VALORES_PATH = {"{empresa_id}": "EMP-0001", "{fiado_id}": "FIA-0045", "{alerta_
 def _rutas_protegidas():
     """Rutas desde el esquema OpenAPI (FastAPI anida los routers incluidos)."""
     for path, operaciones in app.openapi()["paths"].items():
-        if path.endswith("/health"):
+        if path.endswith(("/health", "/auth/login")):
             continue
         for marcador, valor in _VALORES_PATH.items():
             path = path.replace(marcador, valor)
@@ -136,5 +136,6 @@ def test_todas_las_rutas_exigen_api_key(client_sin_key, metodo, path):
 
 
 def test_hay_rutas_protegidas_registradas():
-    # + /health pública = 29 endpoints (incluye POST /media/subidas, las 2 de /llm, /chat/mensajes y /cuentas/anular)
-    assert len(list(_rutas_protegidas())) == 28
+    # + /health y /auth/login públicas = 32 endpoints (incluye POST /media/subidas, las 2 de /llm, /chat/mensajes,
+    # /cuentas/anular, POST /salud/recalcular y GET /auth/sesion)
+    assert len(list(_rutas_protegidas())) == 30

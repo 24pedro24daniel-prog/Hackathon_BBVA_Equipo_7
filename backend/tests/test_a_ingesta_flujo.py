@@ -136,7 +136,7 @@ def test_confirmar_con_correcciones(client_db, db):
 def test_corregir_a_retiro_para_la_casa(client_db, db):
     bid = _interpretar(client_db, "vendí dos cervezas").json()["borrador_id"]
     tx = db.get(m.Transaccion, _confirmar(client_db, bid, correcciones={"tipo": "retiro_personal"}).json()["movimiento_id"])
-    assert tx.tipo == "retiro_personal" and tx.categoria_id == "CAT-15"
+    assert tx.tipo == "retiro_personal" and tx.categoria_id == "CAT-13"
     assert db.query(m.DetalleTransaccion).filter_by(transaccion_id=tx.transaccion_id).count() == 0
 
 

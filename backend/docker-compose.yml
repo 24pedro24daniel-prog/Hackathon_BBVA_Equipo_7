@@ -1,6 +1,8 @@
 # TuCaserito backend: PostgreSQL + API.
 #   docker compose up -d                                   # BD + backend en http://localhost:8000/api/v1
 #   docker compose run --rm backend python -m app.db.reset  # recrea y siembra la demo de Pedro
+#   docker compose run --rm backend python -m app.db.reset --fuente csv   # recrea y carga data/csv (30 empresas)
+#   docker compose run --rm backend python -m app.db.cargar_csv [--bd nombre]   # carga data/csv en esa BD
 #   docker compose run --rm backend pytest -q               # tests (usan la BD cajaclara_test)
 # Parámetros en parametros.env (versionado); credenciales en .env (ver example.env).
 
@@ -31,7 +33,10 @@ services:
     restart: unless-stopped
 
   backend:
-    build: .
+    # Contexto = raíz del repo: la imagen lleva modelo/artifacts/ (igual que en Render, ver render.yaml y backend/Dockerfile)
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
     image: cajaclara-backend:local
     env_file: [parametros.env, .env]
     environment:
@@ -39,6 +44,7 @@ services:
       POSTGRES_PORT: "5432"
       WHISPER_CACHE_DIR: /models/whisper
       ML_ARTIFACTS_DIR: /app/ml/artifacts
+      DATA_CSV_DIR: /app/data_csv
     depends_on:
       db:
         condition: service_healthy
@@ -49,8 +55,11 @@ services:
       # Código montado para desarrollo: los cambios se ven con `docker compose restart backend`
       - ./app:/app/app
       - ./tests:/app/tests
-      # Artefactos de ML del equipo de datos (fuera del contexto del build): solo lectura
+      # Artefactos de ML del equipo de datos: la imagen ya trae una copia; el montaje permite probar artefactos nuevos
+      # sin reconstruir (solo lectura)
       - ../modelo/artifacts:/app/ml/artifacts:ro
+      # CSV del equipo de datos para `python -m app.db.cargar_csv` (carga local igual a producción): solo lectura
+      - ../data/csv:/app/data_csv:ro
     restart: unless-stopped
 
 volumes:

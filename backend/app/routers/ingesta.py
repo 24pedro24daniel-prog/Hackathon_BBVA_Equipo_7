@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.routers._comun import router_protegido
+from app.routers._comun import CON_LIMITE_IA, router_protegido
 from app.schemas.ingesta import (
     ConfirmarRequest,
     ConfirmarResponse,
@@ -19,8 +19,9 @@ from app.services.ingesta import servicio
 router = router_protegido("ingesta")
 
 
-@router.post("/ingesta/interpretar", response_model=InterpretarResponse,
-             responses={422: {"description": "NO_INTERPRETABLE"}, 503: {"description": "SERVICIO_NO_DISPONIBLE"}})  # fmt: skip
+@router.post("/ingesta/interpretar", response_model=InterpretarResponse, dependencies=CON_LIMITE_IA,
+             responses={422: {"description": "NO_INTERPRETABLE"},
+                        503: {"description": "SERVICIO_NO_DISPONIBLE"}})  # fmt: skip
 def interpretar(body: InterpretarRequest, db: Session = Depends(get_db)):
     return servicio.interpretar(db, body)
 
@@ -38,6 +39,6 @@ def confirmar(
     return JSONResponse(status_code=codigo, content=ConfirmarResponse.model_validate(cuerpo).model_dump(mode="json"))
 
 
-@router.post("/ingesta/cuaderno", response_model=CuadernoResponse)
+@router.post("/ingesta/cuaderno", response_model=CuadernoResponse, dependencies=CON_LIMITE_IA)
 def cuaderno(body: CuadernoRequest, db: Session = Depends(get_db)):
     return servicio.leer_cuaderno(db, body.empresa_id, body.media_url)

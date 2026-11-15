@@ -1,6 +1,8 @@
 # TuCaserito — Diccionario de datos (v2)
 
 > Esquema formal: [modelo_datos.dbml](modelo_datos.dbml) (se visualiza pegándolo en <https://dbdiagram.io>).
+> La BD se crea desde [`backend/app/db/models.py`](backend/app/db/models.py) (27 tablas: las 25 de este modelo + las 2 técnicas
+> `idempotency_keys` y `llm_llamadas`). `data/schema.sql` y `data/schema_esquema.json` se **generan** desde ese archivo.
 > Todos los datos son **sintéticos**. Ningún nombre, teléfono, monto ni negocio corresponde a una persona real.
 
 ---
@@ -14,7 +16,7 @@
 | Fechas | `date` para días; `timestamptz` para fecha y hora, zona `America/Lima`. |
 | Probabilidades y confianzas | `decimal(4,3)` entre 0 y 1. |
 | Borrado | No se borra nada transaccional: se marca `anulada = true` (trazabilidad). |
-| Campos calculados | Saldo, monto pendiente, días de atraso y estados *por vencer / vencido / al día* **no se guardan**: salen de vistas (§3), calculadas a una fecha de corte. |
+| Campos calculados | Saldo, monto pendiente, días de atraso y estados *por vencer / vencido / al día* **no se guardan** y **no hay vistas en la BD**: el backend los calcula en Python a una fecha de corte (§3). |
 | Columna **Uso ML** | `feature` = puede entrar a un modelo (solo con datos anteriores a `fecha_corte`) · `etiqueta` = target o ground truth, **nunca feature** · `prohibido` = oculto, solo lo usa el generador · `—` = operativo o trazabilidad. |
 
 ---
@@ -35,7 +37,7 @@
 | `plantilla_meta` | `registrar_30_dias`, `sueldo_fijo`, `colchon_caja`, `apartar_para_pedido`, `reservar_impuestos` | |
 | `tipo_regla` | `porcentaje_de_venta`, `monto_fijo` | |
 | `estado_meta` | `activa`, `lograda`, `pausada` | |
-| `tipo_alerta` | `faltante_caja`, `pedido_excesivo`, `retiro_excesivo`, `obligacion_proxima`, `gasto_inusual`, `caida_ventas`, `fiado_vencido`, `meta_lograda`, `resumen_semanal` | Prioridad 1 a 8 según F6. |
+| `tipo_alerta` | `faltante_caja`, `pedido_excesivo`, `retiro_excesivo`, `obligacion_proxima`, `gasto_inusual`, `caida_ventas`, `fiado_vencido`, `meta_lograda`, `resumen_semanal` | Prioridad 1 a 8 según F6 (faltante 1, pedido 2, retiro 3, obligación 4, gasto inusual y caída 5, fiado vencido 6, meta 7, resumen 8). |
 | `nivel_riesgo` | `bajo`, `medio`, `alto` | |
 | `canal_notificacion` | `whatsapp`, `app`, `email` | |
 | `estado_alerta` | `activa`, `atendida`, `descartada` | |
@@ -55,7 +57,7 @@ Catálogo de rubros. **Grano:** un rubro.
 | Campo | Tipo | Nulo | Descripción | Ejemplo | Uso ML |
 |---|---|---|---|---|---|
 | `rubro_id` | varchar(20) | PK | Identificador | `RUB-01` | — |
-| `nombre` | varchar(50) | no | Nombre único del rubro | `bodega` | feature |
+| `nombre` | varchar(50) | no | Nombre único del rubro: `bodega`, `restaurante`, `taller`, `distribuidora` (los de los modelos de ML) | `bodega` | feature |
 
 #### `empresas`
 La pyme ficticia; entidad central. **Grano:** una empresa.
@@ -63,15 +65,16 @@ La pyme ficticia; entidad central. **Grano:** una empresa.
 | Campo | Tipo | Nulo | Descripción | Ejemplo | Uso ML |
 |---|---|---|---|---|---|
 | `empresa_id` | varchar(20) | PK | Identificador | `EMP-0001` | — |
-| `rubro_id` | varchar(20) | no | FK → `rubros` | `RUB-01` | feature |
+| `rubro_id` | varchar(20) | no | FK → `rubros` (`RUB-01` bodega, `RUB-02` restaurante, `RUB-03` taller, `RUB-04` distribuidora) | `RUB-01` | feature |
 | `nombre_ficticio` | varchar(100) | no | Nombre del negocio | `Bodega Don Pedro` | — |
 | `telefono_whatsapp` | varchar(20) | no, único | Teléfono ficticio; enruta los mensajes del webhook | `+51900000001` | — |
-| `zona` | varchar(50) | no | Distrito o zona (comparación con pares) | `SJL` | feature |
-| `n_trabajadores` | smallint | no | Personas que atienden | `1` | feature |
-| `tiene_ruc` | boolean | no | Si ya se formalizó (Estadio 3) | `false` | — |
-| `regimen_tributario` | varchar(20) | sí | Régimen si tiene RUC | `nuevo_rus` | — |
-| `saldo_inicial` | decimal(12,2) | no | Caja del negocio al empezar a registrar | `1800.00` | — |
-| `fecha_saldo_inicial` | date | no | Fecha de ese saldo | `2026-05-01` | — |
+| `zona` | varchar(50) | no | Zona o distrito (comparación con pares) | `Lima Este` | feature |
+| `n_trabajadores` | smallint | no | Personas que atienden (1 a 5; CHECK ≥ 1) | `1` | feature |
+| `tiene_ruc` | boolean | no | Si ya se formalizó (Estadio 3). En `data/csv`: 24 de 30 con RUC | `true` | — |
+| `ruc` | varchar(11) | sí | RUC de persona natural (`10` + 9 dígitos, CHECK `^10[0-9]{9}$`), único; null si no tiene. En `data/csv` todos pasan el dígito verificador módulo 11 de SUNAT. No lo usa el backend | `10456789019` | — |
+| `regimen_tributario` | varchar(20) | sí | Régimen si tiene RUC; null si es informal | `nuevo_rus` | — |
+| `saldo_inicial` | decimal(12,2) | no | Caja del negocio al empezar a registrar (CHECK ≥ 0) | `1800.00` | — |
+| `fecha_saldo_inicial` | date | no | Fecha de ese saldo | `2026-08-15` | — |
 | `minimo_operativo` | decimal(12,2) | no | Saldo mínimo para operar sin riesgo | `500.00` | feature |
 | `fecha_alta` | timestamptz | no | Alta en TuCaserito | | — |
 
@@ -95,9 +98,13 @@ Categorías globales de ingreso y egreso. **Grano:** una categoría.
 | Campo | Tipo | Nulo | Descripción | Ejemplo | Uso ML |
 |---|---|---|---|---|---|
 | `categoria_id` | varchar(20) | PK | Identificador | `CAT-07` | — |
-| `nombre` | varchar(50) | no, único | Nombre | `bebidas`, `servicios`, `retiro personal` | feature |
+| `nombre` | varchar(50) | no, único | Nombre en `snake_case` (el backend compara sin tildes, en minúsculas y con `_` = espacio) | `bebidas`, `servicios`, `retiro_personal` | feature |
 | `tipo` | tipo_flujo | no | Ingreso o egreso | `egreso` | feature |
-| `es_del_negocio` | boolean | no | `false` para retiro personal: no cuenta como gasto del negocio en la ganancia | `true` | — |
+| `es_del_negocio` | boolean | no | `false` para `retiro_personal`: no cuenta como gasto del negocio en la ganancia | `true` | — |
+
+**Catálogo (16 categorías).** Ingresos: `CAT-01 bebidas`, `CAT-02 abarrotes`, `CAT-03 lacteos_panaderia`, `CAT-04 limpieza_aseo`, `CAT-05 snacks_golosinas`, `CAT-06 otros_ingresos`, `CAT-14 cobro_fiados`, `CAT-15 prestamos_recibidos`. Egresos: `CAT-07 mercaderia`, `CAT-08 servicios`, `CAT-09 alquiler_local`, `CAT-10 transporte_flete`, `CAT-11 impuestos`, `CAT-12 financiamiento`, `CAT-13 retiro_personal` (`es_del_negocio = false`), `CAT-16 otros_gastos`.
+
+Categoría por defecto cuando el registro no trae producto ni categoría: `venta` → `otros_ingresos` · `cobro_fiado` → `cobro_fiados` · `prestamo_recibido` → `prestamos_recibidos` · `otro_ingreso` → `otros_ingresos` · `compra` y `pago_proveedor` → `mercaderia` · `gasto_negocio` → `otros_gastos` · `retiro_personal` → `retiro_personal` · `pago_prestamo` → `financiamiento` · `pago_impuesto` → `impuestos`.
 
 > **Alcance:** no existen categorías de gastos del hogar (comida, colegio, salud, servicios de la vivienda). Lo único personal que se registra es el retiro personal desde la caja del negocio ([context.md](context.md), §3 "Alcance").
 
@@ -154,7 +161,7 @@ Lo que entendió la IA antes de que el usuario confirme (contrato §1.2–1.4). 
 | `canal` | canal_registro | no | Canal de entrada | `voz` |
 | `media_url` | varchar(255) | sí | Audio o foto | `file://data/audios/demo_001.ogg` |
 | `texto_original` | text | sí | Texto escrito o transcripción de Whisper | `vendí dos cervezas` |
-| `payload_propuesto` | json | no | Movimiento(s) propuesto(s); una foto del cuaderno puede traer varios fiados | |
+| `payload_propuesto` | json | no | Movimiento propuesto (`tipo`, `items`, `monto`…). Una foto del cuaderno trae la clave `fiados`: lista de `{cliente, detalle, monto, fecha, confianza}` (es la que lee el backend) | |
 | `origen_monto` | origen_monto | sí | De dónde salió el monto | `catalogo` |
 | `confianza` | decimal(4,3) | sí | Confianza global de la extracción | `0.930` |
 | `campos_faltantes` | json | sí | Campos que no se pudieron extraer | `["metodo_pago"]` |
@@ -201,6 +208,7 @@ Todo movimiento de dinero (y las ventas o compras a crédito, que no mueven caja
 - A lo más una de `fiado_id`, `deuda_id`, `impuesto_id`, `programado_id`.
 - `cobro_fiado` → `fiado_id` obligatorio · `pago_proveedor`, `pago_prestamo`, `prestamo_recibido` → `deuda_id` obligatorio · `pago_impuesto` → `impuesto_id` obligatorio.
 - `venta` + `credito` → `fiado_id` obligatorio · `compra` + `credito` → `deuda_id` obligatorio.
+- `moneda = 'PEN'` y `confianza_extraccion` entre 0 y 1.
 
 > **Fuga de datos:** para entrenar, filtra por `creado_en < fecha_corte`, no solo por `fecha_hora`. Un fiado registrado hoy por foto con fecha de hace un mes no existía en la fecha de corte.
 
@@ -213,10 +221,10 @@ Todo movimiento de dinero (y las ventas o compras a crédito, que no mueven caja
 | `transaccion_id` | varchar(20) | no | FK → `transacciones` | `MOV-000123` | — |
 | `producto_id` | varchar(20) | sí | FK → `productos` (null si no está en el catálogo) | `PRD-0031` | feature |
 | `descripcion` | varchar(100) | sí | Texto libre si no hay producto | | — |
-| `cantidad` | decimal(10,3) | no | Unidades (admite kilos) | `2` | feature |
+| `cantidad` | decimal(10,3) | no | Unidades (la columna admite kilos; en `data/csv` siempre es entera) | `2` | feature |
 | `precio_unitario` | decimal(12,2) | no | Precio cobrado | `6.50` | feature |
-| `costo_unitario` | decimal(12,2) | sí | Costo copiado al momento de la venta (margen histórico) | `4.80` | feature |
-| `subtotal` | decimal(12,2) | no | `cantidad × precio_unitario` | `13.00` | — |
+| `costo_unitario` | decimal(12,2) | sí | Costo copiado al momento de la venta (margen histórico). CHECK ≥ 0 | `4.80` | feature |
+| `subtotal` | decimal(12,2) | no | `cantidad × precio_unitario` (y la suma del detalle es el `monto` de la transacción) | `13.00` | — |
 
 ---
 
@@ -239,7 +247,7 @@ Fiados digitalizados. **Grano:** un fiado (puede pagarse en varias partes).
 | `canal` | canal_registro | no | Cómo se registró | `foto` | — |
 | `pago_tardio` | boolean | sí | Pagó después del compromiso o del umbral | `true` | **etiqueta** |
 
-> `monto_pendiente` y `dias_atraso` salen de `v_fiados` (§3). Guardar `dias_atraso` causaría fuga: depende de `fecha_pago_total`, que es futura respecto a la fecha de corte.
+> `monto_pendiente` y `dias_atraso` los calcula el backend (§3). Guardar `dias_atraso` causaría fuga: depende de `fecha_pago_total`, que es futura respecto a la fecha de corte.
 
 #### `deudas`
 Lo que el negocio debe: pedidos de mercadería a crédito **y** préstamos de dinero (gota a gota, familiar, entidad). **Grano:** una deuda.
@@ -262,7 +270,7 @@ Lo que el negocio debe: pedidos de mercadería a crédito **y** préstamos de di
 | `canal` | canal_registro | no | Cómo se registró | `voz` | — |
 | `notas` | varchar(255) | sí | | | — |
 
-> Costo del préstamo informal (F7): `monto_total_a_pagar − monto_recibido` sobre el plazo. `monto_pendiente` y `estado` salen de `v_deudas`.
+> Costo del préstamo informal (F7): `monto_total_a_pagar − monto_recibido` sobre el plazo. CHECK `monto_total_a_pagar ≥ monto_recibido`. `monto_pendiente` y `estado` los calcula el backend (§3).
 
 #### `billeteras_digitales`
 Movimientos digitales normalizados (F1.3, roadmap; en la demo, sintéticos). **Grano:** una operación del proveedor.
@@ -295,7 +303,7 @@ Obligaciones tributarias (F1.4). **Grano:** un periodo de un régimen.
 | `fecha_pago` | date | sí | Cuándo se pagó | | solo si `< fecha_corte` |
 | `canal` | canal_registro | no | Cómo se registró | `texto` | — |
 
-> Único `(empresa_id, regimen, periodo)`. El semáforo *al día / vencido* sale de `v_impuestos`.
+> Único `(empresa_id, regimen, periodo)`. El semáforo *al día / vencido* lo calcula el backend (§3).
 
 ---
 
@@ -315,12 +323,12 @@ Ingresos y egresos recurrentes, **incluido el sueldo fijo del dueño**. **Grano:
 | `frecuencia` | frecuencia | no | Cada cuánto | `mensual` |
 | `dia_semana` | smallint | sí | 1 = lunes … 7 = domingo (para `semanal`) | `6` |
 | `dia_mes` | smallint | sí | 1–31 (para `quincenal` es el primer día; para `mensual`) | `28` |
-| `es_sueldo` | boolean | no | Sueldo fijo del dueño (egreso, categoría retiro personal) | `true` |
+| `es_sueldo` | boolean | no | Sueldo fijo del dueño (egreso, categoría `retiro_personal`); puede ser semanal, quincenal o mensual | `true` |
 | `fecha_inicio` | date | no | Desde cuándo rige | `2026-11-01` |
 | `fecha_fin` | date | sí | Hasta cuándo (null = vigente) | |
 | `activo` | boolean | no | | `true` |
 
-> Un solo sueldo activo por empresa (índice único parcial). Cambiar el sueldo = cerrar el registro (`fecha_fin`) y crear otro, así queda el historial. La alerta `retiro_excesivo` compara los `retiro_personal` del periodo contra este monto.
+> Un solo sueldo activo por empresa (índice único parcial). Cambiar el sueldo = cerrar el registro (`fecha_fin`) y crear otro, así queda el historial. La alerta `retiro_excesivo` compara los `retiro_personal` del mes contra el sueldo esperado a la fecha: el semanal cuenta por ocurrencias (los sábados) y el mensual o quincenal se **prorratea por día** dentro de su periodo (un sueldo mensual de S/ 1 350 vale S/ 45 por día), para que a mitad de mes no parezca que todo retiro es excesivo. Por eso el sueldo de Pedro (S/ 1 350 al **mes**, día 30) es mensual, mientras que otras empresas lo tienen semanal.
 
 #### `reglas_meta`
 Metas plantilla y sus reglas automáticas (F8). **Grano:** una meta activada.
@@ -330,9 +338,9 @@ Metas plantilla y sus reglas automáticas (F8). **Grano:** una meta activada.
 | `meta_id` | varchar(20) | PK | Identificador | `MET-0004` |
 | `empresa_id` | varchar(20) | no | FK → `empresas` | |
 | `plantilla` | plantilla_meta | no | Meta elegida | `apartar_para_pedido` |
-| `programado_id` | varchar(20) | sí | FK → `movimientos_programados` (para `sueldo_fijo`) | |
-| `tipo_regla` | tipo_regla | sí | Tipo de regla automática | `porcentaje_de_venta` |
-| `valor` | decimal(12,4) | sí | 0.10 = 10 %, o monto fijo | `0.1000` |
+| `programado_id` | varchar(20) | sí | FK → `movimientos_programados` (para `sueldo_fijo`: el sueldo que se compromete a respetar) | |
+| `tipo_regla` | tipo_regla | sí | Tipo de regla automática. `sueldo_fijo` usa `monto_fijo` (el backend además crea el movimiento programado) | `porcentaje_de_venta` |
+| `valor` | decimal(12,4) | sí | 0.10 = 10 %, o monto fijo (en `sueldo_fijo`, el monto del sueldo) | `0.1000` |
 | `destino` | varchar(30) | sí | Fondo virtual | `fondo_pedidos` |
 | `objetivo` | decimal(12,2) | sí | Monto o días meta | `30` |
 | `acumulado` | decimal(12,2) | no | Lo apartado (virtual: no sale de la caja) | `84.00` |
@@ -366,25 +374,25 @@ Alertas y nudges (F6). **Grano:** una alerta generada.
 
 | Campo | Tipo | Nulo | Descripción | Ejemplo |
 |---|---|---|---|---|
-| `alerta_id` | varchar(20) | PK | Identificador | `ALE-0101` |
+| `alerta_id` | varchar(20) | PK | Identificador (prefijo `ALR-`) | `ALR-0007` |
 | `empresa_id` | varchar(20) | no | FK → `empresas` | |
 | `tipo` | tipo_alerta | no | Disparador | `faltante_caja` |
-| `prioridad` | smallint | no | 1 a 8 según F6 | `1` |
+| `prioridad` | smallint | no | 1 a 8 según F6 (CHECK entre 1 y 8) | `1` |
 | `fecha_evento` | date | no | Cuándo ocurriría el problema | `2026-11-30` |
 | `monto` | decimal(12,2) | sí | Monto involucrado | `650.00` |
 | `probabilidad` | decimal(4,3) | sí | Probabilidad estimada | `0.780` |
 | `nivel_riesgo` | nivel_riesgo | sí | | `alto` |
-| `causas` | json | sí | Causas con su impacto | `[{"causa":"retiro_mayor_al_usual","impacto":700}]` |
-| `accion_sugerida` | varchar(50) | sí | Botón propuesto | `recordar_cliente` |
-| `entidad_tipo` | varchar(30) | sí | Tabla del registro que la causa | `cuaderno_fiado` |
-| `entidad_id` | varchar(20) | sí | ID de ese registro | `FIA-0045` |
+| `causas` | json | sí | Lista de `{descripcion, monto}`. `faltante_caja` puede traer 1 o más; `pedido_excesivo` trae 2 (lo que pediste y lo que sueles vender); `retiro_excesivo` trae 2 (lo que sacaste y la referencia). Nadie debe asumir un índice | `[{"descripcion":"Sacaste más de la caja de lo usual","monto":700}]` |
+| `accion_sugerida` | varchar(50) | sí | Botón propuesto (valores del backend): `abrir_simulador`, `ver_retiros`, `ver_cuentas`, `recordar_cliente`… | `recordar_cliente` |
+| `entidad_tipo` | varchar(30) | sí | Tabla del registro que la causa, **en plural**: `cuaderno_fiado`, `deudas`, `impuestos`, `transacciones`, `reglas_meta`; o `mes` para alertas agregadas por periodo (`retiro_excesivo`, con `entidad_id = AAAA-MM`) | `cuaderno_fiado` |
+| `entidad_id` | varchar(20) | sí | ID de ese registro (o el mes `AAAA-MM`) | `FIA-0045` |
 | `canal` | canal_notificacion | no | | `whatsapp` |
 | `estado` | estado_alerta | no | | `activa` |
 | `accion_tomada` | varchar(50) | sí | Lo que hizo el usuario | `recordar_cliente` |
 | `fecha_accion` | timestamptz | sí | | |
 | `creada_en` | timestamptz | no | | |
 | `enviada_en` | timestamptz | sí | Null si se retuvo por tope diario u horario silencioso | |
-| `modelo_version` | varchar(30) | sí | Versión del forecast que la originó | |
+| `modelo_version` | varchar(30) | sí | Versión que la originó: `lgbm_cuantiles-1.0` (forecast) o `reglas-alertas-0.1.0` (reglas determinísticas) | `lgbm_cuantiles-1.0` |
 
 > Métricas de F6: precision y recall de `faltante_caja` contra `saldo_diario.deficit_14d`; anticipación = `fecha_evento − creada_en`; % con acción = `accion_tomada` no nula.
 
@@ -400,7 +408,7 @@ Mensajes del chat con el asistente (F1.6 y F7). **Grano:** un mensaje.
 | `canal` | canal_notificacion | no | | `whatsapp` |
 | `texto` | text | sí | Contenido | `Hoy tienes S/ 2 340 en caja.` |
 | `media_url` | varchar(255) | sí | Audio o foto adjunta | |
-| `intencion` | varchar(50) | sí | Intención clasificada | `consulta_caja` |
+| `intencion` | varchar(50) | sí | Intención clasificada (valores de `IntencionAsistente`: `estado_caja`, `explicar_alerta`, `simular`, `concepto`, `crear_meta`, `prestamo`, `fuera_de_alcance`, `otro`) | `estado_caja` |
 | `herramientas_llamadas` | json | sí | Function calls y resultados | |
 | `cifras_verificadas` | boolean | sí | Todas las cifras existen en los datos | `true` |
 | `fallback_usado` | boolean | no | Se respondió con plantilla | `false` |
@@ -434,7 +442,7 @@ Serie de saldo de cierre. **Grano:** una empresa en un día. PK `(empresa_id, fe
 | `empresa_id` | varchar(20) | PK, FK | | | — |
 | `fecha` | date | PK | | `2026-11-13` | feature |
 | `saldo_cierre` | decimal(12,2) | no | Materializado desde `transacciones`; se regenera si llega un registro con fecha pasada | `2340.00` | feature (rezagos) |
-| `deficit_14d` | boolean | sí | `true` si en los próximos 14 días el saldo cae bajo el mínimo operativo | `false` | **etiqueta** |
+| `deficit_14d` | boolean | sí | `true` si en los próximos 14 días el saldo cae bajo el mínimo operativo. **`null` cuando la ventana de 14 días pasa de la fecha de corte** (no se conoce todavía) | `false` | **etiqueta** |
 
 #### `eventos`
 Shocks insertados por el generador sintético. **Grano:** un evento. **Toda la tabla es etiqueta.**
@@ -445,7 +453,7 @@ Shocks insertados por el generador sintético. **Grano:** un evento. **Toda la t
 | `empresa_id` | varchar(20) | no | FK → `empresas` | |
 | `tipo_evento` | tipo_evento | no | | `retiro_excesivo` |
 | `fecha_inicio` | date | no | | |
-| `fecha_fin` | date | sí | | |
+| `fecha_fin` | date | sí | Null = evento en curso a la fecha de corte (p. ej. un pedido que vence después de "hoy") | |
 | `descripcion` | varchar(255) | sí | | `Retiro de S/ 700 extra para la casa` |
 
 #### `predicciones_saldo`
@@ -458,7 +466,7 @@ Salidas del forecast de F3. **Grano:** empresa × fecha de corte × día proyect
 | `fecha_corte` | date | no | Último día con datos usados | `2026-11-14` |
 | `fecha_objetivo` | date | no | Día proyectado | `2026-11-30` |
 | `p10` / `p50` / `p90` | decimal(12,2) | no | Pesimista / esperado / optimista | `-410.00` / `-120.00` / `260.00` |
-| `modelo_version` | varchar(30) | no | Baseline o modelo | `lgbm_cuantiles-0.3` |
+| `modelo_version` | varchar(30) | no | Baseline o modelo (la del artefacto: `metadata.json`) | `lgbm_cuantiles-1.0` |
 | `creado_en` | timestamptz | no | | |
 
 #### `predicciones_fiado`
@@ -471,8 +479,8 @@ Salidas del clasificador de riesgo de F4. **Grano:** fiado × fecha de corte × 
 | `fecha_corte` | date | no | | `2026-11-14` |
 | `prob_atraso` | decimal(4,3) | no | Probabilidad de pago tardío | `0.720` |
 | `prob_pago_14d` | decimal(4,3) | sí | Pondera el cobro esperado en el forecast | `0.350` |
-| `nivel_riesgo` | nivel_riesgo | no | | `alto` |
-| `modelo_version` | varchar(30) | no | | `baseline_historial-1.0` |
+| `nivel_riesgo` | nivel_riesgo | no | `prob_atraso ≥ 0.6` alto, `≥ 0.3` medio, si no bajo (como `services/finanzas/riesgo.py`) | `alto` |
+| `modelo_version` | varchar(30) | no | Baseline o clasificador | `baseline_historial-1.0` |
 | `creado_en` | timestamptz | no | | |
 
 #### `score_salud`
@@ -483,10 +491,24 @@ Score mensual de F8. **Grano:** empresa × mes. PK `(empresa_id, mes)`.
 | `empresa_id` | varchar(20) | PK, FK | | |
 | `mes` | char(7) | PK | `AAAA-MM` | `2026-11` |
 | `score` | smallint | no | 0 a 100 | `64` |
-| `subindicadores` | json | no | Un valor por regla | `{"constancia_registro":80,"separacion_personal":55}` |
-| `version_formula` | varchar(30) | no | | `score-v1` |
+| `subindicadores` | json | no | Los 3 subindicadores del backend (0–100 cada uno) | `{"constancia_registro":80,"separacion_personal":55,"impuestos_al_dia":100}` |
+| `version_formula` | varchar(30) | no | `score-v1` = `round(0.35·constancia_registro + 0.40·separacion_personal + 0.25·impuestos_al_dia)` (`services/salud/score.py`) | `score-v1` |
 
-### 2.7 Técnicas (observabilidad; no son parte del modelo de negocio)
+### 2.7 Técnicas (no son parte del modelo de negocio)
+
+#### `idempotency_keys`
+Respuesta guardada por la cabecera `Idempotency-Key` (contrato §0): repetir la misma petición devuelve la misma respuesta. **Grano:** una clave por endpoint. PK `(clave, endpoint)`. No se carga desde `data/csv`.
+
+| Campo | Tipo | Nulo | Descripción | Ejemplo |
+|---|---|---|---|---|
+| `clave` | varchar(100) | PK | Valor de `Idempotency-Key` | `a1b2c3` |
+| `endpoint` | varchar(120) | PK | Ruta que guardó la respuesta | `POST /ingesta/confirmar` |
+| `empresa_id` | varchar(20) | sí | Empresa de la petición (sin FK) | `EMP-0001` |
+| `payload_hash` | varchar(64) | no | sha256 del cuerpo; si cambia con la misma clave se rechaza | |
+| `status_code` | int | no | Estado HTTP guardado | `201` |
+| `respuesta` | json | no | Cuerpo guardado | |
+| `creado_en` | timestamptz | no | | |
+
 
 #### `llm_llamadas`
 Una fila por llamada al LLM/VLM (OpenRouter), también las que fallan. **Grano:** una llamada. Se consulta con `GET /empresas/{id}/llm/llamadas` y `/llm/resumen`. Con `LLM_TRAZA_GUARDAR_CONTENIDO=false` no se guardan `messages` ni `content`.
@@ -520,16 +542,20 @@ Una fila por llamada al LLM/VLM (OpenRouter), también las que fallan. **Grano:*
 
 ---
 
-## 3. Vistas derivadas (no se guardan)
+## 3. Cálculos derivados (no se guardan ni hay vistas en la BD)
 
-| Vista | Qué calcula | Fórmula |
+Los calcula el backend en Python, a la fecha de corte que corresponda (`backend/app/services/finanzas/`). `data/schema.sql` ya no define vistas (las anteriores tenían la fecha fija `2026-11-14`, `por vencer` ≤ 16 días y fiados sin compromiso a +15 días, todo distinto del backend).
+
+| Cálculo | Qué calcula | Fórmula |
 |---|---|---|
-| `v_saldo_caja` | Saldo actual de la caja del negocio | `saldo_inicial + Σ(+monto si ingreso, −monto si egreso)` sobre `transacciones` con `afecta_caja` y no `anulada` |
-| `v_fiados` | `monto_pendiente`, `dias_atraso`, estado | `monto − Σ cobro_fiado`; atraso respecto a `fecha_compromiso` o al umbral X, **a la fecha de corte** |
-| `v_deudas` | `monto_pendiente`, estado `pendiente / por_vencer / vencido / pagado` | `monto_total_a_pagar − Σ pagos`; `por_vencer` si vence en ≤ 3 días |
-| `v_impuestos` | Semáforo `al_dia / vencido` | `fecha_pago IS NULL AND fecha_vencimiento < hoy` → `vencido` |
-| `v_resumen_mes` | Indicadores de F2 | Ventas (incluye fiadas) − costo de lo vendido − gastos del negocio; retiros personales vs sueldo |
-| `v_disponible_gastar` | "Disponible para gastar" de F3 | saldo + cobros esperados − pagos comprometidos hasta el próximo vencimiento grande − mínimo operativo − reserva de impuestos |
+| Saldo de caja | Saldo actual de la caja del negocio | `saldo_inicial + Σ(+monto si ingreso, −monto si egreso)` sobre `transacciones` con `afecta_caja` y no `anulada` |
+| Fiados | `monto_pendiente`, `dias_atraso`, estado | `monto − Σ cobro_fiado`; atraso respecto a `fecha_compromiso` (o `fecha_fiado + 14 días` si no hay), **a la fecha de corte** |
+| Deudas | `monto_pendiente`, estado `pendiente / por_vencer / vencido / pagado` | `monto_total_a_pagar − Σ pagos`; `por_vencer` si vence en ≤ 3 días |
+| Impuestos | Semáforo `al_dia / vencido` | impago y `fecha_vencimiento < hoy` → `vencido` |
+| Resumen del mes | Indicadores de F2 | Ventas (incluye fiadas) − costo de lo vendido − gastos del negocio; retiros personales vs sueldo |
+| Disponible para gastar | "Disponible para gastar" de F3 | saldo + cobros esperados − pagos comprometidos hasta el próximo vencimiento grande − mínimo operativo − reserva de impuestos |
+| `usa_fiado`, `usa_billetera_digital` | Features del forecast (ML) | `true` si hay ≥ 1 registro en los últimos 90 días (definición de referencia al final de `modelo_datos.dbml`) |
+| Features de credit scoring | Entrada del modelo de scoring | Ventana de 180 días; el backend/modelos las calculan en Python (SQL de referencia en `modelo_datos.dbml`) |
 
 > El saldo de caja es **flujo de efectivo** (solo `afecta_caja`). La ganancia de F2 es **devengada**: cuenta las ventas fiadas aunque no se hayan cobrado.
 
@@ -548,10 +574,10 @@ Una fila por llamada al LLM/VLM (OpenRouter), también las que fallan. **Grano:*
 | "pagué la cuota del préstamo" | `pago_prestamo`, `deuda_id` | — | Sí, − |
 | "saqué 50 para la casa" | `retiro_personal` (`programado_id` si es el sueldo) | — | Sí, − |
 | "pagué el colegio de mi hijo" | Nada, salvo que la plata haya salido de la caja de la tienda → `retiro_personal` | — | Solo si salió de la caja |
-| "pagué la luz, 80" | `gasto_negocio` (`programado_id` si es recurrente) | — | Sí, − |
+| "pagué la luz, 80" | `gasto_negocio` (`programado_id` si es recurrente; categoría `servicios` o, si no se dice, `otros_gastos`) | — | Sí, − |
 | "pagué mi RUS, 20 soles" | `pago_impuesto`, `impuesto_id` | `impuestos.fecha_pago` | Sí, − |
-| Yape/Plin recibido (API) | `venta`, `billetera_digital`, `billetera_mov_id` | `billeteras_digitales` | Sí, + |
-| "mi sueldo va a ser 400 a la semana" | — | `movimientos_programados` (`es_sueldo = true`) | No (se proyecta) |
+| Yape/Plin recibido (API) | `venta`, `billetera_digital`, `billetera_mov_id` (canal `billetera_api`) | `billeteras_digitales` | Sí, + |
+| "mi sueldo va a ser 400 a la semana" (o quincenal, o 1 350 al mes) | — | `movimientos_programados` (`es_sueldo = true`) y, si lo pide como meta, `reglas_meta` (`sueldo_fijo`, `monto_fijo`) | No (se proyecta) |
 | "este mes no pago alquiler" | — | `forecast_ajustes` | No (se proyecta) |
 
 Todo registro por voz, texto o foto pasa antes por `borradores`; el formulario web (`manual`) y la API de billeteras escriben directo.

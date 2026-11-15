@@ -25,7 +25,7 @@ from app.schemas.cuentas import ChequeoResponse, Sugerencia
 from app.services.finanzas import consultas as q
 from app.services.finanzas import proyeccion as fc
 from app.services.finanzas import simulador as sim
-from app.services.finanzas.modelo_ml import meta_b, motivo_fallback_forecast
+from app.services.finanzas.modelo_ml import meta_de
 from app.services.ingesta.texto import fecha_corta, soles
 
 PEDIDO_NUEVO = "PEDIDO-NUEVO"
@@ -69,7 +69,7 @@ def pedido_coincidente(deudas: list[q.DeudaCalc], proveedor_id: str | None, mont
 
 
 def _confianza(proy: fc.Proyeccion, saldo: Decimal, h: int) -> Confianza:
-    s = proy.sigma * max(h, 1) ** 0.5
+    s = proy.sigma_h(max(h, 1))
     if proy.semanas < 2 or s <= 0:
         return Confianza.baja
     z = abs(float(saldo)) / s
@@ -131,7 +131,9 @@ def chequeo_pedido(db: Session, empresa_id: str, proveedor: str, monto, fecha_ve
     if otros > 0:
         fundamento += f" Hasta esa fecha también tienes otros pagos por {soles(otros)}."
     limites = ("Proyección con tus ventas y gastos de las últimas 4 semanas; no considera eventos que no hayas "
-               "registrado.")  # fmt: skip
+               "registrado." if proy.ml is None else
+               "Proyección con un modelo entrenado con datos sintéticos, tus ventas y gastos del último mes y tus pagos "
+               "con fecha; no considera eventos que no hayas registrado.")  # fmt: skip
     if notas:
         limites += " " + " ".join(dict.fromkeys(notas))
     return ChequeoResponse(
@@ -140,5 +142,5 @@ def chequeo_pedido(db: Session, empresa_id: str, proveedor: str, monto, fecha_ve
         confianza=_confianza(proy, al_vencimiento, (vence - corte).days),
         saldo_minimo_hasta_vencimiento=minimo.p50, fecha_saldo_minimo=minimo.fecha,
         pedido_coincidente_id=coincide.deuda.deuda_id if coincide else None,
-        meta=meta_b(fc.MODELO, fc.VERSION, fallback=True, motivo=motivo_fallback_forecast()),
+        meta=meta_de(proy.motor),
     )  # fmt: skip

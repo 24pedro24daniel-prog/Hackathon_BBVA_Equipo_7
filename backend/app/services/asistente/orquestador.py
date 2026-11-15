@@ -47,7 +47,8 @@ _SIMULAR = re.compile(r"^y si\b|\bsi (pido|pago|cobro|saco|reduzco|pidiera|pagar
 _EXPLICAR = re.compile(r"\bpor que\b|\bme va a faltar\b|\bfalt(a|ar|aria|aran)\b|\balertas?\b|\bme alcanza\b|"
                        r"\bno me alcanza\b")  # fmt: skip
 _ESTADO = re.compile(r"\bcomo va\b|\bmi caja\b|\bcuanto tengo\b|\bcomo estoy\b|\bsaldo\b|\bcuanto hay\b|\bresumen\b|"
-                     r"\bcomo me va\b|\bcuanta plata\b")  # fmt: skip
+                     r"\bcomo me va\b|\bcuanta plata\b|\breportes?\b|\bcomo me (fue|ha ido)\b|"
+                     r"\bcomo (van|fueron|estuvieron) (mis|las) ventas\b")  # fmt: skip
 _CONCEPTO = re.compile(r"\bque es\b|\bque significa\b|\bexplicame\b|\bpara que sirve\b")
 _META = re.compile(r"\b(meta|metas|ahorrar|apartar|sueldo fijo|ponerme un sueldo)\b")
 _SALUDO = re.compile(r"^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|que tal|hey|ola|alo)\b")
@@ -162,7 +163,8 @@ def _plan_simular(ctx: _Contexto, mensaje: str) -> plantillas.Borrador:
     if not acciones:
         return plantillas.Borrador(plantillas.SIMULAR_AYUDA)
     simulacion = ctx.usar("simular", {"acciones": acciones})
-    return plantillas.simular(simulacion, " y ".join(descripcion), partes)
+    pedido_id = next((a["pedido_id"] for a in acciones if a.get("pedido_id")), None)
+    return plantillas.simular(simulacion, " y ".join(descripcion), partes, pedido_id)
 
 
 def _plan_prestamo(ctx: _Contexto, _mensaje: str) -> plantillas.Borrador:
@@ -177,7 +179,7 @@ def _plan_prestamo(ctx: _Contexto, _mensaje: str) -> plantillas.Borrador:
         if fiados:
             acciones.append({"tipo": "cobrar_fiados", "fiado_ids": [f["fiado_id"] for f in fiados]})
         simulacion = ctx.usar("simular", {"acciones": acciones})
-    return plantillas.prestamo(ejemplo, simulacion)
+    return plantillas.prestamo(ejemplo, simulacion, pedido["pedido_id"] if pedido else None)
 
 
 def _plan_concepto(ctx: _Contexto, mensaje: str) -> plantillas.Borrador:
@@ -249,10 +251,12 @@ def redactar_con_llm(mensaje: str, borrador: str, traza: traza_llm.TrazaLLM | No
     return texto
 
 
-def _historial(db, conversacion_id: str | None, limite: int = 6) -> list[dict]:
+def _historial(db, conversacion_id: str | None, empresa_id: str, limite: int = 6) -> list[dict]:
+    """Últimos mensajes de la conversación, solo de esta empresa (un conversacion_id ajeno no trae nada)."""
     if not conversacion_id:
         return []
-    filas = db.scalars(select(m.Conversacion).where(m.Conversacion.conversacion_id == conversacion_id)
+    filas = db.scalars(select(m.Conversacion).where(m.Conversacion.conversacion_id == conversacion_id,
+                                                    m.Conversacion.empresa_id == empresa_id)
                        .order_by(m.Conversacion.fecha_hora.desc(), m.Conversacion.mensaje_id.desc())
                        .limit(limite)).all()  # fmt: skip
     rol = {RolMensaje.usuario.value: "user", RolMensaje.asistente.value: "assistant"}
@@ -312,7 +316,7 @@ def responder(db, empresa_id: str, mensaje: str, conversacion_id: str | None = N
                 else:
                     empresa = db.get(m.Empresa, empresa_id)
                     negocio = empresa.nombre_ficticio if empresa else "su bodega"
-                    propuesta = conversar_con_llm(mensaje, _historial(db, conversacion_id), negocio, traza)
+                    propuesta = conversar_con_llm(mensaje, _historial(db, conversacion_id, empresa_id), negocio, traza)
                 verificacion = verificador.verificar_cifras(propuesta, permitidas)
                 if verificacion["ok"] and _PROHIBIDO_LLM.search(propuesta.lower()):
                     verificacion = verificador.verificar_cifras(texto_plantilla, permitidas)

@@ -46,7 +46,10 @@ T = TipoMovimiento
 
 PREGUNTA = re.compile(r"\?|^¿|\bcomo va\b|\bpor que\b|\bprestamo\b|^y si\b|\bcuanto tengo\b|\bme alcanza\b|\bque hago\b|"
                       r"\bque es\b|\bayuda\b|^hola\b|^buen[oa]s\b|\bcuanto (vendi|gane|saque|debo|me deben)\b|"
-                      r"\bcomo (estoy|voy|me fue)\b")  # fmt: skip
+                      r"\bcomo (estoy|voy|me fue|me ha ido)\b|\breportes?\b|\bresumen\b")  # fmt: skip
+# Respuesta a la pregunta "¿salió de la caja?" (chips "Sí, salió de la caja" / "No, no salió de la caja")
+_SALIO_NO = re.compile(r"^no\b")
+_SALIO_SI = re.compile(r"^(si|sip|sii+|ya|dale|claro|correcto|exacto|salio|yes|afirmativo)\b")
 _CHARLA = re.compile(r"^(hola|holi|ola|alo|hey|buen[oa]s|que tal|como estas|gracias|muchas gracias|grax|mil gracias|"
                      r"chau|chao|adios|hasta luego|nos vemos|genial|chevere|excelente|jaja\w*|ok gracias|ya gracias)\b")  # fmt: skip
 _CONFIRMAR = re.compile(r"^(si|sip|sii+|ya|dale|ok|okey|okay|listo|correcto|exacto|eso|asi es|esta bien|todo bien|"
@@ -395,11 +398,14 @@ def decidir(db, borrador: m.Borrador, texto: str, cat: cat_mod.Catalogo | None =
     mov = mov_actual(borrador)
     falt = faltantes(borrador, mov)
     campo = falt[0] if falt else None
+    if campo == "salio_de_caja":  # se resuelve primero: "de la caja" no es una corrección de tipo en esta respuesta
+        if _SALIO_NO.match(t):
+            return Decision("cancelar")
+        if _SALIO_SI.match(t):
+            return Decision("confirmar")
     nuevas = parsear_correccion(texto, mov, campo, opciones_fecha(borrador), cat)
 
     if _CANCELAR.search(t) and not nuevas:
-        return Decision("cancelar")
-    if campo == "salio_de_caja" and re.match(r"^no\b", t) and not nuevas:
         return Decision("cancelar")
     if _CONFIRMAR.match(t):
         return Decision("confirmar")
@@ -570,6 +576,9 @@ def procesar_texto(db, empresa_id: str, texto: str, borrador: m.Borrador | None 
                 r.transcripcion = transcrito[1]
             return r
     elif texto and es_charla(texto):
-        return asistente(db, empresa_id, texto, conversacion_id, canal_asistente)
+        r = asistente(db, empresa_id, texto, conversacion_id, canal_asistente)
+        if transcrito:
+            r.transcripcion = transcrito[1]
+        return r
     return registro(db, empresa_id, texto or None, canal=canal, media_url=media_url, transcrito=transcrito,
                     conversacion_id=conversacion_id, canal_asistente=canal_asistente)  # fmt: skip
