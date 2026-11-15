@@ -1,16 +1,16 @@
 // Funciones tipadas por endpoint (ver contract.md). Las pantallas solo importan desde aquí.
-import { request, EMPRESA_ID } from './client.js'
+import { request, empresaId } from './client.js'
 
-const emp = (id = EMPRESA_ID) => `/empresas/${id}`
+const emp = (id = empresaId()) => `/empresas/${id}`
 
 export const api = {
   // F1 — Ingesta
   interpretar: ({ canal, texto = null, media_url = null }) =>
-    request('POST', '/ingesta/interpretar', { body: { empresa_id: EMPRESA_ID, canal, texto, media_url } }),
+    request('POST', '/ingesta/interpretar', { body: { empresa_id: empresaId(), canal, texto, media_url } }),
   confirmar: ({ borrador_id, confirmado = true, correcciones = {} }) =>
     request('POST', '/ingesta/confirmar', { body: { borrador_id, confirmado, correcciones } }),
   leerCuaderno: ({ media_url }) =>
-    request('POST', '/ingesta/cuaderno', { body: { empresa_id: EMPRESA_ID, media_url } }),
+    request('POST', '/ingesta/cuaderno', { body: { empresa_id: empresaId(), media_url } }),
   registrarImpuesto: (payload) => request('POST', `${emp()}/impuestos`, { body: payload }),
 
   // Movimientos
@@ -18,6 +18,7 @@ export const api = {
   crearMovimiento: (mov) => request('POST', `${emp()}/movimientos`, { body: mov }),
 
   // F2 — Resumen
+  // Sin periodo, el backend usa el mes de su fecha de corte (en la demo, 2026-11-14).
   getResumen: (periodo) => request('GET', `${emp()}/resumen`, { query: { periodo } }),
 
   // F3 / F4
@@ -39,6 +40,13 @@ export const api = {
   accionAlerta: (alerta_id, accion, detalle) =>
     request('POST', `/alertas/${alerta_id}/accion`, { body: { accion, detalle }, idempotent: false }),
 
+  // Chat: el backend decide si el mensaje es un registro, una respuesta al borrador pendiente o una pregunta
+  chat: ({ texto, canal = 'texto', media_url = null, borrador_id = null, conversacion_id = null }) =>
+    request('POST', `${emp()}/chat/mensajes`, {
+      body: { texto, canal, media_url, borrador_id, conversacion_id },
+      idempotent: false,
+    }),
+
   // F7
   enviarAsistente: ({ conversacion_id = null, mensaje, canal = 'app' }) =>
     request('POST', `${emp()}/asistente/mensajes`, { body: { conversacion_id, mensaje, canal }, idempotent: false }),
@@ -51,4 +59,4 @@ export const api = {
   health: () => request('GET', '/health'),
 }
 
-export { ApiError, USE_MOCK, EMPRESA_ID } from './client.js'
+export { ApiError, USE_MOCK, EMPRESA_ID, empresaId } from './client.js'

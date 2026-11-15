@@ -1,17 +1,18 @@
 // F7: respuesta del asistente (incluye el ejemplo de préstamo informal y el "Modo básico").
-import { Button, Money } from '../../components/ui/index.jsx'
+import { Button, Icon, Money } from '../../components/ui/index.jsx'
 import { soles } from '../../lib/format.js'
-import { HowIKnow, InBubble, KVTable, RichText, StatusText } from './ChatParts.jsx'
+import { HowIKnow, InBubble, KVTable, RichText } from './ChatParts.jsx'
 
-// Fuente técnica de una cifra → frase para Pedro. Si no la reconocemos, no se muestra.
+// Fuente técnica de una cifra en soles → frase para Pedro. Si no la reconocemos (o no es un monto), no se muestra.
+// El ejemplo de préstamo informal ya se ve en su propia tabla.
 const FUENTES = [
-  [/^resumen\.saldo_caja/, 'tu caja de hoy'],
+  [/saldo_caja/, 'tu caja de hoy'],
+  [/pendiente_cobro|^fiados/, 'tus fiados'],
+  [/^forecast\.dia_critico\.obligacion/, 'tu próximo pago'],
   [/^forecast\.dia_critico/, 'lo que calculo para tu día más justo'],
   [/^forecast/, 'lo que calculo que vas a vender'],
   [/^pedidos\./, 'tu pedido'],
   [/^simular/, 'cómo quedaría tu caja con ese cambio'],
-  [/prestamo_informal/, 'un ejemplo de préstamo informal'],
-  [/^fiados/, 'tus fiados'],
 ]
 function fuenteTexto(fuente = '') {
   return FUENTES.find(([re]) => re.test(fuente))?.[1] || null
@@ -37,13 +38,21 @@ export function AssistantCard({ msg, onAccion }) {
       ? [['Cifras', res.verificacion_cifras.ok ? 'Verificadas con tus registros' : 'Algunas no se pudieron verificar']]
       : []),
   ]
+  // Charla sin números (saludo, gracias…): burbuja simple, como lo escribiría una persona
+  if (!fallback && !ej && !res.tabla?.length && !acciones.length && !usadas.length && !res.cifras_usadas?.length) {
+    return (
+      <InBubble time={time}>
+        <RichText text={res.respuesta} />
+        {res.respuesta_post && <RichText text={res.respuesta_post} />}
+      </InBubble>
+    )
+  }
   return (
     <InBubble wide time={time} footer={res.disclaimer || 'Orientación educativa · no es asesoría'}>
       {fallback && (
-        <p>
-          <StatusText tone="warning" icon="info">
-            Modo básico
-          </StatusText>
+        <p className="chat-note chat-st">
+          <Icon name="info" size={14} />
+          Modo básico
         </p>
       )}
       <RichText text={res.respuesta} />

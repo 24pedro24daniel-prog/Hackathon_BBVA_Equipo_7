@@ -6,35 +6,36 @@ import { CardTitle, HowIKnow, InBubble, RichText, SavedLine } from './ChatParts.
 import { sugerenciaTexto } from './chatText.js'
 
 export function WarningCard({ msg, onVerOpciones, onRegistrar }) {
-  const { chequeo, res, correcciones, status, opcionesVistas, time } = msg
+  const { chequeo, res, correcciones, status, opcionesVistas, yaRegistrado, time } = msg
   const mov = res.movimiento_propuesto
   const fecha = ddmm(correcciones.fecha_vencimiento)
   const saldo = chequeo.saldo_proyectado_al_vencimiento
+  const monto = soles(correcciones.monto ?? mov.monto)
+  const pedido = yaRegistrado ? `Con tu pedido de ${monto}` : `Si pides ${monto}`
   const texto =
     saldo < 0
-      ? `Si pides ${soles(mov.monto)}, **el ${fecha} te faltarían ${soles(-saldo)}** para pagarlo.`
-      : `Si pides ${soles(mov.monto)}, **el ${fecha} te quedarían solo ${soles(saldo)}** después de pagarlo.`
+      ? `${pedido}, **el ${fecha} te faltarían ${soles(-saldo)}** para pagarlo.`
+      : `${pedido}, **el ${fecha} te quedarían solo ${soles(saldo)}** después de pagarlo.`
   const locked = status !== 'pending'
   return (
-    <InBubble
-      wide
-      time={time}
-      footer={`${confianzaLabel(chequeo.confianza)} · basado en tus últimos 3 meses`}
-    >
+    <InBubble wide time={time} footer={confianzaLabel(chequeo.confianza)}>
       <CardTitle icon="warning" tone={saldo < 0 ? 'danger' : 'warning'}>
         Antes de confirmar
       </CardTitle>
       <RichText text={texto} />
       {chequeo.fundamento && <p className="chat-why">Por qué: {lowerFirst(chequeo.fundamento)}</p>}
+      {yaRegistrado && <p className="chat-note">Ya tenías este pedido anotado, así que no lo dupliqué.</p>}
       <div className="chat-actions chat-actions--stack">
-        <Button block onClick={onVerOpciones} disabled={locked || opcionesVistas}>
+        <Button block onClick={onVerOpciones} disabled={opcionesVistas || (locked && !yaRegistrado)}>
           Ver opciones
         </Button>
-        <Button variant="ghost" block onClick={onRegistrar} disabled={locked}>
-          Registrar igual
-        </Button>
+        {!yaRegistrado && (
+          <Button variant="ghost" block onClick={onRegistrar} disabled={locked}>
+            Registrar igual
+          </Button>
+        )}
       </div>
-      {status === 'done' && <SavedLine>Pedido registrado</SavedLine>}
+      {status === 'done' && !yaRegistrado && <SavedLine>Pedido registrado</SavedLine>}
       <HowIKnow
         fundamento={chequeo.fundamento}
         limites={chequeo.limites}
@@ -50,7 +51,7 @@ export function WarningCard({ msg, onVerOpciones, onRegistrar }) {
 }
 
 export function OptionsCard({ msg, onRegistrar }) {
-  const { chequeo, fecha, status, time } = msg
+  const { chequeo, fecha, status, yaRegistrado, time } = msg
   const sugs = chequeo.sugerencias || []
   const ordenadas = [...sugs].sort((a, b) => b.saldo_resultante - a.saldo_resultante)
   const alcanzan = ordenadas.filter((s) => s.saldo_resultante >= 0)
@@ -83,9 +84,11 @@ export function OptionsCard({ msg, onRegistrar }) {
         <Link to="/simulador" className="cc-btn cc-btn--primary cc-btn--block">
           Probar en el simulador
         </Link>
-        <Button variant="ghost" block onClick={onRegistrar} disabled={status !== 'pending'}>
-          Registrar igual
-        </Button>
+        {!yaRegistrado && (
+          <Button variant="ghost" block onClick={onRegistrar} disabled={status !== 'pending'}>
+            Registrar igual
+          </Button>
+        )}
       </div>
     </InBubble>
   )

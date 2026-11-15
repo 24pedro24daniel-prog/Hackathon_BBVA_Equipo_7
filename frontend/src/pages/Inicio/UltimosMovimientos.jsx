@@ -9,10 +9,10 @@ import { Card, Icon, List, ListRow, Money, Skeleton, ErrorState } from '../../co
 const LIMITE = 5
 
 /** Tarjeta desplegable con los últimos 5 movimientos y enlace a su detalle (/movimientos, ruta oculta). */
-export default function UltimosMovimientos({ escenario }) {
+export default function UltimosMovimientos() {
   const [abierto, setAbierto] = useState(true)
   const id = useId()
-  const movs = useApi(() => api.getMovimientos({ limit: LIMITE }), [escenario])
+  const movs = useApi(() => api.getMovimientos({ limit: LIMITE }), [])
   const items = movs.data?.items ?? []
 
   return (

@@ -325,6 +325,9 @@ async function handle(method, path, { query, body }) {
       await wait(900)
       return ok(asistente(body?.mensaje || '', body?.conversacion_id, fallback, escenario))
 
+    case 'POST /empresas/:id/chat/mensajes':
+      return chatMock(body ?? {}, path, { fallback, escenario })
+
     default:
       return err(404, 'NO_ENCONTRADO', `Mock sin ruta para ${method} ${path}`)
   }
@@ -430,6 +433,65 @@ function asistente(mensaje, conversacion_id, fallback, escenario = 'pedro') {
     intencion: 'otro',
     respuesta: 'Puedo ayudarte con: cómo va tu caja, por qué te faltaría plata, o qué pasa si cambias un pedido. ¿Qué quieres saber?',
   }
+}
+
+// Chat: versión simple de la ruta del backend (reglas, sin LLM). Reusa interpretar, confirmar, chequeo y asistente.
+const PAGOS_MOCK = [[/billetera|yape|plin/, 'billetera_digital'], [/efectivo/, 'efectivo'], [/tarjeta/, 'tarjeta'], [/transferencia/, 'transferencia']]
+
+async function chatMock({ texto = '', canal = 'texto', media_url, borrador_id, conversacion_id }, path, { fallback, escenario }) {
+  await wait(canal === 'voz' ? 1100 : 400)
+  const t = texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+  const empPath = path.replace(/\/chat\/mensajes$/, '')
+  const meta = D.meta('reglas-chat', '0.1.0', { fallback_usado: fallback })
+  const transcripcion = canal === 'voz' ? texto : null
+  const vacio = { mensaje: null, transcripcion, interpretacion: null, confirmacion: null, asistente: null, conversacion_id, meta }
+  const mov = borrador_id && borradores.get(borrador_id)
+
+  if (mov && !interpretarTexto(texto)) {
+    if (/^(si|ok|dale|listo|correcto|esta bien|guardalo|registralo)\b/.test(t)) {
+      const r = await handle('POST', '/ingesta/confirmar', { body: { borrador_id, confirmado: true, correcciones: {} } })
+      return r.status >= 400 ? r : ok({ ...vacio, tipo: 'guardado', confirmacion: r.body })
+    }
+    if (/borra|cancela|olvida|no lo anotes/.test(t)) {
+      borradores.delete(borrador_id)
+      return ok({ ...vacio, tipo: 'descartado', mensaje: 'Listo, no lo anoto.' })
+    }
+    const c = {}
+    const pago = PAGOS_MOCK.find(([re]) => re.test(t))
+    if (pago) c.metodo_pago = pago[1]
+    if (/nov|30\/11/.test(t)) c.fecha_vencimiento = '2026-11-30'
+    else if (/dic|30\/12/.test(t)) c.fecha_vencimiento = '2026-12-30'
+    const n = !c.fecha_vencimiento && t.match(/(\d+(?:[.,]\d+)?)/)
+    if (n) c.monto = Number(n[1].replace(',', '.'))
+    if (Object.keys(c).length) {
+      const nuevo = { ...mov, ...c }
+      borradores.set(borrador_id, nuevo)
+      const falta = nuevo.tipo === 'compra' && !nuevo.fecha_vencimiento ? ['fecha_vencimiento'] : []
+      const chequeo = nuevo.tipo === 'compra' && nuevo.fecha_vencimiento
+        ? (await handle('POST', `${empPath}/pedidos/chequeo`, { body: { monto: nuevo.monto } })).body
+        : null
+      return ok({
+        ...vacio,
+        tipo: 'borrador_actualizado',
+        mensaje: c.metodo_pago ? 'Dale, lo cambié.' : null,
+        interpretacion: {
+          borrador_id, movimiento_propuesto: nuevo, origen_monto: 'dicho_por_usuario', confianza: 0.95,
+          campos_faltantes: falta, pregunta_aclaratoria: falta.length ? '¿Lo pagas el 30 de noviembre o el 30 de diciembre?' : null,
+          opciones_aclaracion: falta.length ? [{ valor: '2026-11-30', texto: '30/11' }, { valor: '2026-12-30', texto: '30/12' }] : [],
+          ...(chequeo ? { chequeo_pedido: { ...chequeo, fecha_vencimiento: nuevo.fecha_vencimiento } } : {}),
+          meta,
+        },
+      })
+    }
+  }
+
+  const r = await handle('POST', '/ingesta/interpretar', { body: { canal: 'texto', texto, media_url } })
+  if (r.status < 400) return ok({ ...vacio, tipo: 'registro', interpretacion: { ...r.body, transcripcion } })
+  const res = asistente(texto, conversacion_id, fallback, escenario)
+  if (/^(gracias|hola|buenas)/.test(t)) {
+    res.respuesta = t.startsWith('gracias') ? '¡De nada! Aquí estoy para lo que necesites.' : '¡Hola! ¿Qué vendiste hoy?'
+  }
+  return ok({ ...vacio, tipo: 'asistente', asistente: res, conversacion_id: res.conversacion_id })
 }
 
 export async function mockRequest(method, path, opts) {

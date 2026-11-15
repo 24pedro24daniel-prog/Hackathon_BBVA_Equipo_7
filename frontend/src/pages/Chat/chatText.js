@@ -1,4 +1,4 @@
-// Textos, etiquetas y "parsers" de intención del chat simulado. Sin JSX (solo funciones puras).
+// Textos y etiquetas del chat. Sin JSX (solo funciones puras). Qué es cada mensaje lo decide el backend (/chat/mensajes).
 import { ddmm, soles } from '../../lib/format.js'
 
 export const TIPO_LABEL = {
@@ -36,37 +36,11 @@ const humanize = (s = '') => {
 export const tipoLabel = (t) => TIPO_LABEL[t] || humanize(t)
 export const pagoLabel = (p) => PAGO_LABEL[p] || humanize(p)
 
-/** minúsculas y sin tildes, para comparar lo que escribe Pedro */
-export function norm(s = '') {
-  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
-}
+// Respuestas cortas a la tarjeta del cuaderno de fiados (la única que no pasa por /chat/mensajes)
+export const isAffirmative = (text) => /^(si|sii|ok|okey|correcto|listo|dale|esta bien|guardar?)\b/.test(norm(text))
+export const isNegative = (text) => /^(no|corregir)\b/.test(norm(text))
 
-/** ¿Es una pregunta para el asistente (F7) y no un registro (F1)? */
-export function isQuestion(text) {
-  const t = norm(text)
-  return /\?|^¿|como va|por que|prestamo|^y si\b|cuanto tengo|me alcanza|que hago/.test(t)
-}
-
-export const isAffirmative = (text) => /^(si|sii|ok|okey|correcto|listo|dale|esta bien|guardar|si,? guardar)\b/.test(norm(text))
-export const isNegative = (text) => /^(no|corregir|no,? corregir)\b/.test(norm(text))
-
-/**
- * Correcciones en texto libre mientras hay un borrador pendiente:
- * "Fue por billetera" → { metodo_pago: 'billetera_digital' }; "fueron 15" → { monto: 15 }; "era una venta" → { tipo }
- */
-export function parseCorreccion(text) {
-  const t = norm(text)
-  const c = {}
-  if (/billetera|yape|plin|digital/.test(t)) c.metodo_pago = 'billetera_digital'
-  else if (/efectivo|cash/.test(t)) c.metodo_pago = 'efectivo'
-  else if (/tarjeta|\bpos\b/.test(t)) c.metodo_pago = 'tarjeta'
-  else if (/transferencia/.test(t)) c.metodo_pago = 'transferencia'
-  else if (/fiado|credito/.test(t)) c.metodo_pago = 'credito'
-  if (/\bventa\b|vendi/.test(t)) c.tipo = 'venta'
-  const m = t.match(/^(?:s\/\s*)?(\d+(?:[.,]\d+)?)$/) || t.match(/\b(?:fue|fueron|era|eran|son|es)\b\D*(\d+(?:[.,]\d+)?)/)
-  if (m) c.monto = Number(m[1].replace(',', '.'))
-  return Object.keys(c).length ? c : null
-}
+const norm = (s = '') => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
 
 /** número suelto o "son 35" → 35 */
 export function parseNumero(text) {
@@ -106,7 +80,8 @@ export function filasMovimiento(mov) {
 export function resumenEntendido(mov) {
   if (mov.tipo === 'compra') {
     const cred = mov.metodo_pago === 'credito' ? ' a crédito' : ''
-    return `Entendí un **pedido${cred} de ${soles(mov.monto)}${mov.contraparte ? ` a ${mov.contraparte}` : ''}**. Me falta un dato:`
+    const monto = mov.monto ? ` de ${soles(mov.monto)}` : ''
+    return `Entendí un **pedido${cred}${monto}${mov.contraparte ? ` a ${mov.contraparte}` : ''}**. Me falta un dato:`
   }
   return `Entendí **${tipoLabel(mov.tipo).toLowerCase()} de ${soles(mov.monto, { cents: true })}**. Me falta un dato:`
 }
@@ -137,7 +112,7 @@ export function textoConfirmado(mov, correcciones = {}, res) {
     lines.push('Listo, anotado.')
   }
   if (res?.saldo_caja_negocio !== undefined && res?.saldo_caja_negocio !== null) {
-    lines.push(`Saldo del negocio hoy: ${soles(res.saldo_caja_negocio)}`)
+    lines.push(`Ahora tienes ${soles(res.saldo_caja_negocio)} en la caja.`)
   }
   const alerta = res?.alertas_disparadas?.[0]
   if (alerta) lines.push(`Ojo: ${alerta.titulo || alerta.titulo_corto}.`)

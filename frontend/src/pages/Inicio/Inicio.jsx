@@ -2,7 +2,6 @@ import { useId } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
-import { useDemo } from '../../lib/useDemo.js'
 import { soles, ddmm, daysBetween } from '../../lib/format.js'
 import DemoMenu from '../../components/layout/DemoMenu.jsx'
 import {
@@ -27,22 +26,15 @@ const NOMBRE_DUENIO = 'Pedro'
 const DIAS_REQUERIDOS_DEFAULT = 30
 const MAX_PROXIMOS = 3
 
-/** "2026-11" en hora de Lima */
-function periodoActual() {
-  const parts = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', timeZone: 'America/Lima' }).format(new Date())
-  return parts.slice(0, 7)
-}
-
 const diasTxt = (n) => `${n} ${n === 1 ? 'día' : 'días'}`
 const enDias = (n) => (n <= 0 ? 'hoy' : n === 1 ? 'mañana' : `en ${diasTxt(n)}`)
 
 export default function Inicio() {
-  const [demo] = useDemo()
-  const deps = [demo.escenario]
   // Las tres llamadas salen en paralelo; cada bloque se pinta cuando llega su dato.
-  const resumen = useApi(() => api.getResumen(periodoActual()), deps)
-  const forecast = useApi(() => api.getForecast(30), deps)
-  const alertas = useApi(() => api.getAlertas('activa'), deps)
+  // Sin periodo: el backend usa el mes de su fecha de corte (resumen.corte).
+  const resumen = useApi(() => api.getResumen(), [])
+  const forecast = useApi(() => api.getForecast(30), [])
+  const alertas = useApi(() => api.getAlertas('activa'), [])
 
   const r = resumen.data
   const diasConDatos = r?.dias_con_datos
@@ -50,7 +42,7 @@ export default function Inicio() {
   const esNuevo =
     typeof diasConDatos === 'number'
       ? diasConDatos < diasRequeridos
-      : forecast.data?.disponible === false || (!r && demo.escenario === 'nuevo')
+      : forecast.data?.disponible === false
 
   return (
     <div className="inicio">
@@ -66,9 +58,9 @@ export default function Inicio() {
         ) : resumen.error ? (
           <ErrorState error={resumen.error} onRetry={resumen.reload} />
         ) : esNuevo ? (
-          <InicioNuevo resumen={r} diasConDatos={diasConDatos ?? 0} diasRequeridos={diasRequeridos} escenario={demo.escenario} />
+          <InicioNuevo resumen={r} diasConDatos={diasConDatos ?? 0} diasRequeridos={diasRequeridos} />
         ) : (
-          <InicioCompleto resumen={r} forecast={forecast} alertas={alertas} escenario={demo.escenario} />
+          <InicioCompleto resumen={r} forecast={forecast} alertas={alertas} />
         )}
       </div>
     </div>
@@ -103,7 +95,7 @@ function AnotarVenta({ label = 'Anotar una venta' }) {
 
 /* ---------------- Con historial (Pedro y negocio sano) ---------------- */
 
-function InicioCompleto({ resumen, forecast, alertas, escenario }) {
+function InicioCompleto({ resumen, forecast, alertas }) {
   return (
     <div className="inicio__grid">
       <div className="inicio__main">
@@ -116,7 +108,7 @@ function InicioCompleto({ resumen, forecast, alertas, escenario }) {
       </div>
 
       <div className="inicio__side">
-        <UltimosMovimientos escenario={escenario} />
+        <UltimosMovimientos />
       </div>
     </div>
   )
@@ -338,7 +330,7 @@ function Cobertura({ pago, falta }) {
 
 /* ---------------- Día 3: recién empieza ---------------- */
 
-function InicioNuevo({ resumen, diasConDatos, diasRequeridos, escenario }) {
+function InicioNuevo({ resumen, diasConDatos, diasRequeridos }) {
   const idProgreso = useId()
   const ind = resumen?.indicadores
   const hechos = Math.min(diasConDatos, diasRequeridos)
@@ -366,7 +358,7 @@ function InicioNuevo({ resumen, diasConDatos, diasRequeridos, escenario }) {
       </div>
 
       <div className="inicio__side">
-        <UltimosMovimientos escenario={escenario} />
+        <UltimosMovimientos />
       </div>
     </div>
   )

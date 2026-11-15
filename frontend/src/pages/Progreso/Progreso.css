@@ -158,8 +158,6 @@
 
 /* ---------- Metas ---------- */
 .progreso-meta { align-items: flex-start; }
-.progreso-meta .cc-row__sub { display: grid; gap: 10px; }
-.progreso-meta__bar { margin-top: 2px; }
 
 .progreso-privacy { color: var(--text-muted); padding: 4px 4px 0; }
 

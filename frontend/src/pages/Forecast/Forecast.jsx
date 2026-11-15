@@ -58,7 +58,7 @@ export default function Forecast() {
 function ForecastEmpty({ data }) {
   const navigate = useNavigate()
   const tiene = data?.dias_con_datos ?? 0
-  const requiere = data?.dias_requeridos ?? 30
+  const requiere = data?.dias_requeridos ?? 28
   return (
     <Card className="fc-empty" aria-labelledby="fc-empty-title">
       <h2 id="fc-empty-title" className="cc-card__title">
@@ -86,7 +86,7 @@ function ForecastContent({ f }) {
   const minimo = f.minimo_operativo
   const eventos = f.proximos_eventos || []
 
-  // Punto más bajo: el día crítico del backend o, si no viene, el menor "lo esperado" de la serie.
+  // Día a destacar: el día crítico del backend (primer día en rojo) o, si no viene, el menor "lo esperado" de la serie.
   const bajo = useMemo(() => {
     if (critico) return { fecha: critico.fecha, saldo: critico.saldo_p50 }
     const m = points.reduce((a, p) => (p.p50 < a.p50 ? p : a), points[0])
@@ -127,7 +127,11 @@ function ForecastContent({ f }) {
             ) : (
               <>
                 <Money value={bajo.saldo} size="lg" {...moneyTone(tone)} />
-                <p className="fc-head__muted">lo más bajo, el {ddmm(bajo.fecha)}</p>
+                <p className="fc-head__muted">
+                  {critico?.obligacion_asociada?.proveedor
+                    ? `al pagar a ${critico.obligacion_asociada.proveedor}, el ${ddmm(bajo.fecha)}`
+                    : `lo más bajo, el ${ddmm(bajo.fecha)}`}
+                </p>
               </>
             )}
           </div>
@@ -184,7 +188,7 @@ function ForecastContent({ f }) {
               })}
             </List>
           ) : (
-            <p className="cc-muted fc-pad">No tienes pagos ni cobros con fecha en los próximos 30 días.</p>
+            <p className="cc-muted fc-pad">No tienes pagos ni cobros con fecha en los próximos {f.horizonte_dias} días.</p>
           )}
           {eventos.some((e) => e.tipo === 'cobro_fiado') && (
             <p className="cc-small cc-muted fc-pad fc-note">Fiados contados según qué tan probable es que te paguen.</p>

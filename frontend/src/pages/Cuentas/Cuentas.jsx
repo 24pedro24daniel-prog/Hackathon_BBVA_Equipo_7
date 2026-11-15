@@ -2,7 +2,6 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
-import { useDemo } from '../../lib/useDemo.js'
 import { ddmm, weekdayDdmm } from '../../lib/format.js'
 import {
   Button,
@@ -93,9 +92,8 @@ const reducedMotion = () => {
 }
 
 export default function Cuentas() {
-  const [demo] = useDemo()
-  const fiados = useApi(() => api.getFiados(), [demo.escenario])
-  const pedidos = useApi(() => api.getPedidos(), [demo.escenario])
+  const fiados = useApi(() => api.getFiados(), [])
+  const pedidos = useApi(() => api.getPedidos(), [])
 
   const [selected, setSelected] = useState('deben')
   const [eliminando, setEliminando] = useState(null)
@@ -202,7 +200,9 @@ export default function Cuentas() {
       <div className="cuentas-body">
         {errorEliminacion && (
           <p className="cuentas-error-eliminar" role="alert">
-            No pude eliminar la cuenta. {errorEliminacion.message} Vuelve a intentarlo.
+            {errorEliminacion.status === 404
+              ? 'Todavía no puedo eliminar cuentas desde aquí. Tus cuentas siguen igual.'
+              : `No pude eliminar la cuenta. ${errorEliminacion.message} Vuelve a intentarlo.`}
           </p>
         )}
         <div
@@ -415,13 +415,15 @@ function DebesBlock({ state, onEliminar, eliminando, headingRef }) {
                 }
                 amount={imp.monto_estimado != null ? <Money value={imp.monto_estimado} /> : undefined}
               >
-                <EliminarCuenta
-                  tipo="impuesto"
-                  id={imp.impuesto_id}
-                  nombre={imp.nombre || 'el impuesto del mes'}
-                  onEliminar={onEliminar}
-                  eliminando={eliminando}
-                />
+                {imp.impuesto_id && (
+                  <EliminarCuenta
+                    tipo="impuesto"
+                    id={imp.impuesto_id}
+                    nombre={imp.nombre || 'el impuesto del mes'}
+                    onEliminar={onEliminar}
+                    eliminando={eliminando}
+                  />
+                )}
               </ListRow>
             )}
           </List>

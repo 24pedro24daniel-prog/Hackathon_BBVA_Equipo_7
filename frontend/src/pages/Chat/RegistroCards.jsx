@@ -5,14 +5,14 @@ import { CardTitle, InBubble, KVTable, RichText, SavedLine, StatusText } from '.
 import { filasMovimiento, notaDuda, resumenEntendido } from './chatText.js'
 
 export function ConfirmCard({ msg, onCorrecto, onCorregir }) {
-  const { res, status, dudoso, time } = msg
+  const { res, status, dudoso, titulo, time } = msg
   const mov = res.movimiento_propuesto
   const item = mov.items?.[0]
-  const locked = status === 'done' || status === 'saving'
+  const locked = status !== 'pending' && status !== 'editing'
   return (
     <InBubble wide time={time}>
       <div className="chat-card__head">
-        <CardTitle>Anoté esto, ¿está bien?</CardTitle>
+        <CardTitle>{titulo || 'Anoté esto, ¿está bien?'}</CardTitle>
         {dudoso && <StatusText tone="warning">Revisa antes de guardar</StatusText>}
       </div>
       <KVTable rows={filasMovimiento(mov)} label="Lo que anoté" />
@@ -20,14 +20,17 @@ export function ConfirmCard({ msg, onCorrecto, onCorregir }) {
         <p className="chat-note">Usé el precio de tu lista: {soles(item.precio_unitario, { cents: true })} cada una.</p>
       )}
       {res.origen_monto === 'estimado' && <p className="chat-note">El monto es un estimado; corrígelo si no es así.</p>}
-      <div className="chat-actions">
-        <Button icon="check" onClick={onCorrecto} disabled={locked}>
-          Correcto
-        </Button>
-        <Button variant="secondary" onClick={onCorregir} disabled={locked || status === 'editing'}>
-          Corregir
-        </Button>
-      </div>
+      {/* Si Pedro la corrigió o la descartó escribiendo, queda como historial, sin botones */}
+      {status !== 'replaced' && status !== 'discarded' && (
+        <div className="chat-actions">
+          <Button icon="check" onClick={onCorrecto} disabled={locked}>
+            Correcto
+          </Button>
+          <Button variant="secondary" onClick={onCorregir} disabled={locked || status === 'editing'}>
+            Corregir
+          </Button>
+        </div>
+      )}
       {status === 'done' && <SavedLine />}
     </InBubble>
   )

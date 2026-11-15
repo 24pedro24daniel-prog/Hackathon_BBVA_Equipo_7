@@ -3,25 +3,20 @@
 // Mensaje: { id, from: 'me' | 'bot', kind, time, ...datos }
 //   me:  text | audio | photo
 //   bot: text | error | confirm | clarify | warning | options | alert | assistant | cuaderno | plan
-// Las tarjetas con acciones llevan `status`: pending | editing | saving | done.
+// Las tarjetas con acciones llevan `status`: pending | editing | saving | done | replaced | discarded.
+// Todo texto o audio va a POST /chat/mensajes (con el borrador pendiente, si hay): el backend decide si es un registro,
+// una corrección/respuesta, un "sí", un "bórralo" o una pregunta. Los botones usan sus endpoints directos.
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/index.js'
-import { hhmm, soles } from '../../lib/format.js'
-import {
-  isAffirmative,
-  isNegative,
-  isQuestion,
-  norm,
-  parseCorreccion,
-  parseNumero,
-  textoConfirmado,
-} from './chatText.js'
+import { ddmm, hhmm, soles } from '../../lib/format.js'
+import { isAffirmative, isNegative, parseNumero, textoConfirmado } from './chatText.js'
 import { capturarFotoCuaderno, capturarNotaDeVoz, DEMO_VOICE_NOTES } from './media.js'
 import { DEMO_SCRIPTS } from './demoScripts.js'
 import { armarPlanCaja, preguntaPlan } from './planCaja.js'
 
 const now = () => hhmm(new Date())
+const HOLA = 'Hola 👋 ¿Qué vendiste o gastaste hoy? Escríbeme, mándame un audio o una foto de tu cuaderno.'
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
 export function useChat({ demo, intent } = {}) {
@@ -35,8 +30,8 @@ export function useChat({ demo, intent } = {}) {
   const store = useRef([])
   const seq = useRef(0)
   const conversacionId = useRef(null)
-  // Qué tarjeta está esperando una respuesta escrita
-  const pending = useRef({ draftId: null, clarifyId: null, warningId: null, cuadernoId: null })
+  // Tarjeta cuyo borrador espera respuesta (se manda como borrador_id) y cuaderno pendiente
+  const pending = useRef({ cardId: null, cuadernoId: null })
 
   const commit = () => setMessages(store.current)
   const get = (id) => store.current.find((m) => m.id === id)
@@ -65,11 +60,13 @@ export function useChat({ demo, intent } = {}) {
   }
 
   function handleError(err, retry) {
-    if (err?.codigo === 'NO_INTERPRETABLE' || err?.codigo === 'NO_ENCONTRADO') {
+    // Mensajes del backend que ya están escritos para Pedro (no interpretable, ya confirmado, falta el monto…)
+    const paraPedro = ['NO_INTERPRETABLE', 'NO_ENCONTRADO', 'CONFLICTO'].includes(err?.codigo) || (err?.codigo === 'VALIDACION' && err.status === 400)
+    if (paraPedro) {
       bot('text', { text: err.message })
       return
     }
-    bot('error', { text: 'No pude procesarlo ahora. Intenta otra vez.', retry, status: 'pending' })
+    bot('error', { text: 'Uy, no me llegó bien. ¿Lo intentamos otra vez?', retry, status: 'pending' })
   }
 
   function retry(id) {
@@ -79,52 +76,96 @@ export function useChat({ demo, intent } = {}) {
     return m.retry()
   }
 
-  // ---------- F1: interpretar → confirmar ----------
+  // ---------- Conversación: todo texto o audio va a POST /chat/mensajes; el backend decide qué es ----------
 
-  async function interpretar({ canal, texto, media_url = null, audioId = null }) {
-    setFlujo('Registro')
+  /** Tarjeta (confirm | clarify | warning) cuyo borrador espera respuesta, si sigue abierta */
+  function cardPendiente() {
+    const m = get(pending.current.cardId)
+    return m && (m.status === 'pending' || m.status === 'editing') ? m : null
+  }
+
+  async function conversar({ texto, canal = 'texto', media_url = null, audioId = null }) {
+    const card = cardPendiente()
     try {
-      const res = await withTyping(canal === 'voz' ? 'Escuchando tu audio…' : 'Anotando…', () =>
-        api.interpretar({ canal, texto, media_url }),
+      const r = await withTyping(canal === 'voz' ? 'Escuchando tu audio…' : 'Escribiendo…', () =>
+        api.chat({ texto, canal, media_url, borrador_id: card?.res.borrador_id ?? null, conversacion_id: conversacionId.current }),
       )
-      if (audioId) update(audioId, { transcripcion: res.transcripcion || texto })
-      mostrarInterpretacion(res)
+      if (audioId) update(audioId, { transcripcion: r.transcripcion || texto })
+      conversacionId.current = r.conversacion_id || conversacionId.current
+      mostrarRespuesta(r, card)
     } catch (err) {
       if (audioId) update(audioId, { transcripcion: texto })
-      handleError(err, () => interpretar({ canal, texto, media_url, audioId }))
+      handleError(err, () => conversar({ texto, canal, media_url, audioId }))
     }
   }
 
-  function mostrarInterpretacion(res) {
+  function mostrarRespuesta(r, card) {
+    switch (r.tipo) {
+      case 'registro':
+      case 'borrador_actualizado':
+        // Una corrección o respuesta se muestra como tarjeta nueva, debajo de lo que escribió Pedro; la anterior queda cerrada.
+        if (r.tipo === 'borrador_actualizado' && card) cerrar(card.id, 'replaced')
+        return mostrarInterpretacion(r.interpretacion, r.mensaje)
+      case 'guardado':
+        if (card) cerrar(card.id, 'done')
+        // El backend ya redacta el "listo" con el saldo; si no viene, se arma aquí
+        return bot('text', { text: r.mensaje || textoConfirmado(card?.res.movimiento_propuesto, {}, r.confirmacion) })
+      case 'descartado':
+        if (card) cerrar(card.id, 'discarded')
+        return bot('text', { text: r.mensaje || 'Listo, no lo anoto.' })
+      default:
+        setFlujo('Alertas y preguntas')
+        if (r.mensaje && !r.asistente) return bot('text', { text: r.mensaje })
+        return bot('assistant', { res: r.asistente })
+    }
+  }
+
+  /** Cierra una tarjeta (y sus opciones) y deja de esperar respuesta sobre ella */
+  function cerrar(id, status) {
+    update(id, { status })
+    store.current.filter((x) => x.warningId === id).forEach((x) => update(x.id, { status }))
+    if (pending.current.cardId === id) pending.current.cardId = null
+  }
+
+  /** `mensaje`: texto natural del backend; encabeza la tarjeta o va antes, sin repetir la pregunta */
+  function mostrarInterpretacion(res, mensaje = null) {
     const mov = res.movimiento_propuesto
-    if (mov?.tipo === 'compra') setFlujo('Pedido')
+    setFlujo(mov?.tipo === 'compra' ? 'Pedido' : 'Registro')
     const faltan = res.campos_faltantes || []
     const dudoso = (res.confianza ?? 1) < 0.75
     if (res.pregunta_aclaratoria && (faltan.length || dudoso)) {
-      pending.current.clarifyId = bot('clarify', { res, status: 'pending' })
+      if (mensaje && mensaje !== res.pregunta_aclaratoria) bot('text', { text: mensaje })
+      pending.current.cardId = bot('clarify', { res, status: 'pending' })
       return
     }
-    pending.current.draftId = bot('confirm', { res, status: 'pending', dudoso })
+    // Pedido completo: antes de guardarlo se revisa si te alcanza la caja ese día
+    if (mov?.tipo === 'compra' && mov.fecha_vencimiento && mov.monto) {
+      return chequear(res, { fecha_vencimiento: mov.fecha_vencimiento }, mensaje)
+    }
+    pending.current.cardId = bot('confirm', { res, status: 'pending', dudoso, titulo: mensaje })
+  }
+
+  /** POST /ingesta/confirmar del borrador `res`; `ids` son las tarjetas que quedan guardadas */
+  async function confirmarBorrador(res, correcciones, ids) {
+    const prev = ids.map((id) => get(id)?.status)
+    ids.forEach((id) => update(id, { status: 'saving' }))
+    try {
+      const r = await withTyping('Guardando…', () =>
+        api.confirmar({ borrador_id: res.borrador_id, confirmado: true, correcciones }),
+      )
+      ids.forEach((id) => cerrar(id, 'done'))
+      bot('text', { text: textoConfirmado(res.movimiento_propuesto, correcciones, r) })
+    } catch (err) {
+      ids.forEach((id, i) => update(id, { status: prev[i] }))
+      handleError(err, () => confirmarBorrador(res, correcciones, ids))
+    }
   }
 
   /** Guarda el borrador de una tarjeta (confirm | clarify | warning) con correcciones opcionales */
-  async function guardar(id, correcciones = {}) {
+  function guardar(id, correcciones = {}) {
     const m = get(id)
     if (!m || m.status === 'done' || m.status === 'saving') return
-    const prev = m.status
-    update(id, { status: 'saving' })
-    try {
-      const r = await withTyping('Guardando…', () =>
-        api.confirmar({ borrador_id: m.res.borrador_id, confirmado: true, correcciones }),
-      )
-      update(id, { status: 'done' })
-      store.current.filter((x) => x.warningId === id).forEach((x) => update(x.id, { status: 'done' }))
-      for (const k of Object.keys(pending.current)) if (pending.current[k] === id) pending.current[k] = null
-      bot('text', { text: textoConfirmado(m.res.movimiento_propuesto, correcciones, r) })
-    } catch (err) {
-      update(id, { status: prev })
-      handleError(err, () => guardar(id, correcciones))
-    }
+    return confirmarBorrador(m.res, correcciones, [id])
   }
 
   function corregir(id) {
@@ -132,8 +173,8 @@ export function useChat({ demo, intent } = {}) {
     if (!m || m.status !== 'pending') return
     me('text', { text: '✏️ Corregir' })
     update(id, { status: 'editing' })
-    pending.current.draftId = id
-    bot('text', { text: '¿Qué cambio? Escríbeme, por ejemplo: «fue por billetera», «fueron 15» o «era una venta».' })
+    pending.current.cardId = id
+    bot('text', { text: 'Dale, ¿qué cambio?' })
   }
 
   function correcto(id) {
@@ -145,86 +186,77 @@ export function useChat({ demo, intent } = {}) {
 
   // ---------- Pedido: aclaración → chequeo → advertencia ----------
 
-  async function elegirOpcion(id, opcion, { echo = true } = {}) {
+  function elegirOpcion(id, opcion) {
     const m = get(id)
     if (!m || m.status !== 'pending') return
-    if (echo) me('text', { text: opcion.texto })
-    update(id, { status: 'done', elegido: opcion.valor })
-    pending.current.clarifyId = null
-    const campo = m.res.campos_faltantes?.[0] || 'fecha_vencimiento'
-    const correcciones = { [campo]: opcion.valor }
+    me('text', { text: opcion.texto })
+    update(id, { elegido: opcion.valor })
     const mov = m.res.movimiento_propuesto
-    if (mov.tipo === 'compra' && campo === 'fecha_vencimiento') return chequear(id, correcciones)
-    update(id, { status: 'pending' })
-    return guardar(id, correcciones)
+    const campo = m.res.campos_faltantes?.[0] || 'fecha_vencimiento'
+    // Fecha de un pedido con monto: se revisa la caja directo. Cualquier otra respuesta la entiende el backend.
+    if (mov.tipo === 'compra' && campo === 'fecha_vencimiento' && mov.monto) {
+      update(id, { status: 'done' })
+      if (pending.current.cardId === id) pending.current.cardId = null
+      return chequear(m.res, { fecha_vencimiento: opcion.valor })
+    }
+    pending.current.cardId = id
+    return conversar({ texto: opcion.texto })
   }
 
-  async function chequear(id, correcciones) {
-    const m = get(id)
-    const mov = m.res.movimiento_propuesto
+  async function chequear(res, correcciones, mensaje = null) {
+    const mov = res.movimiento_propuesto
+    const fecha = correcciones.fecha_vencimiento
     try {
-      const chequeo = await withTyping('Revisando tu caja…', () =>
-        api.chequearPedido({ proveedor: mov.contraparte, monto: mov.monto, fecha_vencimiento: correcciones.fecha_vencimiento }),
-      )
+      // El backend ya suele traer el chequeo para esa fecha; si no, se pide.
+      const chequeo =
+        res.chequeo_pedido?.fecha_vencimiento === fecha
+          ? res.chequeo_pedido
+          : await withTyping('Revisando tu caja…', () =>
+              api.chequearPedido({ proveedor: mov.contraparte, monto: mov.monto, fecha_vencimiento: fecha }),
+            )
+      // Ese pedido ya está anotado (mismo proveedor, monto y fecha): se descarta el borrador para no duplicarlo.
+      const yaRegistrado = !!chequeo.pedido_coincidente_id
+      if (yaRegistrado) await api.confirmar({ borrador_id: res.borrador_id, confirmado: false }).catch(() => {})
+      else if (mensaje) bot('text', { text: mensaje })
       if (chequeo.estado_caja === 'te_alcanza') {
-        update(id, { status: 'pending' })
-        return guardar(id, correcciones)
+        if (yaRegistrado) return bot('text', { text: `Ese pedido ya lo tenías anotado. Y tranquilo: te alcanza para pagarlo el ${ddmm(fecha)}.` })
+        return confirmarBorrador(res, correcciones, [])
       }
-      pending.current.warningId = bot('warning', { res: m.res, chequeo, correcciones, status: 'pending' })
+      const id = bot('warning', { res, chequeo, correcciones, yaRegistrado, status: yaRegistrado ? 'done' : 'pending' })
+      if (!yaRegistrado) pending.current.cardId = id
     } catch (err) {
-      handleError(err, () => chequear(id, correcciones))
+      handleError(err, () => chequear(res, correcciones, mensaje))
     }
   }
 
-  function verOpciones(id, { echo = true } = {}) {
+  function verOpciones(id) {
     const w = get(id)
     if (!w || w.opcionesVistas) return
-    if (echo) me('text', { text: 'Ver opciones' })
+    me('text', { text: 'Ver opciones' })
     update(id, { opcionesVistas: true })
-    bot('options', { chequeo: w.chequeo, fecha: w.correcciones.fecha_vencimiento, warningId: id, status: w.status })
+    bot('options', { chequeo: w.chequeo, fecha: w.correcciones.fecha_vencimiento, warningId: id, status: w.status, yaRegistrado: w.yaRegistrado })
   }
 
-  function registrarIgual(id, { echo = true } = {}) {
+  function registrarIgual(id) {
     const w = get(id)
-    if (!w || w.status !== 'pending') return
-    if (echo) me('text', { text: 'Registrar igual' })
-    return guardar(id, w.correcciones)
+    if (!w || w.yaRegistrado || w.status !== 'pending') return
+    me('text', { text: 'Registrar igual' })
+    return confirmarBorrador(w.res, w.correcciones, [id])
   }
 
   // ---------- F6: alerta proactiva ----------
 
-  async function abrirAlerta(id) {
-    const m = get(id)
-    if (!m) return
-    try {
-      await api.accionAlerta(m.alerta.alerta_id, 'ejecutada')
-    } catch {
-      /* registrar la acción no debe impedir abrir el simulador */
-    }
-    navigate('/simulador')
-  }
+  // Solo abre el simulador: no marca la alerta como atendida (Pedro aún no hizo nada).
+  const abrirAlerta = () => navigate('/simulador')
 
   // ---------- F7: asistente ----------
-
-  async function preguntar(texto) {
-    setFlujo('Alertas y preguntas')
-    try {
-      const res = await withTyping('Escribiendo…', () =>
-        api.enviarAsistente({ conversacion_id: conversacionId.current, mensaje: texto, canal: 'app' }),
-      )
-      conversacionId.current = res.conversacion_id || conversacionId.current
-      bot('assistant', { res })
-    } catch (err) {
-      handleError(err, () => preguntar(texto))
-    }
-  }
 
   function accionAsistente(accion) {
     if (accion.tipo === 'abrir_simulador') return navigate('/simulador')
     if (accion.tipo === 'hablar_humano') {
       me('text', { text: accion.texto || 'Hablar con una persona' })
       bot('text', {
-        text: 'Listo. Le pasé tu consulta a una persona del equipo y te escribirá por este chat.\n(En esta demo no se envía nada.)',
+        text: 'Listo, le paso tu consulta a una persona del equipo y te escribe por aquí.\n(En esta demo no se envía nada.)',
       })
     }
   }
@@ -253,7 +285,7 @@ export function useChat({ demo, intent } = {}) {
     const f = accion.fiado
     try {
       const r = await withTyping('Preparando el mensaje…', () => api.recordatorioFiado(f.fiado_id))
-      bot('text', { text: `Este es el mensaje para ${f.cliente}:\n“${r.mensaje}”\n(En esta demo no se envía nada.)` })
+      bot('text', { text: `Te dejo el mensaje para ${f.cliente}:\n“${r.mensaje}”\n(En esta demo no se envía nada.)` })
     } catch (err) {
       update(id, { usadas: get(id).usadas.filter((t) => t !== accion.tipo) })
       handleError(err, () => accionPlan(id, accion))
@@ -267,7 +299,7 @@ export function useChat({ demo, intent } = {}) {
     try {
       const res = await withTyping('Leyendo tu cuaderno…', () => api.leerCuaderno({ media_url }))
       if (!res.fiados_propuestos?.length) {
-        bot('text', { text: 'No encontré fiados en la foto. ¿Puedes tomarla más de cerca y con buena luz?' })
+        bot('text', { text: 'No logré ver fiados en la foto. ¿Me la mandas más de cerca y con buena luz?' })
         return
       }
       pending.current.cuadernoId = bot('cuaderno', {
@@ -293,13 +325,18 @@ export function useChat({ demo, intent } = {}) {
       monto: m.montos[i],
     }))
     try {
-      await withTyping('Guardando…', () =>
+      const r = await withTyping('Guardando…', () =>
         api.confirmar({ borrador_id: m.res.borrador_id, confirmado: true, correcciones: { fiados } }),
       )
       update(id, { status: 'done' })
       pending.current.cuadernoId = null
-      const total = fiados.reduce((s, f) => s + Number(f.monto || 0), 0)
-      bot('text', { text: `Guardé ${fiados.length} fiados por **${soles(total)}** ✅` })
+      const repetidos = r?.duplicados?.length || 0
+      const nuevos = fiados.length - repetidos
+      const total = fiados.reduce((s, f) => s + Number(f.monto || 0), 0) - (r?.duplicados || []).reduce((s, f) => s + f.monto, 0)
+      const lines = []
+      if (nuevos > 0) lines.push(`Guardé ${nuevos} ${nuevos === 1 ? 'fiado' : 'fiados'} por **${soles(total)}** ✅`)
+      if (repetidos > 0) lines.push(`${repetidos} ya ${repetidos === 1 ? 'estaba' : 'estaban'} en tu cuaderno; no los dupliqué.`)
+      bot('text', { text: lines.join('\n') })
     } catch (err) {
       update(id, { status: prev })
       handleError(err, () => guardarCuaderno(id, { echo: false }))
@@ -312,9 +349,10 @@ export function useChat({ demo, intent } = {}) {
     if (echo) me('text', { text: 'No, corregir' })
     update(id, { status: 'editing' })
     const dudoso = m.res.fiados_propuestos.find((f) => f.alternativas_monto?.length || f.confianza < 0.75)
+    const otro = dudoso?.alternativas_monto?.find((x) => x !== dudoso.monto)
     bot('text', {
       text: dudoso
-        ? `Dime el monto correcto de ${dudoso.cliente}, por ejemplo «${dudoso.alternativas_monto?.[1] ?? 35}».`
+        ? `Dime el monto correcto de ${dudoso.cliente}${otro ? `, por ejemplo «${otro}»` : ''}.`
         : 'Dime qué nombre está mal y el monto correcto.',
     })
   }
@@ -349,43 +387,14 @@ export function useChat({ demo, intent } = {}) {
     const texto = raw.trim()
     if (!texto) return
     me('text', { text: texto })
-    const t = norm(texto)
-    const p = pending.current
-
-    if (p.cuadernoId && textoCuaderno(p.cuadernoId, texto)) return
-
-    if (p.warningId) {
-      if (/opciones/.test(t)) return verOpciones(p.warningId, { echo: false })
-      if (/registrar|igual/.test(t)) return registrarIgual(p.warningId, { echo: false })
-    }
-
-    if (p.clarifyId) {
-      const c = get(p.clarifyId)
-      const ops = c?.res.opciones_aclaracion || []
-      const op =
-        ops.find((o) => norm(o.texto) === t || t.includes(norm(o.texto))) ||
-        (/nov/.test(t) && ops.find((o) => o.valor.slice(5, 7) === '11')) ||
-        (/dic/.test(t) && ops.find((o) => o.valor.slice(5, 7) === '12'))
-      if (op) return elegirOpcion(p.clarifyId, op, { echo: false })
-    }
-
-    if (p.draftId) {
-      const d = get(p.draftId)
-      if (d && d.status !== 'done') {
-        if (isAffirmative(texto)) return guardar(p.draftId)
-        const corr = parseCorreccion(texto)
-        if (corr && !isQuestion(texto)) return guardar(p.draftId, corr)
-      }
-    }
-
-    if (isQuestion(texto)) return preguntar(texto)
-    return interpretar({ canal: 'texto', texto })
+    if (pending.current.cuadernoId && textoCuaderno(pending.current.cuadernoId, texto)) return
+    return conversar({ texto })
   }
 
   async function enviarVoz(note) {
     const nota = await capturarNotaDeVoz(note)
     const audioId = me('audio', { duracion: nota.duracion, transcripcion: null })
-    return interpretar({ canal: 'voz', texto: nota.texto, media_url: nota.media_url, audioId })
+    return conversar({ canal: 'voz', texto: nota.texto, media_url: nota.media_url, audioId })
   }
 
   async function enviarFoto() {
@@ -424,10 +433,10 @@ export function useChat({ demo, intent } = {}) {
         if (top) {
           bot('alert', { alerta: top, total: items.length, time: top.creada_en ? hhmm(top.creada_en) : now() })
         } else {
-          bot('text', { text: 'Hola 👋 Cuéntame qué vendiste o gastaste. Puedes escribir, mandar un audio o una foto de tu cuaderno.' })
+          bot('text', { text: HOLA })
         }
       } catch {
-        bot('text', { text: 'Hola 👋 Cuéntame qué vendiste o gastaste. Puedes escribir, mandar un audio o una foto de tu cuaderno.' })
+        bot('text', { text: HOLA })
       }
       const script = DEMO_SCRIPTS[demo]
       if (!script) return
@@ -438,6 +447,7 @@ export function useChat({ demo, intent } = {}) {
         if (step.texto) await a.enviarTexto(step.texto)
         else if (step.voz) await a.enviarVoz(DEMO_VOICE_NOTES.find((n) => n.id === step.voz))
         else if (step.foto) await a.enviarFoto()
+        else if (step.tap) a[step.tap](store.current.findLast((m) => m.kind === step.kind)?.id)
       }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps

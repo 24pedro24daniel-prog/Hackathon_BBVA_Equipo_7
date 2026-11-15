@@ -1,13 +1,16 @@
 // Cliente HTTP de TuCaserito. Un único punto de entrada a la API (contract.md, base /api/v1).
-// Con VITE_USE_MOCK=true (por defecto) las llamadas se resuelven en src/mocks con los mismos JSON del contrato,
-// así el front funciona sin backend y conectar el backend real es solo cambiar la variable de entorno.
+// Por defecto llama al backend FastAPI. Con VITE_USE_MOCK=true las llamadas se resuelven en src/mocks
+// (respaldo para una demo sin backend).
 
 import { mockRequest } from '../mocks/handlers.js'
+import { getDemoSettings } from '../lib/demo.js'
 
 const env = import.meta.env
-export const USE_MOCK = (env.VITE_USE_MOCK ?? 'true') !== 'false'
+export const USE_MOCK = env.VITE_USE_MOCK === 'true'
 export const API_BASE = env.VITE_API_BASE || '/api/v1'
 export const EMPRESA_ID = env.VITE_EMPRESA_ID || 'EMP-0001'
+/** Empresa actual: la elegida en el menú Demo (con backend real) o VITE_EMPRESA_ID. */
+export const empresaId = () => (!USE_MOCK && getDemoSettings().empresa) || EMPRESA_ID
 const API_KEY = env.VITE_API_KEY || ''
 
 /** Error con la forma del contrato: { codigo, mensaje, detalles, request_id, status } */

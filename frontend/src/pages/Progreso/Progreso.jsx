@@ -1,7 +1,6 @@
 import { useId, useState } from 'react'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
-import { useDemo } from '../../lib/useDemo.js'
 import { ddmm } from '../../lib/format.js'
 import {
   Card,
@@ -16,8 +15,6 @@ import {
   ProgressBar,
 } from '../../components/ui/index.jsx'
 import './Progreso.css'
-
-const ETAPAS_DEFAULT = ['organizar', 'estabilizar', 'proteger', 'crecer']
 
 const cap = (s = '') => s.charAt(0).toUpperCase() + s.slice(1)
 const clamp = (v) => Math.max(0, Math.min(100, Number(v) || 0))
@@ -47,13 +44,16 @@ function calificacionParte(valor) {
   return { texto: 'Por mejorar', tono: 'warning' }
 }
 
-/** Peso del factor en palabras ("pesa 25%" sin cifras, como pide el sistema de diseño). */
-function pesoEnPalabras(peso) {
-  const p = Number(peso)
-  if (!(p > 0)) return null
-  if (p >= 0.25) return 'Es de lo que más pesa'
-  if (p >= 0.2) return 'Pesa bastante'
-  return 'Pesa menos'
+/** Peso del factor en palabras, comparado con los demás (sin cifras, como pide el sistema de diseño). */
+function pesoEnPalabras(peso, subs) {
+  const pesos = subs.map((s) => Number(s.peso) || 0)
+  const max = Math.max(...pesos)
+  const min = Math.min(...pesos)
+  const p = Number(peso) || 0
+  if (max === min) return null
+  if (p === max) return 'Es lo que más pesa'
+  if (p === min) return 'Es lo que menos pesa'
+  return 'Pesa bastante'
 }
 
 /** Factores de más peso, para la frase que explica cómo se calcula. */
@@ -79,8 +79,7 @@ const RACHAS = {
 }
 
 export default function Progreso() {
-  const [demo] = useDemo()
-  const { data, error, loading, reload } = useApi(() => api.getSalud(), [demo.escenario])
+  const { data, error, loading, reload } = useApi(() => api.getSalud(), [])
 
   return (
     <div className="progreso">
@@ -93,7 +92,7 @@ export default function Progreso() {
             <div className="progreso-col">
               <Score salud={data} />
               <Historial historial={data.historial || []} />
-              <Etapa etapas={data.etapas || ETAPAS_DEFAULT} actual={data.etapa_actual} />
+              {data.etapas?.length > 0 && <Etapa etapas={data.etapas} actual={data.etapa_actual} />}
             </div>
             <div className="progreso-col">
               <Componentes salud={data} />
@@ -130,9 +129,8 @@ function Score({ salud }) {
     tendencia = 'Te mantienes igual'
   }
 
-  const palabra = salud.etiqueta || calificacion(salud.score)
-  const fechaFuente = salud.actualizado_en || salud.fecha_corte || salud.meta?.generado_en
-  const fecha = fechaFuente ? ddmm(fechaFuente) : null
+  const palabra = calificacion(salud.score)
+  const fecha = salud.meta?.generado_en ? ddmm(salud.meta.generado_en) : null
   const pos = clamp(salud.score)
 
   return (
@@ -259,10 +257,10 @@ function Etapa({ etapas, actual }) {
 
 /* ---------- Qué lo compone (factores, patrón SoFi) ---------- */
 
-function Factor({ s, esMasBajo }) {
+function Factor({ s, subs, esMasBajo }) {
   const { texto, tono } = calificacionParte(s.valor)
   const explica = s.detalle
-  const peso = pesoEnPalabras(s.peso)
+  const peso = pesoEnPalabras(s.peso, subs)
   const sub = (
     <>
       {esMasBajo && <span className="progreso-factor__flag">Donde más puedes avanzar</span>}
@@ -308,7 +306,7 @@ function Componentes({ salud }) {
       </div>
       <List>
         {subs.map((s) => (
-          <Factor key={s.id} s={s} esMasBajo={s === porMejorar} />
+          <Factor key={s.id} s={s} subs={subs} esMasBajo={s === porMejorar} />
         ))}
       </List>
       {salud.meta && (
@@ -321,14 +319,6 @@ function Componentes({ salud }) {
 }
 
 /* ---------- Metas (patrón "pots" de Monzo) ---------- */
-
-/** Avance 0–100 solo si los datos traen un objetivo; nunca se inventa. */
-function avanceMeta(m) {
-  const objetivo = m.objetivo ?? m.monto_objetivo
-  if (objetivo > 0 && m.acumulado != null) return clamp((m.acumulado / objetivo) * 100)
-  if (m.progreso != null) return clamp(Number(m.progreso) <= 1 ? Number(m.progreso) * 100 : m.progreso)
-  return null
-}
 
 function Metas({ metas, rachas }) {
   const titleId = useId()
@@ -345,26 +335,16 @@ function Metas({ metas, rachas }) {
         </h2>
       </div>
       <List>
-        {activas.map((m) => {
-          const avance = avanceMeta(m)
-          return (
-            <ListRow
-              key={m.meta_id}
-              className="progreso-meta"
-              title={cap(m.titulo)}
-              sub={
-                <>
-                  {m.detalle && <span className="progreso-meta__detail">{m.detalle}</span>}
-                  {avance != null && (
-                    <ProgressBar value={Math.round(avance)} tone="ok" label={`Avance de ${m.titulo}`} className="progreso-meta__bar" />
-                  )}
-                </>
-              }
-              amount={m.acumulado != null ? <Money value={m.acumulado} /> : undefined}
-              end={m.acumulado != null ? <span className="cc-row__sub">apartado</span> : undefined}
-            />
-          )
-        })}
+        {activas.map((m) => (
+          <ListRow
+            key={m.meta_id}
+            className="progreso-meta"
+            title={cap(m.titulo)}
+            sub={m.detalle}
+            amount={m.acumulado != null ? <Money value={m.acumulado} /> : undefined}
+            end={m.acumulado != null ? <span className="cc-row__sub">apartado</span> : undefined}
+          />
+        ))}
         {!activas.length && (
           <ListRow to="/chat" title="Crear una meta" sub="Dila en el chat, por ejemplo “quiero apartar para el pedido”." />
         )}

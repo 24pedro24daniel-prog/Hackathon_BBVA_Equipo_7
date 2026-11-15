@@ -9,6 +9,7 @@ export function CuadernoCard({ msg, onGuardar, onCorregir }) {
   const n = fiados.length
   const ilegibles = res.lineas_no_legibles || 0
   const dudas = fiados.filter((f) => f.alternativas_monto?.length > 1)
+  const repetidos = fiados.filter((f) => f.posible_duplicado).length
   const locked = status === 'done' || status === 'saving'
   return (
     <InBubble wide time={time}>
@@ -35,6 +36,12 @@ export function CuadernoCard({ msg, onGuardar, onCorregir }) {
           </li>
         ))}
       </ul>
+      {repetidos > 0 && (
+        <p className="chat-note">
+          {repetidos === n ? 'Todos ya están' : `${repetidos} ya ${repetidos === 1 ? 'está' : 'están'}`} en tu cuaderno; no se
+          duplican al guardar.
+        </p>
+      )}
       {(ilegibles > 0 || dudas.length > 0) && (
         <p className="chat-note chat-note--body">
           {ilegibles > 0 && `Hay ${ilegibles} ${ilegibles === 1 ? 'línea' : 'líneas'} que no pude leer. `}

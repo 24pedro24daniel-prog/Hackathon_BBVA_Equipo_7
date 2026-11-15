@@ -6,7 +6,7 @@ React 19 + Vite + react-router. Mobile-first (360 px). Implementa el mockup `moc
 
 ```bash
 cd frontend
-cp .env.example .env      # opcional; por defecto usa mocks
+cp .env.example .env      # y pon VITE_API_KEY (ver abajo)
 npm install
 npm run dev               # http://localhost:5173
 ```
@@ -22,20 +22,17 @@ npm run dev               # http://localhost:5173
 | `/progreso` | Tu negocio, más ordenado (p. 9) | `GET /salud` |
 | `/chat` | Chat simulado: registro, pedido, alertas, fiados (p. 1–4) | `/ingesta/*`, `/pedidos/chequeo`, `/asistente/mensajes`, `/alertas` |
 
-El chip **Demo** (Inicio) cambia entre Pedro con 3 meses de datos y Pedro en su día 3, y simula el asistente caído (modo básico). Solo afecta a los mocks.
+El chip **Demo** (Inicio) muestra u oculta los detalles técnicos (modelo, versión). Con `VITE_USE_MOCK=true` además cambia el escenario de los mocks y simula el asistente caído.
 
 ## Conectar el backend
 
-Todo pasa por `src/api/` — las pantallas nunca importan los mocks.
+El front llama al backend real por defecto. Todo pasa por `src/api/` — las pantallas nunca importan los mocks.
 
-1. Levanta FastAPI en `http://localhost:8000` (base `/api/v1`).
-2. En `frontend/.env`:
-   ```
-   VITE_USE_MOCK=false
-   VITE_PROXY_TARGET=http://localhost:8000
-   VITE_API_KEY=<clave de la demo>   # se manda como X-API-Key; nunca la subas al repo
-   ```
-3. `npm run dev`. Vite proxea `/api` al backend (sin CORS en desarrollo).
+1. Backend (en `backend/`): `docker compose up -d` y `docker compose run --rm backend python -m app.db.reset` (siembra la demo de Pedro, EMP-0001).
+2. Copia el `API_KEY` de `backend/.env` a `frontend/.env` como `VITE_API_KEY` (se manda como `X-API-Key`; nunca la subas al repo).
+3. `npm run dev`. Vite proxea `/api` a `VITE_PROXY_TARGET` (por defecto `http://localhost:8000`, sin CORS en desarrollo).
+
+Sin backend: `VITE_USE_MOCK=true` usa los mocks de `src/mocks` (respaldo para la demo).
 
 `src/api/client.js` agrega `X-API-Key`, `Idempotency-Key` en los POST que crean registros, y convierte el formato de error del contrato en `ApiError { status, codigo, mensaje, detalles, requestId }`.
 

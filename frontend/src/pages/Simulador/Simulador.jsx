@@ -2,47 +2,107 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../api/index.js'
 import { useApi } from '../../api/useApi.js'
 import { ddmm, soles } from '../../lib/format.js'
-import { Card, ErrorState, Icon, LoadingBlock, MetaLine, Money, PageHeader, Skeleton } from '../../components/ui/index.jsx'
+import { Card, ErrorState, Icon, LoadingBlock, MetaLine, Money, PageHeader } from '../../components/ui/index.jsx'
 import './Simulador.css'
 
-// Escenario del mockup: pedido a Distribuidora Andina que vence el 30/11.
-const PEDIDO_ID = 'PED-0012'
-const PEDIDO_MONTO = 2400
-const FECHAS_PARTES = ['2026-11-30', '2026-12-15']
-const FECHA_COBRO = '2026-11-20'
-const MINIMO = 800
-
-const OPCIONES = [
-  { monto: 2400, texto: 'Lo que pediste' },
-  { monto: 2000, texto: 'Lo que vendes en 2 semanas' },
-  { monto: 1800, texto: 'Solo lo que más se vende' },
-]
+/** "2026-11-30" + 15 → "2026-12-15" */
+function addDays(iso, n) {
+  const d = new Date(`${iso}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
 
 function joinNombres(nombres) {
   if (nombres.length <= 1) return nombres.join('')
   return `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}`
 }
 
-function buildAcciones({ monto, partes, cobrar, fiadoIds }) {
+/** Todo lo que la pantalla necesita, sacado del backend: pedido pendiente, chequeo, fiados, mínimo y resultado inicial. */
+async function cargarEscenario() {
+  const [forecast, pedidos, fiados] = await Promise.all([api.getForecast(30), api.getPedidos(), api.getFiados('pendiente')])
+  const items = pedidos.items || []
+  const pedido = items.find((p) => p.pedido_id === forecast.dia_critico?.obligacion_asociada?.id) || items[0]
+  if (!pedido) return null
+  // Sin acciones, /simular da el punto de partida antes de mover opciones.
+  const [chequeo, inicial] = await Promise.all([
+    api.chequearPedido({ proveedor: pedido.proveedor, monto: pedido.monto, fecha_vencimiento: pedido.fecha_vencimiento }),
+    api.simular([]),
+  ])
+  const reducir = chequeo.sugerencias?.find((s) => s.accion === 'reducir_pedido')?.monto_sugerido
+  const opciones = [
+    { monto: pedido.monto, texto: 'Lo que pediste' },
+    { monto: chequeo.venta_esperada_periodo, texto: 'Lo que vendes en 2 semanas' },
+    { monto: reducir, texto: 'Solo lo que más se vende' },
+  ].filter((o, i, all) => o.monto > 0 && o.monto <= pedido.monto && all.findIndex((x) => x.monto === o.monto) === i)
+  return {
+    pedido,
+    opciones,
+    minimo: forecast.minimo_operativo,
+    fechasPartes: [pedido.fecha_vencimiento, addDays(pedido.fecha_vencimiento, 15)],
+    fechaCobro: addDays(forecast.fecha_corte, 6),
+    fiados: fiados.items || [],
+    totalFiados: fiados.total_pendiente,
+    inicial,
+  }
+}
+
+function buildAcciones(esc, { monto, partes, cobrar }) {
+  const pedido_id = esc.pedido.pedido_id
   const acciones = []
-  if (monto !== PEDIDO_MONTO) acciones.push({ tipo: 'reducir_pedido', pedido_id: PEDIDO_ID, nuevo_monto: monto })
-  if (partes) acciones.push({ tipo: 'pagar_en_partes', pedido_id: PEDIDO_ID, partes: 2, fechas: FECHAS_PARTES })
-  if (cobrar && fiadoIds.length) acciones.push({ tipo: 'cobrar_fiados', fiado_ids: fiadoIds, fecha: FECHA_COBRO })
+  if (monto !== esc.pedido.monto) acciones.push({ tipo: 'reducir_pedido', pedido_id, nuevo_monto: monto })
+  if (partes) acciones.push({ tipo: 'pagar_en_partes', pedido_id, partes: 2, fechas: esc.fechasPartes })
+  if (cobrar && esc.fiados.length) {
+    acciones.push({ tipo: 'cobrar_fiados', fiado_ids: esc.fiados.map((f) => f.fiado_id), fecha: esc.fechaCobro })
+  }
   return acciones
 }
 
 export default function Simulador() {
-  const [monto, setMonto] = useState(PEDIDO_MONTO)
+  const { data: esc, error, loading, reload } = useApi(cargarEscenario, [])
+
+  if (loading && !esc)
+    return (
+      <Shell>
+        <LoadingBlock heights={[220, 140, 180]} />
+      </Shell>
+    )
+  if (error)
+    return (
+      <Shell>
+        <ErrorState error={error} onRetry={reload} />
+      </Shell>
+    )
+  if (!esc)
+    return (
+      <Shell>
+        <Card>
+          <h2 className="cc-card__title">No tienes pedidos por pagar</h2>
+          <p className="cc-muted">Cuando anotes un pedido a crédito, aquí podrás probar qué hacer antes de pagarlo.</p>
+        </Card>
+      </Shell>
+    )
+  return <SimuladorEscenario key={esc.pedido.pedido_id} esc={esc} />
+}
+
+function Shell({ sub, children }) {
+  return (
+    <div className="sim-page">
+      <PageHeader back sub={sub} title="¿Qué puedo hacer?" />
+      <div className="sim-body">{children}</div>
+    </div>
+  )
+}
+
+function SimuladorEscenario({ esc }) {
+  const { pedido, opciones, minimo, fiados: items, totalFiados } = esc
+  const [monto, setMonto] = useState(pedido.monto)
   const [partes, setPartes] = useState(false)
   const [cobrar, setCobrar] = useState(false)
-
-  const fiados = useApi(() => api.getFiados('pendiente'), [])
-  const items = fiados.data?.items || []
-  const fiadoIds = items.map((f) => f.fiado_id)
-  const fiadoKey = fiadoIds.join(',')
-  const totalFiados = fiados.data?.total_pendiente ?? items.reduce((s, f) => s + f.monto, 0)
-
-  const [sim, setSim] = useState({ data: null, error: null, loading: true })
+  const [sim, setSim] = useState({
+    data: esc.inicial,
+    error: null,
+    loading: false,
+  })
   const callId = useRef(0)
 
   const run = useCallback(
@@ -58,148 +118,140 @@ export default function Simulador() {
   )
 
   useEffect(() => {
-    const ids = fiadoKey ? fiadoKey.split(',') : []
-    const t = setTimeout(() => run(buildAcciones({ monto, partes, cobrar, fiadoIds: ids })), 180)
+    const t = setTimeout(() => run(buildAcciones(esc, { monto, partes, cobrar })), 180)
     return () => clearTimeout(t)
-  }, [monto, partes, cobrar, fiadoKey, run])
+  }, [esc, monto, partes, cobrar, run])
 
-  const retry = () => run(buildAcciones({ monto, partes, cobrar, fiadoIds }))
+  const retry = () => run(buildAcciones(esc, { monto, partes, cobrar }))
 
   return (
-    <div className="sim-page">
-      <PageHeader back sub="Antes del 30/11" title="¿Qué puedo hacer?" />
-      <div className="sim-body">
-        <div className="sim-options">
-          <Card flush as="div">
-            <fieldset className="sim-group">
-              <legend className="cc-card__title sim-legend">¿Cuánto le pides a Andina?</legend>
-              <div className="sim-list">
-                {OPCIONES.map((o) => (
-                  <label key={o.monto} className="sim-row">
-                    <input
-                      type="radio"
-                      name="sim-monto"
-                      className="sim-input"
-                      value={o.monto}
-                      checked={monto === o.monto}
-                      onChange={() => setMonto(o.monto)}
-                    />
-                    <span className="sim-row__text">
-                      <Money value={o.monto} size="md" className="sim-row__title" />
-                      <span className="sim-row__sub">{o.texto}</span>
-                    </span>
-                    <span className="sim-radio" aria-hidden="true" />
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-          </Card>
+    <Shell sub={`Antes del ${ddmm(pedido.fecha_vencimiento)}`}>
+      <div className="sim-options">
+        <Card flush as="div">
+          <fieldset className="sim-group">
+            <legend className="cc-card__title sim-legend">¿Cuánto le pides a {pedido.proveedor}?</legend>
+            <div className="sim-list">
+              {opciones.map((o) => (
+                <label key={o.monto} className="sim-row">
+                  <input
+                    type="radio"
+                    name="sim-monto"
+                    className="sim-input"
+                    value={o.monto}
+                    checked={monto === o.monto}
+                    onChange={() => setMonto(o.monto)}
+                  />
+                  <span className="sim-row__text">
+                    <Money value={o.monto} size="md" className="sim-row__title" />
+                    <span className="sim-row__sub">{o.texto}</span>
+                  </span>
+                  <span className="sim-radio" aria-hidden="true" />
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </Card>
 
-          <Card flush as="div">
-            <fieldset className="sim-group">
-              <legend className="cc-card__title sim-legend">También puedes</legend>
-              <div className="sim-list">
+        <Card flush as="div">
+          <fieldset className="sim-group">
+            <legend className="cc-card__title sim-legend">También puedes</legend>
+            <div className="sim-list">
+              <label className="sim-row">
+                <span className="sim-row__text">
+                  <span className="sim-row__title">Pagar en 2 partes</span>
+                  <span className="sim-row__sub">
+                    Mitad el {ddmm(esc.fechasPartes[0])} y mitad el {ddmm(esc.fechasPartes[1])} (pídelo a {pedido.proveedor})
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  className="sim-input"
+                  checked={partes}
+                  onChange={(e) => setPartes(e.target.checked)}
+                />
+                <span className="sim-switch" aria-hidden="true" />
+              </label>
+
+              {items.length > 0 && (
                 <label className="sim-row">
                   <span className="sim-row__text">
-                    <span className="sim-row__title">Pagar en 2 partes</span>
-                    <span className="sim-row__sub">Mitad el 30/11 y mitad el 15/12 (pídelo a Andina)</span>
+                    <span className="sim-row__title">Cobrar los fiados esta semana</span>
+                    <span className="sim-row__sub">
+                      {joinNombres(items.map((f) => f.cliente))} · <span className="num">{soles(totalFiados)}</span>
+                    </span>
                   </span>
                   <input
                     type="checkbox"
                     role="switch"
                     className="sim-input"
-                    checked={partes}
-                    onChange={(e) => setPartes(e.target.checked)}
+                    checked={cobrar}
+                    onChange={(e) => setCobrar(e.target.checked)}
                   />
                   <span className="sim-switch" aria-hidden="true" />
                 </label>
+              )}
+            </div>
+          </fieldset>
+        </Card>
+      </div>
 
-                {fiados.loading ? (
-                  <div className="sim-row" aria-hidden="true">
-                    <Skeleton height={40} style={{ flex: 1 }} />
-                  </div>
-                ) : fiados.error ? (
-                  <div className="sim-row">
-                    <p className="cc-small cc-muted">
-                      No pude traer tus fiados.{' '}
-                      <button type="button" className="sim-link" onClick={fiados.reload}>
-                        Intentar otra vez
-                      </button>
-                    </p>
-                  </div>
-                ) : items.length ? (
-                  <label className="sim-row">
-                    <span className="sim-row__text">
-                      <span className="sim-row__title">Cobrar los fiados esta semana</span>
-                      <span className="sim-row__sub">
-                        {joinNombres(items.map((f) => f.cliente))} · <span className="num">{soles(totalFiados)}</span>
-                      </span>
-                    </span>
-                    <input
-                      type="checkbox"
-                      role="switch"
-                      className="sim-input"
-                      checked={cobrar}
-                      onChange={(e) => setCobrar(e.target.checked)}
-                    />
-                    <span className="sim-switch" aria-hidden="true" />
-                  </label>
-                ) : null}
-              </div>
-            </fieldset>
-          </Card>
+      <div className="sim-aside">
+        <div aria-live="polite" aria-busy={sim.loading}>
+          <Resultado r={sim.data} pending={sim.loading} minimo={minimo} proveedor={pedido.proveedor} />
+          {sim.error && (
+            <p className="cc-small sim-stale" role="alert">
+              No pude actualizar el cálculo.{' '}
+              <button type="button" className="sim-link" onClick={retry}>
+                Intentar otra vez
+              </button>
+            </p>
+          )}
         </div>
 
-        <div className="sim-aside">
-          <div aria-live="polite" aria-busy={sim.loading}>
-            {sim.error && !sim.data ? (
-              <ErrorState error={sim.error} onRetry={retry} />
-            ) : !sim.data ? (
-              <LoadingBlock heights={[180]} />
-            ) : (
-              <>
-                <Resultado r={sim.data} pending={sim.loading} />
-                {sim.error && (
-                  <p className="cc-small sim-stale" role="alert">
-                    No pude actualizar el cálculo.{' '}
-                    <button type="button" className="sim-link" onClick={retry}>
-                      Intentar otra vez
-                    </button>
-                  </p>
-                )}
-              </>
-            )}
-          </div>
-
-          <div className="sim-foot">
-            <p>Simulación con tus ventas de los últimos 3 meses. Tú decides; nada se ejecuta solo.</p>
-            {sim.data?.meta && <MetaLine meta={sim.data.meta} />}
-          </div>
+        <div className="sim-foot">
+          <p>Simulación con tus ventas y gastos recientes. Tú decides; nada se ejecuta solo.</p>
+          {sim.data.meta && <MetaLine meta={sim.data.meta} />}
         </div>
       </div>
-    </div>
+    </Shell>
   )
 }
 
 const ESTADOS = {
-  no_te_alcanza: { tone: 'danger', icon: 'warning', money: { tone: 'neg' }, titulo: 'No te alcanza' },
-  justo: { tone: 'warning', icon: 'warning', money: { className: 'sim-money--warning' }, titulo: 'Justo' },
-  te_alcanza: { tone: 'ok', icon: 'check', money: { tone: 'pos' }, titulo: 'Te alcanza' },
+  no_te_alcanza: {
+    tone: 'danger',
+    icon: 'warning',
+    money: { tone: 'neg' },
+    titulo: 'No te alcanza',
+  },
+  justo: {
+    tone: 'warning',
+    icon: 'warning',
+    money: { className: 'sim-money--warning' },
+    titulo: 'Justo',
+  },
+  te_alcanza: {
+    tone: 'ok',
+    icon: 'check',
+    money: { tone: 'pos' },
+    titulo: 'Te alcanza',
+  },
 }
 
-function Resultado({ r, pending }) {
-  const saldo = r.con_acciones?.saldo_minimo
-  const fecha = ddmm(r.con_acciones?.fecha || '2026-11-30')
-  const estado = r.con_acciones?.estado_caja || (saldo < 0 ? 'no_te_alcanza' : saldo < MINIMO ? 'justo' : 'te_alcanza')
+function Resultado({ r, pending, minimo, proveedor }) {
+  const saldo = r.con_acciones.saldo_minimo
+  const fecha = ddmm(r.con_acciones.fecha)
+  const estado = r.con_acciones.estado_caja
   const mejora = r.mejora ?? 0
   const e = ESTADOS[estado] || ESTADOS.justo
 
   const explicacion =
     estado === 'no_te_alcanza'
-      ? 'Todavía te faltaría plata para pagar a Andina. Prueba combinar opciones.'
+      ? `Todavía te faltaría plata para pagar a ${proveedor}. Prueba combinar opciones.`
       : estado === 'justo'
-        ? `Te alcanza para pagar, pero quedas debajo de tu mínimo de ${soles(MINIMO)}.`
-        : `Pasas tu mínimo de ${soles(MINIMO)} para el día a día.`
+        ? `Te alcanza para pagar, pero quedas debajo de tu mínimo de ${soles(minimo)}.`
+        : `Pasas tu mínimo de ${soles(minimo)} para el día a día.`
 
   return (
     <Card className={'sim-result' + (pending ? ' is-pending' : '')} aria-labelledby="sim-result-label">

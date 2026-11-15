@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
- * const { data, error, loading, reload } = useApi(() => api.getResumen('2026-11'), [])
+ * const { data, error, loading, reload } = useApi(() => api.getResumen(), [])
  * Ignora respuestas de llamadas viejas si las deps cambian antes de que terminen.
  */
 export function useApi(fn, deps = []) {

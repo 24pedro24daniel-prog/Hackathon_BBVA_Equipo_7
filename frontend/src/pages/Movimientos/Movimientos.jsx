@@ -3,26 +3,23 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../../api/index.js'
-import { useDemo } from '../../lib/useDemo.js'
-import { hhmm, soles, weekdayDdmm } from '../../lib/format.js'
+import { useApi } from '../../api/useApi.js'
+import { daysBetween, hhmm, soles, weekdayDdmm } from '../../lib/format.js'
 import { CANAL_LABEL, METODO_LABEL, TIPO_LABEL, esIngreso, tituloMovimiento } from '../../lib/movimientos.js'
 import { Button, Card, ErrorState, Icon, LoadingBlock, Money, PageHeader, Status } from '../../components/ui/index.jsx'
 import './Movimientos.css'
 
 const PAGINA = 20
-const CORTE = '2026-11-14' // fecha de la demo; con backend real se usaría la fecha de hoy
-
-function etiquetaDia(fechaHora) {
-  const dia = fechaHora.slice(0, 10)
-  const ayer = new Date(`${CORTE}T12:00:00-05:00`)
-  ayer.setDate(ayer.getDate() - 1)
-  if (dia === CORTE) return 'Hoy'
-  if (dia === ayer.toISOString().slice(0, 10)) return 'Ayer'
+/** "Hoy" / "Ayer" respecto a la fecha de corte del backend (resumen.corte); si no llegó, el día de la semana. */
+function etiquetaDia(fechaHora, corte) {
+  const dias = corte ? daysBetween(fechaHora.slice(0, 10), corte) : null
+  if (dias === 0) return 'Hoy'
+  if (dias === 1) return 'Ayer'
   return weekdayDdmm(fechaHora)
 }
 
 export default function Movimientos() {
-  const [demo] = useDemo()
+  const corte = useApi(() => api.getResumen(), []).data?.corte
   const [params] = useSearchParams()
   const idInicial = params.get('id')
   const [items, setItems] = useState([])
@@ -42,7 +39,7 @@ export default function Movimientos() {
     )
   }
 
-  useEffect(() => cargar(null), [demo.escenario])
+  useEffect(() => cargar(null), [])
 
   // Al llegar con ?id, lleva la vista a ese movimiento
   useEffect(() => {
@@ -53,13 +50,13 @@ export default function Movimientos() {
   const grupos = useMemo(() => {
     const g = []
     for (const m of items) {
-      const etiqueta = etiquetaDia(m.fecha_hora)
+      const etiqueta = etiquetaDia(m.fecha_hora, corte)
       const last = g[g.length - 1]
       if (last?.etiqueta === etiqueta) last.items.push(m)
       else g.push({ etiqueta, items: [m] })
     }
     return g
-  }, [items])
+  }, [items, corte])
 
   return (
     <div className="movs">
@@ -139,9 +136,9 @@ function MovimientoItem({ m, abierto, onToggle }) {
               v={
                 <ul className="movs__productos">
                   {m.items.map((it, i) => (
-                    <li key={it.producto_id || i}>
+                    <li key={i}>
                       <span>
-                        {it.cantidad} × {it.producto}
+                        {it.cantidad} × {it.producto || 'Producto'}
                       </span>
                       <span className="num">{soles(it.subtotal, { cents: true })}</span>
                     </li>

@@ -34,9 +34,13 @@ export const CANAL_LABEL = {
   manual: 'Anotado en la app',
 }
 
-/** Título corto de la fila: descripción, o tipo + contraparte */
+const capitalizar = (t) => t.charAt(0).toUpperCase() + t.slice(1).replace(/_/g, ' ')
+
+/** Título corto de la fila: descripción → "Venta · Bodega Rosa" → "Venta · Bebidas" → "Venta" */
 export function tituloMovimiento(m) {
   if (m.descripcion) return m.descripcion
   const t = TIPO_LABEL[m.tipo] || 'Movimiento'
-  return m.contraparte ? `${t} · ${m.contraparte}` : t
+  if (m.contraparte) return `${t} · ${m.contraparte}`
+  if (m.categoria && m.categoria !== m.tipo) return `${t} · ${capitalizar(m.categoria)}`
+  return t
 }

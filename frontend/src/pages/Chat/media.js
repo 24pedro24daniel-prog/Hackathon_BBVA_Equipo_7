@@ -1,5 +1,7 @@
 // Entrada de voz y foto del chat simulado.
-// Hoy no hay backend de grabación: el micrófono ofrece notas de voz de demostración y la cámara una foto fija.
+// Aún no se graba ni se sube nada: el micrófono ofrece notas de voz de prueba y la cámara una foto fija.
+// El backend acepta canal 'voz' con `texto` + un media_url que no existe (usa el texto como transcripción), y
+// para la foto `cuaderno_01` responde con la lectura precalculada de la demo cuando no hay modelo de visión.
 
 export const DEMO_VOICE_NOTES = [
   { id: 'cervezas', texto: 'vendí dos cervezas', duracion: '0:04', media_url: 'demo://audios/vendi_dos_cervezas.ogg' },
@@ -17,7 +19,8 @@ export const DEMO_CUADERNO = {
  *
  * TODO(voz-real): reemplazar por grabación real:
  *   1. navigator.mediaDevices.getUserMedia({ audio: true }) + new MediaRecorder(stream) mientras se mantiene el botón.
- *   2. Subir el Blob (audio/ogg|webm) a un endpoint de media → obtener media_url.
+ *   2. POST /media/subidas { empresa_id, tipo: 'audio', content_type, tamano_bytes } → { media_url, upload_url, headers_requeridos };
+ *      PUT del Blob a upload_url (requiere R2 configurado en el backend; si no, responde 503).
  *   3. Devolver { texto: null, media_url, duracion } — el backend transcribe (whisper) y responde `transcripcion`.
  * El resto del flujo (burbuja de audio, "Escuchando tu audio…", tarjeta de confirmación) no cambia.
  */
@@ -26,7 +29,8 @@ export async function capturarNotaDeVoz(demoNote) {
 }
 
 /**
- * TODO(foto-real): abrir <input type="file" accept="image/*" capture="environment">, subir la imagen y devolver su media_url.
+ * TODO(foto-real): <input type="file" accept="image/*" capture="environment"> → POST /media/subidas (tipo 'imagen') → PUT
+ * → devolver su media_url. Leer una foto real necesita además el modelo de visión configurado (OPENROUTER_API_KEY).
  */
 export async function capturarFotoCuaderno() {
   return { ...DEMO_CUADERNO }
