@@ -32,7 +32,7 @@ VERSION_REGLAS = "reglas-1.0.0"
 T = TipoMovimiento
 
 MENSAJE_NO_INTERPRETABLE = 'No entendí bien. ¿Me lo dices de otra forma? Por ejemplo: "vendí 2 cervezas".'
-MENSAJE_ALCANCE = ("CajaClara solo lleva la plata del negocio, no los gastos de la casa. Si esa plata salió de la caja "
+MENSAJE_ALCANCE = ("TuCaserito solo lleva la plata del negocio, no los gastos de la casa. Si esa plata salió de la caja "
                    "de la tienda, dime cuánto fue (por ejemplo: «saqué 150 de la caja para el colegio») y lo anoto "
                    "como retiro para la casa.")  # fmt: skip
 
@@ -94,7 +94,7 @@ TOOL_MOVIMIENTO = {
     },
 }
 
-_SISTEMA = """Eres el extractor de CajaClara, un asistente para el dueño de una bodega en Perú. Convierte su mensaje \
+_SISTEMA = """Eres el extractor de TuCaserito, un asistente para el dueño de una bodega en Perú. Convierte su mensaje \
 en UN movimiento llamando a la función registrar_movimiento. Hoy es {hoy} (zona America/Lima).
 
 Tipos: venta, cobro_fiado (un cliente paga lo que debía), prestamo_recibido, otro_ingreso, compra (mercadería), \
@@ -321,7 +321,7 @@ def completar(crudo: Crudo, texto: str, cat: Catalogo, *, fallback: bool) -> Ext
             raise NoInterpretable(MENSAJE_ALCANCE, [{"campo": "alcance", "problema": "gasto_del_hogar"}])
         faltantes = ["salio_de_caja"]
         opciones = [{"valor": "si", "texto": "Sí, salió de la caja"}, {"valor": "no", "texto": "No, fue plata de la casa"}]
-        pregunta = ("CajaClara solo lleva la plata del negocio. ¿Esa plata salió de la caja de la tienda? Si es así, "
+        pregunta = ("TuCaserito solo lleva la plata del negocio. ¿Esa plata salió de la caja de la tienda? Si es así, "
                     "lo anoto como retiro para la casa.")  # fmt: skip
         confianza = min(confianza, 0.55)
     elif faltantes:

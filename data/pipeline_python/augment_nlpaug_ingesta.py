@@ -1,5 +1,5 @@
 """
-CajaClara — Generador y Aumentador de Ruido en Ingesta Manual (F1) con nlpaug + Reglas Fonéticas/OCR
+TuCaserito — Generador y Aumentador de Ruido en Ingesta Manual (F1) con nlpaug + Reglas Fonéticas/OCR
 Simula sobre los 3 canales manuales ('voz', 'texto', 'foto') y operación 100% en efectivo/crédito:
   1. Perturbaciones fonéticas de voz en español peruano (seseo, b/v, jerga de bodega como 'chelas')
      que reducen la confianza (< 0.75) y activan pregunta_aclaratoria (doble confirmación).

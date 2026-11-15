@@ -1,4 +1,4 @@
-# CajaClara — Backend (FastAPI)
+# TuCaserito — Backend (FastAPI)
 
 FastAPI + SQLAlchemy 2 + PostgreSQL 16. Plan y reparto A/B: [PLAN_MVP.md](PLAN_MVP.md) · Contrato: [../contract.md](../contract.md) · Tablas: [../modelo_datos.dbml](../modelo_datos.dbml).
 Todos los datos son sintéticos (Pedro, "Bodega Don Pedro", EMP-0001).

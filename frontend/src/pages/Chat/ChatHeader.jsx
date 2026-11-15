@@ -10,7 +10,7 @@ export default function ChatHeader({ flujo }) {
         <Icon name="back" size={22} />
       </button>
       <div className="chat-header__text">
-        <h1 className="chat-header__title">CajaClara</h1>
+        <h1 className="chat-header__title">TuCaserito</h1>
         <p className="chat-header__sub">{flujo} · chat simulado</p>
       </div>
       <span aria-hidden="true" />

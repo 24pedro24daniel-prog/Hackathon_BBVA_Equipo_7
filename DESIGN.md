@@ -1,4 +1,4 @@
-# CajaClara — Sistema de diseño (aplicado)
+# TuCaserito — Sistema de diseño (aplicado)
 
 Versión 2 (14/11). Estructura tomada de apps bancarias de referencia (Nu, Monzo, SoFi) y color de la paleta BBVA 2025.
 Tokens en `frontend/src/index.css`, primitivas en `frontend/src/components/ui/`. Las pantallas usan siempre los tokens, nunca hex sueltos.

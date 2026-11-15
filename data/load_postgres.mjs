@@ -1,5 +1,5 @@
 /**
- * CajaClara — Cargador y Verificador en PostgreSQL (Render / Local)
+ * TuCaserito — Cargador y Verificador en PostgreSQL (Render / Local)
  * Lee DATABASE_URL desde data/.env, ejecuta data/schema.sql (25 tablas + 19 enums + 6 vistas),
  * inserta por lotes todas las tablas desde data/csv/*.csv y verifica los indicadores de EMP-0001.
  */

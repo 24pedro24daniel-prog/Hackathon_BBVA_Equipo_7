@@ -38,7 +38,7 @@ export function OutBubble({ time, className, children }) {
   )
 }
 
-/** Burbuja entrante (CajaClara). wide = tarjeta con acciones */
+/** Burbuja entrante (TuCaserito). wide = tarjeta con acciones */
 export function InBubble({ time, wide, tone, className, footer, children }) {
   return (
     <div className="chat-row chat-row--bot">

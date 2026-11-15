@@ -18,7 +18,7 @@ What this means for design:
 **Secondary (roadmap only):** a bank business advisor who, with Pedro's explicit consent, could read his ordered history to evaluate a working-capital loan faster. Not designed for in the MVP.
 
 ## Product Purpose
-**CajaClara** is a cash-flow manager for unbanked bodegas and small businesses. It helps Pedro order his cash flow, see shortfalls coming before they happen, and build healthy money habits, so that over time he builds the history he needs to reach formal credit instead of informal "gota a gota" loans.
+**TuCaserito** is a cash-flow manager for unbanked bodegas and small businesses. It helps Pedro order his cash flow, see shortfalls coming before they happen, and build healthy money habits, so that over time he builds the history he needs to reach formal credit instead of informal "gota a gota" loans.
 
 The problem it breaks: *no le alcanza → pide prestado → paga cuotas diarias con la venta del día → vuelve a no alcanzarle.*
 
@@ -36,7 +36,7 @@ Simplified for the demo: notebook photos, taxes via buttons, assistant with 3–
 Success for Pedro: he stops running out of cash, understands his business, and leaves the informal-loan cycle. Measurable MVP targets live in `context.md` §3.
 
 ## Positioning
-CajaClara is a **door in**, not a bank app. Existing business banking tools see only what flows through bank channels (POS, QR, accounts) and assume the user already has a RUC and a business account. CajaClara serves the person before that point and captures what the bank can't see: cash sales, fiados, supplier credit and personal withdrawals, entered through WhatsApp.
+TuCaserito is a **door in**, not a bank app. Existing business banking tools see only what flows through bank channels (POS, QR, accounts) and assume the user already has a RUC and a business account. TuCaserito serves the person before that point and captures what the bank can't see: cash sales, fiados, supplier credit and personal withdrawals, entered through WhatsApp.
 
 Its edge is **anticipation, not bookkeeping**: it tells Pedro what will happen on the 30th and what he can do about it today, in his own words.
 

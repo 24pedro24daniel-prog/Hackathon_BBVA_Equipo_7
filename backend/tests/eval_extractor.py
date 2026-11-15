@@ -283,7 +283,7 @@ def _imprimir(r: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Exactitud por campo del extractor de CajaClara.")
+    parser = argparse.ArgumentParser(description="Exactitud por campo del extractor de TuCaserito.")
     parser.add_argument("--llm", action="store_true", help="evaluar también la ruta LLM (llama a OpenRouter)")
     parser.add_argument("--limite", type=int, default=None, help="evaluar solo las primeras N frases")
     parser.add_argument("--json", action="store_true", help="salida en JSON")
