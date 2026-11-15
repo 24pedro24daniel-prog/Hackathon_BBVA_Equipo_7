@@ -11,13 +11,12 @@
     "pct_fiado_sobre_ventas",
     "pct_fiado_cobrado_a_tiempo",
     "n_alertas_quiebre_stock",
+    "n_trabajadores",
     "tiene_ruc",
     "usa_billetera_digital",
-    "zona_rural",
-    "zona_urbano",
-    "rubro_bebidas",
-    "rubro_mixto",
-    "rubro_panaderia"
+    "rubro_distribuidora",
+    "rubro_restaurante",
+    "rubro_taller"
   ],
   "features_numericas": [
     "antiguedad_meses",
@@ -29,28 +28,23 @@
     "dias_desde_ultimo_registro",
     "pct_fiado_sobre_ventas",
     "pct_fiado_cobrado_a_tiempo",
-    "n_alertas_quiebre_stock"
+    "n_alertas_quiebre_stock",
+    "n_trabajadores"
   ],
   "features_binarias": [
     "tiene_ruc",
     "usa_billetera_digital"
   ],
   "features_categoricas_originales": [
-    "zona",
     "rubro"
   ],
-  "categorias_zona": [
-    "periurbano",
-    "rural",
-    "urbano"
-  ],
   "categorias_rubro": [
-    "abarrotes",
-    "bebidas",
-    "mixto",
-    "panaderia"
+    "bodega",
+    "distribuidora",
+    "restaurante",
+    "taller"
   ],
-  "auc_test": 0.7648,
+  "auc_test": 0.7643,
   "formula_score": "score = round(modelo.predict_proba(scaler.transform(X))[:, 1] * 100)",
   "rangos_categoria": {
     "Rojo (Poor)": "0-39",
