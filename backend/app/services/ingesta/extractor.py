@@ -20,7 +20,7 @@ from app.core.config import settings
 from app.core.errors import NoInterpretable
 from app.core.reloj import ahora, hoy
 from app.schemas.common import Frecuencia, MetodoPago, OrigenMonto, TipoMovimiento, redondear
-from app.services.ingesta import llm_client, reglas
+from app.services.ingesta import llm_client, reglas, traza_llm
 from app.services.ingesta.catalogo import Catalogo
 from app.services.ingesta.reglas import Crudo, ItemCrudo
 from app.services.ingesta.texto import ResultadoFecha, fecha_corta, fecha_larga, soles, valores_en_texto
@@ -50,6 +50,7 @@ class Extraccion:
     modelo: str = "reglas-extractor"
     modelo_version: str = VERSION_REGLAS
     motivo_fallback: str | None = None
+    llamada_id: str | None = None  # fila de llm_llamadas (el servicio la enlaza con el borrador)
 
 
 # ── herramienta para el LLM ─────────────────────────────────────────────────────────────────────
@@ -160,22 +161,27 @@ class SalidaInvalida(Exception):
     """El LLM respondió, pero sin una tool call válida."""
 
 
-def _llamar_llm(texto: str, cat: Catalogo, dia: date) -> SalidaLLM:
+def _llamar_llm(texto: str, cat: Catalogo, dia: date, traza: traza_llm.TrazaLLM | None = None) -> SalidaLLM:
     sistema = _SISTEMA.format(hoy=dia.isoformat(), catalogo=json.dumps(cat.para_prompt(), ensure_ascii=False))
     mensaje = llm_client.chat_completion(
         [{"role": "system", "content": sistema}, {"role": "user", "content": texto}],
         tools=[TOOL_MOVIMIENTO],
         tool_choice={"type": "function", "function": {"name": "registrar_movimiento"}},
         max_tokens=400,
+        traza=traza,
     )
     llamadas = mensaje.get("tool_calls") or []
     if not llamadas:
+        if traza:
+            traza.marcar("rechazada_validacion")
         raise SalidaInvalida("el LLM no llamó a la función")
     argumentos = llamadas[0].get("function", {}).get("arguments")
     try:
         datos = json.loads(argumentos) if isinstance(argumentos, str) else argumentos
         return SalidaLLM.model_validate(datos)
     except (json.JSONDecodeError, TypeError, ValidationError) as exc:
+        if traza:
+            traza.marcar("rechazada_validacion")
         raise SalidaInvalida(f"argumentos inválidos: {exc}") from exc
 
 
@@ -360,14 +366,24 @@ def extraer(texto: str, *, empresa_id: str, db=None, catalogo: Catalogo | None =
     base = reglas.interpretar(texto, cat, dia)
 
     motivo = None
+    traza = None
     if usar_llm and settings.llm_configurado:
+        traza = traza_llm.crear(db, empresa_id, "extractor", PROMPT_VERSION)
         try:
-            salida = _llamar_llm(texto, cat, dia)
+            salida = _llamar_llm(texto, cat, dia, traza)
             if not salida.es_movimiento or (salida.tipo is None and not salida.es_gasto_del_hogar):
                 raise NoInterpretable(MENSAJE_NO_INTERPRETABLE)
             resultado = completar(_crudo_desde_llm(salida, texto, cat, base), texto, cat, fallback=False)
             resultado.modelo, resultado.modelo_version = "llm-extractor", settings.LLM_MODEL
+            if traza:
+                traza.marcar("aceptada")
+                resultado.llamada_id = traza.llamada_id
             return resultado
+        except NoInterpretable:
+            if traza:  # el modelo respondió bien; no habrá borrador ni commit, así que se confirma la traza aquí
+                traza.marcar("aceptada")
+                traza.confirmar()
+            raise
         except (llm_client.LLMNoDisponible, SalidaInvalida) as exc:
             motivo = str(exc)
             log.warning("Extractor: uso reglas (%s)", motivo)
@@ -375,4 +391,5 @@ def extraer(texto: str, *, empresa_id: str, db=None, catalogo: Catalogo | None =
         motivo = "LLM sin configurar" if usar_llm else "LLM desactivado"
     resultado = completar(base, texto, cat, fallback=True)
     resultado.motivo_fallback = motivo
+    resultado.llamada_id = traza.llamada_id if traza else None
     return resultado

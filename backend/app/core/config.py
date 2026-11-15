@@ -57,6 +57,9 @@ class Settings(BaseSettings):
     LLM_MAX_TOKENS: int = 800
     LLM_APP_URL: str = "http://localhost:5173"
     LLM_APP_NAME: str = "CajaClara"
+    # Trazabilidad de cada llamada al LLM/VLM (tabla llm_llamadas). Sin contenido: solo metadatos, tokens y costo.
+    LLM_TRAZA_ACTIVA: bool = True
+    LLM_TRAZA_GUARDAR_CONTENIDO: bool = True
     # Visión (foto del cuaderno de fiados): mismo OpenRouter y misma OPENROUTER_API_KEY, otro modelo con imágenes.
     VLM_MODEL: str = "openai/gpt-4o-mini"
     VLM_TIMEOUT_S: float = Field(default=30.0, gt=0)

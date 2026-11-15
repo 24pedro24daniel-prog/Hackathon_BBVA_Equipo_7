@@ -14,7 +14,7 @@ from app.core.errors import registrar_handlers
 from app.core.meta import iniciar_request
 from app.routers import (
     alertas, analisis, asistente, fiados, forecast, health, ingesta,
-    impuestos, media, movimientos, pedidos, resumen, salud, simulador, webhooks,
+    impuestos, llm_trazas, media, movimientos, pedidos, resumen, salud, simulador, webhooks,
 )
 
 PREFIJO = settings.API_PREFIX
@@ -69,6 +69,8 @@ protegidos = [
     # Dev B
     resumen.router, forecast.router, fiados.router, pedidos.router, simulador.router,
     analisis.router, alertas.router,
+    # Observabilidad interna
+    llm_trazas.router,
 ]
 for r in protegidos:
     app.include_router(r, prefix=PREFIJO, dependencies=[Depends(verificar_api_key)])

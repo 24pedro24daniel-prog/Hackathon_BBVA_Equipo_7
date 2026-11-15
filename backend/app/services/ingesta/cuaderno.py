@@ -19,7 +19,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.errors import NoInterpretable
 from app.db import models as m
-from app.services.ingesta import almacenamiento, llm_client, transcriptor, vision
+from app.services.ingesta import almacenamiento, llm_client, transcriptor, traza_llm, vision
 from app.services.ingesta import catalogo as cat_mod
 
 log = logging.getLogger("cajaclara.cuaderno")
@@ -73,6 +73,7 @@ class LecturaCuaderno:
     modelo_version: str = MODELO_VERSION_FIXTURE
     prompt_version: str = PROMPT_VERSION_FIXTURE
     motivo_fallback: str | None = None
+    llamada_id: str | None = None  # fila de llm_llamadas (el servicio la enlaza con el borrador)
 
 
 def _nombre_foto(media_url: str) -> str:
@@ -125,6 +126,7 @@ def leer_cuaderno(media_url: str, *, empresa_id: str, db=None) -> LecturaCuadern
     imagen = _cargar_imagen(media_url, empresa_id)
     foto = _nombre_foto(media_url)
     motivo = "VLM sin configurar"
+    traza = None
     if settings.llm_configurado and imagen is None:
         motivo = "no hay archivo de imagen que leer"
     elif settings.llm_configurado:
@@ -132,18 +134,22 @@ def leer_cuaderno(media_url: str, *, empresa_id: str, db=None) -> LecturaCuadern
         if tipo is None or tipo not in settings.media_tipos_imagen:
             raise almacenamiento.MediaInvalida("La foto no es de un tipo permitido.", "tipo de imagen no permitido")
         cat = cat_mod.cargar(db, empresa_id) if db is not None else cat_mod.Catalogo(empresa_id)
+        traza = traza_llm.crear(db, empresa_id, "vision", PROMPT_VERSION)
         try:
-            vista = vision.leer(imagen, tipo, clientes=[c.nombre for c in cat.clientes])
+            vista = vision.leer(imagen, tipo, clientes=[c.nombre for c in cat.clientes], traza=traza)
             return LecturaCuaderno(
                 fiados=_proponer(vista.fiados, cat, db, empresa_id), lineas_no_legibles=vista.lineas_no_legibles,
                 lineas_tachadas=vista.lineas_tachadas, fallback_usado=False, foto=foto, modelo=MODELO,
-                modelo_version=settings.VLM_MODEL[:30], prompt_version=PROMPT_VERSION)  # fmt: skip
+                modelo_version=settings.VLM_MODEL[:30], prompt_version=PROMPT_VERSION,
+                llamada_id=traza.llamada_id if traza else None)  # fmt: skip
         except (llm_client.LLMNoDisponible, vision.SalidaInvalida) as exc:
             motivo = str(exc)
             log.warning("Cuaderno: uso fixture (%s)", motivo)
+    llamada_id = traza.llamada_id if traza else None
     datos = FIXTURES.get(foto)
     if datos is None:
-        return LecturaCuaderno(foto=foto, motivo_fallback=motivo)
+        return LecturaCuaderno(foto=foto, motivo_fallback=motivo, llamada_id=llamada_id)
     cat = cat_mod.cargar(db, empresa_id) if db is not None else cat_mod.Catalogo(empresa_id)
     return LecturaCuaderno(fiados=_proponer(datos["fiados"], cat, db, empresa_id),
-                           lineas_no_legibles=datos["lineas_no_legibles"], foto=foto, motivo_fallback=motivo)  # fmt: skip
+                           lineas_no_legibles=datos["lineas_no_legibles"], foto=foto, motivo_fallback=motivo,
+                           llamada_id=llamada_id)  # fmt: skip

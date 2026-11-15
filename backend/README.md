@@ -7,7 +7,7 @@ Todos los datos son sintéticos (Pedro, "Bodega Don Pedro", EMP-0001).
 
 | Archivo | Qué tiene | ¿Se versiona? |
 |---|---|---|
-| `parametros.env` | Parámetros no secretos: host/puerto/BD, `FECHA_DEMO=2026-11-14`, `TZ`, `LLM_*` (OpenRouter), `WHISPER_*`, `UMBRAL_CONFIANZA`, `R2_ACCOUNT_ID`, `R2_BUCKET`, `MEDIA_*` | Sí |
+| `parametros.env` | Parámetros no secretos: host/puerto/BD, `FECHA_DEMO=2026-11-14`, `TZ`, `LLM_*` (OpenRouter, incluida la trazabilidad `LLM_TRAZA_*`), `WHISPER_*`, `UMBRAL_CONFIANZA`, `R2_ACCOUNT_ID`, `R2_BUCKET`, `MEDIA_*` | Sí |
 | `.env` | Solo credenciales: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `API_KEY`, `OPENROUTER_API_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | **No** (`.gitignore`) |
 | `example.env` | Plantilla de `.env` con valores vacíos | Sí |
 
@@ -66,6 +66,32 @@ uvicorn app.main:app --port 8000 --reload
 ```
 
 Front contra este backend: en `frontend/.env` poner `VITE_USE_MOCK=false` y `VITE_API_KEY` = `API_KEY` del `.env` del backend.
+
+## Observabilidad del LLM
+
+Cada llamada al LLM/VLM (extractor, asistente, cuaderno) deja una fila en la tabla técnica `llm_llamadas`, también si
+falla (timeout, HTTP 4xx/5xx, respuesta inválida, sin API key). Se pide el uso a OpenRouter (`usage.include`).
+
+- **Qué se guarda:** origen, `prompt_version`, modelo solicitado y respondido, `generation_id`, tokens, `costo_usd`,
+  latencia, `estado`/`http_status`/`error`, `request` (messages, tools, temperature...), `respuesta` cruda (content,
+  tool_calls, finish_reason) y `resultado_uso` (`aceptada`, `rechazada_validacion`, `rechazada_verificador`). La
+  llamada se enlaza con el `borrador_id` o el `mensaje_id` que produjo (`referencia_tipo` / `referencia_id`).
+- **Privacidad:** nunca se guardan headers ni la API key; las fotos del cuaderno se guardan solo como
+  `{"imagen": {"sha256", "bytes", "mime"}}`, jamás el base64. Con `LLM_TRAZA_GUARDAR_CONTENIDO=false` tampoco se guardan
+  los `messages` ni el `content` (solo metadatos, tokens y costo); con `LLM_TRAZA_ACTIVA=false` no se escribe nada.
+  El texto del usuario sí queda en `request` cuando se guarda el contenido: tratar la tabla como dato sensible.
+- **Robustez:** la traza usa la misma sesión que el consumidor (flush, sin commit propio) y va en un SAVEPOINT; si falla
+  el guardado solo se registra un warning. Si el flujo termina en error controlado (p. ej. 422 `NO_INTERPRETABLE`) la
+  fila se confirma antes; si el request revienta con 500 se pierde con el rollback. Sin `db` (scripts, tests sin BD)
+  no se registra nada.
+- **Consulta (X-API-Key, uso interno, ver contract.md §11):**
+
+```bash
+curl -H "X-API-Key: $API_KEY" "http://localhost:8000/api/v1/empresas/EMP-0001/llm/llamadas?origen=asistente&limit=20"
+curl -H "X-API-Key: $API_KEY" "http://localhost:8000/api/v1/empresas/EMP-0001/llm/resumen?desde=2026-11-01"
+```
+
+El resumen da, por día y por origen: llamadas, ok/errores, % fallback, tokens, `costo_usd` y latencia p50/p95.
 
 ## Tests
 

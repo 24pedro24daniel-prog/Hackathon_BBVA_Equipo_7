@@ -136,4 +136,4 @@ def test_todas_las_rutas_exigen_api_key(client_sin_key, metodo, path):
 
 
 def test_hay_rutas_protegidas_registradas():
-    assert len(list(_rutas_protegidas())) == 24  # + /health pública = 25 endpoints (incluye POST /media/subidas)
+    assert len(list(_rutas_protegidas())) == 26  # + /health pública = 27 endpoints (incluye POST /media/subidas y las 2 de /llm)

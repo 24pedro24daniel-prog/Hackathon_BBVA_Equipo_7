@@ -486,6 +486,38 @@ Score mensual de F8. **Grano:** empresa × mes. PK `(empresa_id, mes)`.
 | `subindicadores` | json | no | Un valor por regla | `{"constancia_registro":80,"separacion_personal":55}` |
 | `version_formula` | varchar(30) | no | | `score-v1` |
 
+### 2.7 Técnicas (observabilidad; no son parte del modelo de negocio)
+
+#### `llm_llamadas`
+Una fila por llamada al LLM/VLM (OpenRouter), también las que fallan. **Grano:** una llamada. Se consulta con `GET /empresas/{id}/llm/llamadas` y `/llm/resumen`. Con `LLM_TRAZA_GUARDAR_CONTENIDO=false` no se guardan `messages` ni `content`.
+
+| Campo | Tipo | Nulo | Descripción | Ejemplo |
+|---|---|---|---|---|
+| `llamada_id` | varchar(20) | PK | Identificador | `LLM-000001` |
+| `empresa_id` | varchar(20) | sí | FK → `empresas` | `EMP-0001` |
+| `origen` | varchar(20) | no | `extractor`, `asistente` o `vision` | `extractor` |
+| `referencia_tipo` | varchar(20) | sí | `borrador` o `mensaje` | `borrador` |
+| `referencia_id` | varchar(20) | sí | Registro que produjo la llamada (sin FK) | `BOR-7781` |
+| `prompt_version` | varchar(30) | sí | | `extractor-v3` |
+| `proveedor` | varchar(30) | no | | `openrouter` |
+| `modelo_solicitado` | varchar(100) | sí | | `openai/gpt-4o-mini` |
+| `modelo_respondido` | varchar(100) | sí | Modelo que realmente respondió | `openai/gpt-4o-mini-2024-07-18` |
+| `generation_id` | varchar(100) | sí | `id` de la respuesta de OpenRouter | `gen-1731...` |
+| `request` | json | sí | `messages`, `tools`, `tool_choice`, `temperature`, `max_tokens`. Las imágenes van como `{"imagen": {"sha256", "bytes", "mime"}}`; nunca el base64, headers ni la API key | |
+| `respuesta` | json | sí | `content`, `tool_calls` crudos y `finish_reason` (o el `error` del proveedor) | |
+| `prompt_tokens` | int | sí | ≥ 0 | `1480` |
+| `completion_tokens` | int | sí | ≥ 0 | `60` |
+| `total_tokens` | int | sí | ≥ 0 | `1540` |
+| `costo_usd` | decimal(12,8) | sí | `usage.cost` de OpenRouter | `0.00026000` |
+| `latencia_ms` | int | sí | Tiempo de la llamada HTTP | `1280` |
+| `estado` | varchar(20) | no | `ok`, `timeout`, `http_error`, `red`, `respuesta_invalida`, `sin_configurar` | `ok` |
+| `http_status` | smallint | sí | | `429` |
+| `error` | text | sí | Mensaje corto, sin secretos | |
+| `resultado_uso` | varchar(30) | sí | Qué hizo el consumidor con la salida: `aceptada`, `rechazada_validacion`, `rechazada_verificador` | `aceptada` |
+| `creado_en` | timestamptz | no | | |
+
+Índices: `(empresa_id, creado_en)` y `(origen, creado_en)`.
+
 ---
 
 ## 3. Vistas derivadas (no se guardan)

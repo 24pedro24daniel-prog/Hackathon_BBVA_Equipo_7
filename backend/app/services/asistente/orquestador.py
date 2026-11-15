@@ -22,7 +22,7 @@ from app.core.reloj import ahora
 from app.db import models as m
 from app.schemas.common import CanalNotificacion, IntencionAsistente, RolMensaje
 from app.services.asistente import herramientas, plantillas, verificador
-from app.services.ingesta import llm_client
+from app.services.ingesta import llm_client, traza_llm
 from app.services.ingesta.texto import normalizar, numeros
 
 log = logging.getLogger("cajaclara.asistente")
@@ -200,14 +200,16 @@ cifras, porcentajes, fechas ni cálculos nuevos. No recomiendes créditos, entid
 con el texto."""
 
 
-def redactar_con_llm(mensaje: str, borrador: str) -> str:
+def redactar_con_llm(mensaje: str, borrador: str, traza: traza_llm.TrazaLLM | None = None) -> str:
     salida = llm_client.chat_completion(
         [{"role": "system", "content": _SISTEMA},
          {"role": "user", "content": json.dumps({"pregunta": mensaje, "borrador": borrador}, ensure_ascii=False)}],
-        max_tokens=300, temperature=0.2,
+        max_tokens=300, temperature=0.2, traza=traza,
     )  # fmt: skip
     texto = (salida.get("content") or "").strip()
     if not texto:
+        if traza:
+            traza.marcar("rechazada_validacion")
         raise llm_client.LLMNoDisponible("el LLM respondió vacío")
     return texto
 
@@ -239,14 +241,20 @@ def responder(db, empresa_id: str, mensaje: str, conversacion_id: str | None = N
     permitidas = ctx.resultados + [{"mensaje": [float(n.valor) for n in numeros(normalizar(mensaje))]}]
     verificacion = verificador.verificar_cifras(texto_plantilla, permitidas)
     respuesta, fallback, usa_llm = borrador.texto, False, False
+    traza = None
     if intencion in CON_LLM and ctx.llamadas:
         if settings.llm_configurado and settings.ASISTENTE_USAR_LLM:
+            traza = traza_llm.crear(db, empresa_id, "asistente", PROMPT_VERSION, "mensaje")
             try:
-                propuesta = redactar_con_llm(mensaje, borrador.texto)
+                propuesta = redactar_con_llm(mensaje, borrador.texto, traza)
                 verificacion = verificador.verificar_cifras(propuesta, permitidas)
                 if verificacion["ok"]:
                     respuesta, usa_llm = propuesta, True
+                    if traza:
+                        traza.marcar("aceptada")
                 else:
+                    if traza:
+                        traza.marcar("rechazada_verificador")
                     log.warning("Cifras no verificadas en la respuesta del LLM: %s", verificacion["no_verificadas"])
                     fallback = True
             except llm_client.LLMNoDisponible as exc:
@@ -264,13 +272,16 @@ def responder(db, empresa_id: str, mensaje: str, conversacion_id: str | None = N
     db.add(m.Conversacion(mensaje_id=nuevo_id(db, m.Conversacion, "MSG"), empresa_id=empresa_id,
                           conversacion_id=conversacion_id, rol=RolMensaje.usuario, canal=canal_n, texto=mensaje,
                           intencion=intencion.value, fecha_hora=ahora()))  # fmt: skip
-    db.add(m.Conversacion(mensaje_id=nuevo_id(db, m.Conversacion, "MSG"), empresa_id=empresa_id,
+    mensaje_asistente_id = nuevo_id(db, m.Conversacion, "MSG")
+    db.add(m.Conversacion(mensaje_id=mensaje_asistente_id, empresa_id=empresa_id,
                           conversacion_id=conversacion_id, rol=RolMensaje.asistente, canal=canal_n,
                           texto=" ".join([respuesta, borrador.extras.get("respuesta_post", "")]).strip(),
                           intencion=intencion.value, herramientas_llamadas=ctx.llamadas or None,
                           cifras_verificadas=verificacion["ok"], fallback_usado=fallback,
                           derivado_a_humano=False, prompt_version=PROMPT_VERSION, modelo_version=version[:30],
                           fecha_hora=ahora()))  # fmt: skip
+    if traza:
+        traza.marcar(referencia_tipo="mensaje", referencia_id=mensaje_asistente_id)
     db.commit()
     return {
         "conversacion_id": conversacion_id,
