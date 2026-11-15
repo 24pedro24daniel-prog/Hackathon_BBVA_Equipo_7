@@ -103,3 +103,5 @@ $RECYCLE.BIN/
 # ==========================================
 .claude/settings.local.json
 .claude/launch.json
+modelo/checkpoints/
+modelo/data_sintetica/
