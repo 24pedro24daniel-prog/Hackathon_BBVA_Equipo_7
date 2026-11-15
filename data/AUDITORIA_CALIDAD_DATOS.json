@@ -1,72 +1,253 @@
 {
-  "fecha_auditoria": "2026-11-14T17:15:00-05:00",
-  "semilla_rng": 42,
-  "total_tablas": 25,
-  "total_registros": 15945,
-  "total_casos_eval_f1": 150,
-  "total_reglas_evaluadas": 10,
-  "reglas_aprobadas": 10,
-  "reglas_fallidas": 0,
-  "detalle_checks": [
+  "fecha_auditoria": "2026-11-15T13:17:39.701Z",
+  "esquema": "backend/app/db/models.py (vía data/schema_esquema.json)",
+  "csv": "data\\csv",
+  "checks": [
     {
-      "categoria": "Esquema Multi-Tabla (DBML)",
-      "regla": "25 archivos CSV generados (24 tablas operativas pobladas + billeteras_digitales vacía con encabezados para roadmap)",
+      "categoria": "A. Estructura",
+      "regla": "Los 25 CSV del modelo existen",
       "estado": "PASS",
-      "detalle": "Pobladas: 24/24 | billeteras_digitales: 0 filas"
+      "violaciones": 0,
+      "evidencia": "25/25 archivos"
     },
     {
-      "categoria": "Público Objetivo (RUC 10)",
-      "regla": "100% de empresas son bodegas (rubro_id='RUB-01') con RUC 10 de 11 dígitos (^10\\d{9}$) activo (tiene_ruc=true) en 'nuevo_rus'",
+      "categoria": "A. Estructura",
+      "regla": "Las columnas de cada CSV coinciden con las de la tabla (ninguna extra, ninguna obligatoria faltante)",
       "estado": "PASS",
-      "detalle": "30/30 bodegas RUC 10 (11 dígitos, ej. EMP-0001: 10456789012) en Nuevo RUS"
+      "violaciones": 0,
+      "evidencia": "columnas coinciden con schema_esquema.json"
     },
     {
-      "categoria": "Operación 100% Efectivo",
-      "regla": "0 transacciones con métodos digitales (100% metodo_pago IN ('efectivo', 'credito') y 0 filas en billeteras_digitales)",
+      "categoria": "B. Columnas",
+      "regla": "NOT NULL: ninguna columna obligatoria vacía",
       "estado": "PASS",
-      "detalle": "Transacciones digitales: 0 | Efectivo/Crédito: 8102/8102"
+      "violaciones": 0,
+      "evidencia": "63736 filas revisadas"
     },
     {
-      "categoria": "Canales Manuales y Doble Confirmación (F1)",
-      "regla": "100% canales manuales ('voz', 'texto', 'foto'), baja confianza (<0.75) con pregunta_aclaratoria y posibles duplicados etiquetados",
+      "categoria": "B. Columnas",
+      "regla": "Largo máximo de varchar(n)/char(n) (p. ej. IDs de 20 caracteres)",
       "estado": "PASS",
-      "detalle": "Canales no manuales: 0 | Borradores <0.75: 3 | Eval <0.75: 30 | Eval duplicados: 10"
+      "violaciones": 0,
+      "evidencia": "todos los textos caben en su columna"
     },
     {
-      "categoria": "Criterio Bancario Sueldo (\"Mínimo para vivir\")",
-      "regla": "EMP-0001 registra sueldo fijo mensual bajo criterio bancario de mínimo para vivir (S/ 1,350.00) separado de retiros extra",
+      "categoria": "B. Columnas",
+      "regla": "Tipos: boolean, date, timestamptz, time, numeric(p,s), smallint/integer, JSON válidos",
       "estado": "PASS",
-      "detalle": "Sueldo programado EMP-0001: S/ 1350.00 (sueldo fijo del dueño (criterio bancario mínimo para vivir S/ 1350/mes))"
+      "violaciones": 0,
+      "evidencia": "todos los valores tienen el formato de su columna"
     },
     {
-      "categoria": "Campaña Navideña y Nuevo RUS Mal Informado",
-      "regla": "Presencia de sobrecompra navideña en eventos.csv y casos donde ventas > S/ 5,000 pagan S/ 20 (Cat. 1) en vez de S/ 50 (Cat. 2)",
+      "categoria": "B. Columnas",
+      "regla": "Enums: cada valor pertenece a su tipo enumerado",
       "estado": "PASS",
-      "detalle": "RUS mal informado (S/ 20 con ventas > S/ 5,000): 11 empresas (incl. EMP-0001) | Cat. 2 S/ 50 correcto: 14 | Eventos campaña: 4"
+      "violaciones": 0,
+      "evidencia": "todos los valores están en su enum"
     },
     {
-      "categoria": "Dominio y Restricciones CHECK (Pandera)",
-      "regla": "monto > 0, moneda == 'PEN', afecta_caja == (metodo_pago != 'credito') y <= 1 FK satélite en 100% de transacciones",
+      "categoria": "C. Llaves",
+      "regla": "PK únicas (simples y compuestas) en las 25 tablas",
       "estado": "PASS",
-      "detalle": "8102/8102 transacciones válidas (0 violaciones CHECK)"
+      "violaciones": 0,
+      "evidencia": "63736 filas"
     },
     {
-      "categoria": "Integridad Referencial (PK/FK)",
-      "regla": "100% de llaves foráneas en transacciones existen en sus tablas padre",
+      "categoria": "C. Llaves",
+      "regla": "Todas las FK (40 relaciones del esquema) apuntan a un registro existente",
       "estado": "PASS",
-      "detalle": "Huérfanos detectados: 0"
+      "violaciones": 0,
+      "evidencia": "40 FK sin huérfanos"
     },
     {
-      "categoria": "Anti-Leakage (ML)",
-      "regla": "Cero transacciones o pagos de fiados con fecha posterior a fecha_corte (2026-11-14)",
+      "categoria": "C. Llaves",
+      "regla": "UNIQUE e índices únicos (ruc, teléfono, nombre de rubro/categoría, un sueldo activo por empresa, impuesto y billetera 1-1…)",
       "estado": "PASS",
-      "detalle": "Transacciones futuras: 0 | Pagos futuros en cuaderno_fiado: 0"
+      "violaciones": 0,
+      "evidencia": "sin repetidos"
     },
     {
-      "categoria": "Storytelling Pedro (EMP-0001)",
-      "regla": "Saldo en efectivo al 2026-11-14 (S/ 2,340.00), Ingresos Nov (S/ 8,540.00), Egresos Nov (S/ 7,310.00) y Fiados (S/ 310.00) cuadran al céntimo",
+      "categoria": "D. CHECK",
+      "regla": "Los 46 CHECK de models.py se cumplen (afecta_caja, un solo vínculo, cobro/pago con su vínculo, moneda PEN, 0-1, RUC, periodos AAAA-MM…)",
       "estado": "PASS",
-      "detalle": "Saldo: S/ 2340.00 | Ingresos: S/ 8540.00 | Egresos: S/ 7310.00 | Fiados: S/ 310.00"
+      "violaciones": 0,
+      "evidencia": "46 CHECK evaluados sobre todas las filas"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Nada posterior a la hora de corte (10:00 del 2026-11-14, Lima): transacciones, fiados, pagos, predicciones, conversaciones, borradores",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "cero registros posteriores al corte; la venta \"2 cervezas\" y los movimientos de la demo no están cargados"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Cero fuga de datos: creado_en nunca es anterior a la fecha del hecho que registra salvo registro tardío explícito, y los pagos no preceden a su origen",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "orden temporal coherente"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "saldo_diario = saldo inicial + Σ movimientos que afectan caja (todas las empresas, todos los días)",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "4267 filas recalculadas"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Ninguna empresa tiene saldo de caja negativo",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "mínimo de cada empresa >= 0"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "deficit_14d recalculado (saldo < mínimo operativo en los 14 días siguientes); null si la ventana pasa del corte",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "etiqueta consistente"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Hay episodios reales de déficit en varias bodegas para medir recall (>= 5 empresas con deficit_14d = true)",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "15 empresas con episodios"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "detalle_transaccion: cantidades enteras, subtotal = cantidad x precio y Σ subtotales = monto de la transacción",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "41998 líneas"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Categorías: cobros de fiado, préstamos, retiros, impuestos y cuotas en su categoría; ingresos en categorías de ingreso y egresos en categorías de egreso",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "categorías coherentes con el tipo"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Catálogo de categorías snake_case con cobro_fiados, prestamos_recibidos y otros_gastos; rubros bodega/restaurante/taller/distribuidora",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "16 categorías y 4 rubros"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Borradores: payload legible con clave del backend, confirmados con su transacción y monto corregido coherente, confianza < 0.75 con pregunta aclaratoria",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "3 borradores"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Alertas: causas {descripcion, monto}, entidad existente (plural) o `mes`, prioridad según el tipo, causas de pedido/retiro como las arma el backend",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "18 alertas"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "score_salud: 3 subindicadores con los pesos del backend (0.35 / 0.40 / 0.25) y score = suma ponderada",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "170 scores"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Predicciones: nivel de riesgo con los umbrales del backend (>= 0.6 alto, >= 0.3 medio) y p10 <= p50 <= p90",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "31 de fiado y 60 de saldo"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Ninguna versión del forecast apunta a 'forecast-lgbm-quantile-0.3.1' (la del artefacto es lgbm_cuantiles-1.0)",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "versiones: lgbm_cuantiles-1.0, naive-estacional-0.1.0, reglas-alertas-0.2.0, riesgo-atraso-baseline-0.1.0"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Empresas: tiene_ruc ⇔ ruc presente, dígito verificador SUNAT (módulo 11) válido y régimen/impuestos coherentes",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "24/30 con RUC válido"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Heterogeneidad: volúmenes, rubros, trabajadores (1-5), billetera digital y empresas sin RUC distintos entre sí",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "5 valores de n_trabajadores; 29 volúmenes distintos; 1292 movimientos de billetera"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Billeteras: cada pago por billetera_digital tiene su movimiento en billeteras_digitales (1-1)",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "1292 movimientos enlazados"
+    },
+    {
+      "categoria": "E. Negocio",
+      "regla": "Fiados, deudas e impuestos: fecha de pago total ⇔ pagos registrados que cubren el monto; nunca se cobra o paga de más",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "152 fiados, 140 deudas, 136 impuestos"
+    },
+    {
+      "categoria": "F. Evaluación de ingesta",
+      "regla": "Frases distintas y sin \"(muestra N)\", UTF-8 correcto, monto coherente con el catálogo de EMP-0001 y doble confirmación según la confianza",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "153 frases distintas"
+    },
+    {
+      "categoria": "G. Demo (informativo)",
+      "regla": "EMP-0001: saldo de caja al 2026-11-14 = S/ 2 340 (cifra de context.md §9)",
+      "estado": "PASS",
+      "violaciones": 0,
+      "evidencia": "saldo 2340"
     }
-  ]
+  ],
+  "resumen": {
+    "pass": 30,
+    "fail": 0,
+    "warn": 0
+  },
+  "volumenes": {
+    "rubros": 4,
+    "empresas": 30,
+    "preferencias_alertas": 30,
+    "categorias": 16,
+    "productos": 376,
+    "clientes": 117,
+    "proveedores": 82,
+    "borradores": 3,
+    "transacciones": 14651,
+    "detalle_transaccion": 41998,
+    "cuaderno_fiado": 152,
+    "deudas": 140,
+    "billeteras_digitales": 1292,
+    "impuestos": 136,
+    "movimientos_programados": 81,
+    "reglas_meta": 41,
+    "forecast_ajustes": 4,
+    "alertas": 18,
+    "conversaciones": 4,
+    "consentimientos": 10,
+    "saldo_diario": 4267,
+    "eventos": 23,
+    "predicciones_saldo": 60,
+    "predicciones_fiado": 31,
+    "score_salud": 170
+  },
+  "totalFilas": 63736,
+  "frases": 153,
+  "nChecks": 46,
+  "nFk": 40
 }

@@ -22,8 +22,11 @@ RUN groupadd --system --gid 1000 app \
     && mkdir -p /models/whisper /models/huggingface \
     && chown -R app:app /models /app
 
-COPY backend/requirements.txt .
-RUN pip install -r requirements.txt
+# Directas en requirements.txt y transitivas congeladas en constraints.txt: local y Render instalan exactamente lo mismo.
+# pip check corta el build si alguna versión fijada no es compatible con lo que declara otra.
+COPY backend/requirements.txt backend/constraints.txt ./
+RUN pip install -r requirements.txt -c constraints.txt \
+    && pip check
 
 # Artefactos de ML (solo lo que usa el backend; motor_recomendaciones no se integra). Cambian poco: van antes del código.
 COPY --chown=app:app modelo/artifacts/prediccion_ingreso_egreso /app/ml/artifacts/prediccion_ingreso_egreso

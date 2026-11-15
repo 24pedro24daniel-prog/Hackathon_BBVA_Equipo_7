@@ -1,0 +1,1286 @@
+[
+  {
+    "caso_id": "EVF-001-R",
+    "canal": "voz",
+    "frase": "bendi dos cervezas",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 13,
+    "producto_id_esperado": "PRD-0031",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0031",
+        "cantidad": 2
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-002-R",
+    "canal": "voz",
+    "frase": "le fié a la seño Carmen 2 panes y una leche, son 9.50",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "credito",
+    "monto_esperado": 9.5,
+    "producto_id_esperado": "PRD-0001",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0001",
+        "cantidad": 2
+      },
+      {
+        "producto_id": "PRD-0002",
+        "cantidad": 1
+      }
+    ],
+    "contraparte_esperada": "Sra. Carmen",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-003-R",
+    "canal": "voz",
+    "frase": "la seño Carmen me pagó 50 en efectivo de su cuenta del cuaderno",
+    "tipo_esperado": "cobro_fiado",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 50,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": "Sra. Carmen",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-004-R",
+    "canal": "voz",
+    "frase": "saqué 50 pa la casa",
+    "tipo_esperado": "retiro_personal",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 50,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-006-R",
+    "canal": "voz",
+    "frase": "le pague 1200 a Distribuidora Andina en efectivo",
+    "tipo_esperado": "pago_proveedor",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 1200,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": "Distribuidora Andina",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-008-R",
+    "canal": "texto",
+    "frase": "pague la luz del local en efectivo, 180 soles",
+    "tipo_esperado": "gasto_negocio",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 180,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-009-R",
+    "canal": "texto",
+    "frase": "pague mi RUS en efectivo, 20 soles",
+    "tipo_esperado": "pago_impuesto",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 20,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-012-R",
+    "canal": "texto",
+    "frase": "se llevaron una bolsa de pan, cuatro kilos de arros y una gaseosa familiar",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 26.8,
+    "producto_id_esperado": "PRD-0001",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0001",
+        "cantidad": 1
+      },
+      {
+        "producto_id": "PRD-0003",
+        "cantidad": 4
+      },
+      {
+        "producto_id": "PRD-0008",
+        "cantidad": 1
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-014-R",
+    "canal": "voz",
+    "frase": "bendi dos kilos de arroz, cuatro bolsas de pan y cuatro paquetes de papel higiénico",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 39.2,
+    "producto_id_esperado": "PRD-0003",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0003",
+        "cantidad": 2
+      },
+      {
+        "producto_id": "PRD-0001",
+        "cantidad": 4
+      },
+      {
+        "producto_id": "PRD-0012",
+        "cantidad": 4
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-016-R",
+    "canal": "texto",
+    "frase": "salieron tres serbesas, cinco kilos de arroz y dos paquetes de papel higiénico",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 50.9,
+    "producto_id_esperado": "PRD-0031",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0031",
+        "cantidad": 3
+      },
+      {
+        "producto_id": "PRD-0003",
+        "cantidad": 5
+      },
+      {
+        "producto_id": "PRD-0012",
+        "cantidad": 2
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-017-R",
+    "canal": "voz",
+    "frase": "anota que bendi cuatro kilos de azúcar en efectivo",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 15.2,
+    "producto_id_esperado": "PRD-0005",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0005",
+        "cantidad": 4
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-021-R",
+    "canal": "voz",
+    "frase": "anota que bendi un detergente, tres gaseosas familiares y dos paquetes de fideos",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 34.1,
+    "producto_id_esperado": "PRD-0011",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0011",
+        "cantidad": 1
+      },
+      {
+        "producto_id": "PRD-0008",
+        "cantidad": 3
+      },
+      {
+        "producto_id": "PRD-0006",
+        "cantidad": 2
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-023-R",
+    "canal": "voz",
+    "frase": "anota que bendi dos kilos de arroz",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 8.4,
+    "producto_id_esperado": "PRD-0003",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0003",
+        "cantidad": 2
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-024-R",
+    "canal": "voz",
+    "frase": "me compraron un kilo de azúcar, una botella de aseite y un paquete de papel higiénico",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 17.5,
+    "producto_id_esperado": "PRD-0005",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0005",
+        "cantidad": 1
+      },
+      {
+        "producto_id": "PRD-0004",
+        "cantidad": 1
+      },
+      {
+        "producto_id": "PRD-0012",
+        "cantidad": 1
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-025-R",
+    "canal": "voz",
+    "frase": "me compraron un kilo de arros",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 4.2,
+    "producto_id_esperado": "PRD-0003",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0003",
+        "cantidad": 1
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-026-R",
+    "canal": "voz",
+    "frase": "bendi cinco kilos de arroz y dos quesos frescos en efectivo",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 35,
+    "producto_id_esperado": "PRD-0003",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0003",
+        "cantidad": 5
+      },
+      {
+        "producto_id": "PRD-0017",
+        "cantidad": 2
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-027-R",
+    "canal": "voz",
+    "frase": "salieron dos botellas de aseite",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 17,
+    "producto_id_esperado": "PRD-0004",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0004",
+        "cantidad": 2
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-028-R",
+    "canal": "voz",
+    "frase": "salieron dos serbesas en efectivo",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 13,
+    "producto_id_esperado": "PRD-0031",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0031",
+        "cantidad": 2
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-031-R",
+    "canal": "texto",
+    "frase": "despaché cinco kilos de arros",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 21,
+    "producto_id_esperado": "PRD-0003",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0003",
+        "cantidad": 5
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-035-R",
+    "canal": "voz",
+    "frase": "bendi tres paquetes de papel higiénico y dos tarros de leche",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 24.6,
+    "producto_id_esperado": "PRD-0012",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0012",
+        "cantidad": 3
+      },
+      {
+        "producto_id": "PRD-0002",
+        "cantidad": 2
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-036-R",
+    "canal": "voz",
+    "frase": "bendi cuatro latas de atún y una bolsa de pan",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 24.5,
+    "producto_id_esperado": "PRD-0010",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0010",
+        "cantidad": 4
+      },
+      {
+        "producto_id": "PRD-0001",
+        "cantidad": 1
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-037-R",
+    "canal": "voz",
+    "frase": "salieron cinco kilos de arros en efectivo",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 21,
+    "producto_id_esperado": "PRD-0003",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0003",
+        "cantidad": 5
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-040-R",
+    "canal": "voz",
+    "frase": "bendi una barra de jabón y 2 botellas de aceite, fueron 20",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 20,
+    "producto_id_esperado": "PRD-0013",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0013",
+        "cantidad": 1
+      },
+      {
+        "producto_id": "PRD-0004",
+        "cantidad": 2
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-044-R",
+    "canal": "voz",
+    "frase": "bendi 4 paquetes de galletas y una gaseosa familiar, me pagaron 22",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 22,
+    "producto_id_esperado": "PRD-0014",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0014",
+        "cantidad": 4
+      },
+      {
+        "producto_id": "PRD-0008",
+        "cantidad": 1
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-047-R",
+    "canal": "voz",
+    "frase": "bendi 3 bolsas de pan, 3 paquetes de fideos y un kilo de azúcar, me pagaron 20",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 20,
+    "producto_id_esperado": "PRD-0001",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0001",
+        "cantidad": 3
+      },
+      {
+        "producto_id": "PRD-0006",
+        "cantidad": 3
+      },
+      {
+        "producto_id": "PRD-0005",
+        "cantidad": 1
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-049-R",
+    "canal": "voz",
+    "frase": "bendi 2 kilos de azúcar, 4 bolsas de pan y 4 latas de atún, fueron 40",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 40,
+    "producto_id_esperado": "PRD-0005",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0005",
+        "cantidad": 2
+      },
+      {
+        "producto_id": "PRD-0001",
+        "cantidad": 4
+      },
+      {
+        "producto_id": "PRD-0010",
+        "cantidad": 4
+      }
+    ],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-050-R",
+    "canal": "texto",
+    "frase": "le fie a don Luis dos quesos frescos, una gaseosa familiar y dos paquetes de papel higiénico, son 31.90",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "credito",
+    "monto_esperado": 31.9,
+    "producto_id_esperado": "PRD-0017",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0017",
+        "cantidad": 2
+      },
+      {
+        "producto_id": "PRD-0008",
+        "cantidad": 1
+      },
+      {
+        "producto_id": "PRD-0012",
+        "cantidad": 2
+      }
+    ],
+    "contraparte_esperada": "Don Luis",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-052-R",
+    "canal": "voz",
+    "frase": "fíale a la seño Carmen cinco paquetes de galletas, tres mantequillas y cinco paquetes de fideos, son 51.90",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "credito",
+    "monto_esperado": 51.9,
+    "producto_id_esperado": "PRD-0014",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0014",
+        "cantidad": 5
+      },
+      {
+        "producto_id": "PRD-0016",
+        "cantidad": 3
+      },
+      {
+        "producto_id": "PRD-0006",
+        "cantidad": 5
+      }
+    ],
+    "contraparte_esperada": "Sra. Carmen",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-054-R",
+    "canal": "texto",
+    "frase": "fíale a la seño Elena cinco menestras de lenteja, un jugo y tres gaseosas familiares",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "credito",
+    "monto_esperado": 47.3,
+    "producto_id_esperado": "PRD-0018",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0018",
+        "cantidad": 5
+      },
+      {
+        "producto_id": "PRD-0019",
+        "cantidad": 1
+      },
+      {
+        "producto_id": "PRD-0008",
+        "cantidad": 3
+      }
+    ],
+    "contraparte_esperada": "Sra. Elena",
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-055-R",
+    "canal": "voz",
+    "frase": "anota en el cuaderno de Rosa tres detergentes, tres serbesas y tres mantequillas",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "credito",
+    "monto_esperado": 57.9,
+    "producto_id_esperado": "PRD-0011",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0011",
+        "cantidad": 3
+      },
+      {
+        "producto_id": "PRD-0031",
+        "cantidad": 3
+      },
+      {
+        "producto_id": "PRD-0016",
+        "cantidad": 3
+      }
+    ],
+    "contraparte_esperada": "Vecina Rosa",
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-057-R",
+    "canal": "voz",
+    "frase": "le dejé fiado a don Luis cuatro detergentes, dos botellas de aseite y tres paquetes de galletas",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "credito",
+    "monto_esperado": 51.5,
+    "producto_id_esperado": "PRD-0011",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0011",
+        "cantidad": 4
+      },
+      {
+        "producto_id": "PRD-0004",
+        "cantidad": 2
+      },
+      {
+        "producto_id": "PRD-0014",
+        "cantidad": 3
+      }
+    ],
+    "contraparte_esperada": "Don Luis",
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-059-R",
+    "canal": "texto",
+    "frase": "fíale a la seño Elena cuatro detergentes y cinco paquetes de papel higiénico, son 50",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "credito",
+    "monto_esperado": 50,
+    "producto_id_esperado": "PRD-0011",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0011",
+        "cantidad": 4
+      },
+      {
+        "producto_id": "PRD-0012",
+        "cantidad": 5
+      }
+    ],
+    "contraparte_esperada": "Sra. Elena",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-060-R",
+    "canal": "voz",
+    "frase": "le dejé fiado a la seño Elena cinco tarros de leche",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "credito",
+    "monto_esperado": 22.5,
+    "producto_id_esperado": "PRD-0002",
+    "items_esperados": [
+      {
+        "producto_id": "PRD-0002",
+        "cantidad": 5
+      }
+    ],
+    "contraparte_esperada": "Sra. Elena",
+    "origen_monto_esperado": "catalogo",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-075-R",
+    "canal": "texto",
+    "frase": "compré 200 en abarrotes, pague en efectivo",
+    "tipo_esperado": "compra",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 200,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-077-R",
+    "canal": "voz",
+    "frase": "compré 380 en abarrotes, pague en efectivo",
+    "tipo_esperado": "compra",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 380,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-080-R",
+    "canal": "texto",
+    "frase": "compré 600 en abarrotes, pague en efectivo",
+    "tipo_esperado": "compra",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 600,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-090-R",
+    "canal": "voz",
+    "frase": "le pague 300 a El Sol",
+    "tipo_esperado": "pago_proveedor",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 300,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": "Abarrotes El Sol",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-092-R",
+    "canal": "voz",
+    "frase": "le pague 500 a Andina",
+    "tipo_esperado": "pago_proveedor",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 500,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": "Distribuidora Andina",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-095-R",
+    "canal": "voz",
+    "frase": "le pague 400 a El Sol",
+    "tipo_esperado": "pago_proveedor",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 400,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": "Abarrotes El Sol",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-096-R",
+    "canal": "voz",
+    "frase": "le pague 500 a El Sol",
+    "tipo_esperado": "pago_proveedor",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 500,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": "Abarrotes El Sol",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-098-R",
+    "canal": "voz",
+    "frase": "recibí un prestamo de 800 soles, pago 32 diarios",
+    "tipo_esperado": "prestamo_recibido",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 800,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-099-R",
+    "canal": "voz",
+    "frase": "recibí un prestamo de 1000 soles, pago 40 diarios",
+    "tipo_esperado": "prestamo_recibido",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 1000,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-100-R",
+    "canal": "voz",
+    "frase": "recibí un prestamo de 1500 soles, pago 60 diarios",
+    "tipo_esperado": "prestamo_recibido",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 1500,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-102-R",
+    "canal": "voz",
+    "frase": "pague la cuota del préstamo, 30 soles",
+    "tipo_esperado": "pago_prestamo",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 30,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-103-R",
+    "canal": "voz",
+    "frase": "pague la cuota del préstamo, 40 soles",
+    "tipo_esperado": "pago_prestamo",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 40,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-105-R",
+    "canal": "voz",
+    "frase": "pague 40 de la cuota del préstamo en efectivo",
+    "tipo_esperado": "pago_prestamo",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 40,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-107-R",
+    "canal": "voz",
+    "frase": "saqué 200 de la caja pa la casa",
+    "tipo_esperado": "retiro_personal",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 200,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-108-R",
+    "canal": "voz",
+    "frase": "sake 100 de la caja para el colegio",
+    "tipo_esperado": "retiro_personal",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 100,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-111-R",
+    "canal": "texto",
+    "frase": "sake 120 de la caja para el pasaje de mis hijos",
+    "tipo_esperado": "retiro_personal",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 120,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-114-R",
+    "canal": "voz",
+    "frase": "sake 120 de la caja para el almuerzo familiar",
+    "tipo_esperado": "retiro_personal",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 120,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-115-R",
+    "canal": "texto",
+    "frase": "retiré 300 pa la casa",
+    "tipo_esperado": "retiro_personal",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 300,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-119-R",
+    "canal": "texto",
+    "frase": "pague el agua, 48 soles",
+    "tipo_esperado": "gasto_negocio",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 48,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-120-R",
+    "canal": "texto",
+    "frase": "pague 48 por el agua",
+    "tipo_esperado": "gasto_negocio",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 48,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-121-R",
+    "canal": "texto",
+    "frase": "pague el alquiler del local, 350 soles",
+    "tipo_esperado": "gasto_negocio",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 350,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-122-R",
+    "canal": "voz",
+    "frase": "pague la luz del local, 180 soles",
+    "tipo_esperado": "gasto_negocio",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 180,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-125-R",
+    "canal": "texto",
+    "frase": "pague mi RUS de octubre, 50 soles",
+    "tipo_esperado": "pago_impuesto",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 50,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-127-R",
+    "canal": "texto",
+    "frase": "pague la cuota del Nuevo RUS, 50",
+    "tipo_esperado": "pago_impuesto",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 50,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-128-R",
+    "canal": "texto",
+    "frase": "pague mi RUS de noviembre, 50 soles",
+    "tipo_esperado": "pago_impuesto",
+    "metodo_pago_esperado": "efectivo",
+    "monto_esperado": 50,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": null,
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-147-R",
+    "canal": "foto",
+    "frase": "[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 86; ya dictado antes por voz)",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "credito",
+    "monto_esperado": 95,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": "Don Luis",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.64,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?",
+    "posible_duplicado": true,
+    "dentro_alcance": true
+  },
+  {
+    "caso_id": "EVF-149-R",
+    "canal": "foto",
+    "frase": "[Foto cuaderno] Vecina Rosa - gaseosas - S/ 95 (05/17)",
+    "tipo_esperado": "venta",
+    "metodo_pago_esperado": "credito",
+    "monto_esperado": 95,
+    "producto_id_esperado": null,
+    "items_esperados": [],
+    "contraparte_esperada": "Vecina Rosa",
+    "origen_monto_esperado": "dicho_por_usuario",
+    "confianza_simulada": 0.72,
+    "requiere_doble_confirmacion": true,
+    "pregunta_aclaratoria": "No estoy seguro de lo que entendí. ¿Me confirmas el monto y el tipo de movimiento?",
+    "posible_duplicado": false,
+    "dentro_alcance": true
+  }
+]

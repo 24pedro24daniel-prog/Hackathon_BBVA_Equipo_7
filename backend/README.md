@@ -34,7 +34,7 @@ curl -H "Authorization: Bearer <token>" http://localhost:8000/api/v1/empresas/EM
 
 | Dónde | Qué |
 |---|---|
-| `parametros.env` | `AUTH_USUARIOS=USR-01:EMP-0001,USR-02:EMP-0003,USR-03:EMP-0002` (usuario interno → empresa; para cambiar la empresa de una demo se cambia aquí). `USR-01` = login de la demo de Pedro, `USR-02` = la bodega sana, `USR-03` = la bodega del día 3 |
+| `parametros.env` | `AUTH_USUARIOS=USR-01:EMP-0001,USR-02:EMP-0030,USR-03:EMP-0002` (usuario interno → empresa; para cambiar la empresa de una demo se cambia aquí). `USR-01` = login de la demo de Pedro (EMP-0001), `USR-02` = la bodega sana (EMP-0030 Bodega SurAndina), `USR-03` = la bodega del día 3 (EMP-0002) |
 | `.env` / panel de Render | `AUTH_SECRET` (≥ 32 caracteres aleatorios: `python -c "import secrets; print(secrets.token_urlsafe(48))"`) y `AUTH_CREDENCIALES` = `USR-01:<login>:<hash>,USR-02:<login>:<hash>,USR-03:<login>:<hash>`. El login va en la credencial (no en `parametros.env`) porque en las demos coincide con la contraseña |
 
 Generar el hash de una contraseña (scrypt n=2^14, r=8, p=1, sal de 16 bytes; ~50 ms en local, ~0,5 s en el plan free
@@ -96,7 +96,7 @@ curl -H "X-API-Key: <tu API_KEY>" http://localhost:8000/api/v1/empresas/EMP-0001
 - Postgres queda publicado en el host como **`localhost:5433`** (el 5432 puede estar ocupado por un PostgreSQL nativo);
   dentro de compose el backend usa `db:5432`. La primera vez se crea también la BD de pruebas `cajaclara_test`.
 - `app/` y `tests/` están montados en el contenedor: tras cambiar código, `docker compose restart backend`.
-  Si cambias `requirements.txt`: `docker compose build backend`.
+  Si cambias `requirements.txt` o `constraints.txt`: `docker compose build backend` (ver [Dependencias](#dependencias)).
 - El modelo de Whisper (`small`) se descarga en la primera transcripción y queda en el volumen `whisper_models`.
 
 ## Cargar `data/csv` (local igual a producción)
@@ -148,13 +148,54 @@ Python 3.12+, con la BD levantada (`docker compose up -d db`) en `localhost:5433
 ```bash
 python -m venv .venv
 .venv\Scripts\activate          # Mac/Linux: source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.txt -c constraints.txt
 python -m app.db.reset
 uvicorn app.main:app --port 8000 --reload --no-proxy-headers
 ```
 
 Front contra este backend: en `frontend/.env` poner `VITE_USE_MOCK=false` y entrar con un usuario de demo (el front manda
 `Authorization: Bearer`; ya no usa `VITE_API_KEY`).
+
+## Dependencias
+
+Todas con versión exacta, en dos archivos:
+
+- `requirements.txt`: solo las **directas** (`==`).
+- `constraints.txt`: las **transitivas** congeladas (generado por `tests/congelar_dependencias.py`). El Dockerfile instala
+  con `pip install -r requirements.txt -c constraints.txt` y luego `pip check`, así local y Render traen exactamente lo
+  mismo. Como el contexto de build es la raíz, el `.dockerignore` de la raíz deja pasar todo `backend/` (incluido este archivo).
+- `tests/test_f_dependencias.py` rompe la suite si la imagen tiene un paquete sin fijar o con otra versión, si alguna
+  línea no usa `==` o si una directa aparece también en `constraints.txt`.
+
+Subir una versión: cámbiala en `requirements.txt` (o la línea puntual en `constraints.txt`), `docker compose build backend`
+y la suite. Si la resolución cambia (paquete nuevo o choque con `constraints.txt`), regenera las transitivas de cero en un
+contenedor limpio (desde `backend/`; escribe `constraints.txt` en UTF-8 aunque la terminal sea PowerShell):
+
+```bash
+docker run --rm -v "${PWD}:/w" -w /w python:3.12.15-slim sh -c "pip install -q --root-user-action=ignore -r requirements.txt && python tests/congelar_dependencias.py > constraints.txt"
+# Git Bash: MSYS_NO_PATHCONV=1 docker run --rm -v "$(pwd -W):/w" -w /w ...   (mismo comando)
+```
+
+### Notas de voz: `av` fijado en 18.1.0
+
+faster-whisper decodifica el audio con PyAV (`av`, que trae su propio FFmpeg: la imagen no necesita `ffmpeg`).
+faster-whisper 1.2.1 declara solo `av>=11`, pero llama a `av.open(..., metadata_errors="ignore")` y **av 19 quitó ese
+argumento**: con av 19.0.2 (lo que instalaba pip sin fijar) toda nota de voz real fallaba con
+`TypeError: open() got an unexpected keyword argument 'metadata_errors'` y el usuario veía "Ahora no puedo escuchar
+audios" (solo funcionaba si el cliente mandaba el texto). `av==18.1.0` es la última versión que acepta el argumento.
+
+- Formatos probados (decodificación y transcripción real): `audio/webm;codecs=opus` (Chrome/Edge/Firefox, también sin
+  cues ni duración como lo graba MediaRecorder), `audio/ogg;codecs=opus` (Firefox, WhatsApp), `audio/mp4` AAC normal y
+  fragmentado (Safari) y WAV. Notas de prueba en `tests/datos/audio/` (TTS sintético).
+- `tests/test_f_audio.py`: los tests baratos codifican audio en memoria con PyAV y lo decodifican con
+  `faster_whisper.audio.decode_audio` (sin cargar Whisper); el test caro transcribe de verdad las 3 notas con
+  `servicio.transcribir` y el modelo de `WHISPER_MODEL`, y se salta (con el comando para descargarlo) si el modelo no
+  está en `WHISPER_CACHE_DIR`. No subas `av` sin correrlos.
+- RAM con Whisper `base` (Render), medida en la imagen con un límite de 512 MiB sin swap y el uvicorn real (resumen,
+  forecast LightGBM, salud y 12 notas de voz): ≈ 195 MiB tras arrancar, **pico ≈ 479 MiB** del contenedor al cargar el
+  modelo (transitorio, ≈ 465 MiB anónimos) y ≈ 340–357 MiB estable después; sin OOM. Entra en el plan free, con poco
+  margen durante la carga (VmRSS del proceso: 450 MiB estable, 540 MiB de pico, contando ≈ 128 MiB de librerías
+  compartidas que el kernel puede liberar). `small` no entra en 512 MB.
 
 ## Observabilidad del LLM
 
@@ -202,9 +243,10 @@ pytest -q                                               # o con el venv
   (`POSTGRES_CSV_DB` la cambia) desde `DATA_CSV_DIR` y prueba la API sobre la misma data que producción: registrar cada
   tipo de movimiento, la meta `sueldo_fijo`, y alertas, forecast, resumen, fiados, pedidos, chequeo, simular, salud y
   análisis de las 30 empresas, además de que los GET no escriben (cuenta filas antes y después). Corre con la suite
-  normal (`pytest -q`); si no hay CSV o Postgres, se salta con un mensaje. Solo ella: `pytest -m csv -q`. La historia de
-  la demo sobre el CSV (EMP-0001: saldo 2 340, −650 el 30/11, causas 700/400/310…) está como `xfail(strict=False)`
-  "pendiente de calibración" hasta calibrar `data/csv` con el forecast final.
+  normal (`pytest -q`); si no hay CSV o Postgres, se salta con un mensaje. Solo ella: `pytest -m csv -q`. También
+  verifica las 3 demos con el LightGBM (context.md §9): Pedro (EMP-0001: saldo 2 340, ≈ −650 el 30/11, causas 700/400/310,
+  chequeo −50/550/850, 1 800 en 2 partes → 850; tras la venta en vivo de S/ 13 el faltante baja 13), la bodega sana
+  EMP-0030 (sin día crítico y con margen) y el negocio nuevo EMP-0002 (baseline por poca historia).
 
 ## Estado
 
@@ -260,6 +302,11 @@ regla en el docstring de su módulo y en `../contract.md`.
   movimiento y al accionar una alerta pendiente; al reevaluar, la activa de la misma entidad se actualiza y la que ya no
   aplica se cierra (`ya_no_aplica`). Máx. 2 notificadas al día y horario silencioso: las que no se notifican se guardan con
   `enviada_en = null` (corre la demo fuera de 21:00–07:00 si quieres verlas como enviadas).
+  **Limitación conocida (`pedido_excesivo`):** compara el pedido con lo que se vende de eso solo en los días que faltan
+  hasta su vencimiento. Un pedido de rutina (p. ej. semanal) que vence en pocos días puede salir "excesivo" aunque sea el
+  de siempre (falso positivo). No se cambia antes de la demo: la historia de Pedro (`PED-0012`, S/ 400 más) depende de
+  esta regla; la mejora sería comparar con lo que el pedido cubre (su periodo habitual de reposición) o con los pedidos
+  anteriores al mismo proveedor.
 - **Sueldo fijo:** diario/semanal cuenta las veces que cae en el rango; mensual/quincenal se prorratea por día (un sueldo
   mensual de S/ 1 350 vale S/ 630 a mitad de mes) y, si el sueldo ya cayó en el periodo (p. ej. se cobra el día 1), cuenta
   completo (`max(prorrateo, sueldo ya vencido)`), así no hay `retiro_excesivo` falso. Lo usan alertas, score y `/resumen`.
@@ -310,6 +357,7 @@ falla con `OSError libgomp.so.1`).
 | El modelo se entrenó con el egreso **total** de la caja (proveedores, impuestos y alquiler incluidos); el backend suma aparte los pagos con fecha | El modelo se aplica al flujo ordinario y los eventos conocidos van encima: sin doble conteo |
 | En el entrenamiento los pagos grandes caían siempre los días 5 y 15: el egreso del modelo sube ≈ S/ 1 000 esos días | Solo en los modelos de egreso, `dom` 5→4 y 15→14 (mismo flag de quincena), para no inventar un pago |
 | Un modelo de 1 paso: hace falta recursión para 30 días | Predicción recursiva con el p50; las desviaciones móviles futuras salen algo más chicas que las reales |
+| Si en los últimos 30 días del flujo ordinario no hay ningún egreso grande (en el entrenamiento siempre había uno al mes, el día 5), el modelo lo "espera" y predice ≈ S/ 1 200 de egreso cada día (error a 1 día ≈ S/ 900) | Sin corrección en el backend; `data/csv` da a Pedro una compra grande al contado al mes (día 5) y su error a 1 día es S/ 82 |
 | Escala y proporciones de las bodegas sintéticas (ingreso ≈ S/ 180/día, egreso ≈ 55 % del ingreso de ayer); `mes` solo vio junio–septiembre | Sin corrección (un reescalado por empresa se probó y era inestable): el sesgo se mide en `eval_forecast` y se informa |
 | Los cuantiles del modelo son más angostos que el error real | Piso con el error de 1 paso de la propia empresa |
 | `usa_billetera_digital` mira `billeteras_digitales` (el backend no escribe esa tabla: las ventas con `metodo_pago = billetera_digital` registradas por la app no la activan) | Regla acordada al pie de la letra; en `data/csv` actual coincide (1 292 filas = 1 292 ventas con billetera) |
@@ -325,7 +373,8 @@ Compara los dos motores (baseline y LightGBM) sobre los mismos cortes (≥ 31 d�
 delante, usando solo lo que se sabía ese día): MAE / MAPE / sesgo / cobertura p10–p90 del saldo por horizonte (vs persistencia),
 MAE del flujo ordinario de mañana (ingreso, egreso y neto, vs "igual que ayer") y precision / recall de `faltante_caja` contra
 `saldo_diario.deficit_14d` (etiqueta solo para evaluar, nunca feature). `--empresa todas` resume las 29 empresas con historia.
-Con `data/csv` (dev, FECHA_DEMO = 14/11): en las 29 empresas el MAE del saldo a 7 días es 933 (baseline) vs 948 (LightGBM; mejor
-en 18 de 29) y la cobertura de la banda 0.70 vs 0.59. En Pedro (EMP-0001, horizonte 14, 47 cortes) el LightGBM es peor: MAE del
-saldo 2 658 vs 1 069 a 14 días (cobertura 0.47 vs 0.43) porque subestima su egreso ordinario ≈ 35 % (S/ 330 vs S/ 520 por día).
-Ninguna empresa tiene días con déficit a 14 días, así que el recall del faltante no es medible.
+Con `data/csv` (FECHA_DEMO = 14/11): en las 29 empresas el MAE del saldo a 7 días es, en promedio por empresa, 932 (baseline)
+vs 912 (LightGBM; mejor en 19 de 29) y la cobertura de la banda 0.72 vs 0.59. En Pedro (EMP-0001, horizonte 14, 47 cortes) el
+LightGBM le gana al baseline en todos los horizontes: MAE del saldo 232 vs 251 a 1 día, 442 vs 615 a 7 y 675 vs 823 a 14
+(cobertura 0.72 vs 0.85), y MAE del flujo neto de mañana 95 vs 127 ("igual que ayer": 137). La historia de Pedro no tiene días
+con déficit a 14 días (su 30/11 es futuro), así que ahí el recall del faltante no es medible.

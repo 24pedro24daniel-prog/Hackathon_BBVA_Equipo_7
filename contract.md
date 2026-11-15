@@ -12,7 +12,7 @@
 | Base URL | `/api/v1` |
 | Formato | JSON, UTF-8 |
 | Autenticación | `Authorization: Bearer <token>` (sesión de **una** empresa, del login de las demos, §12) o `X-API-Key: <clave>` (bot/administración: todas las empresas). Públicas: `/health` y `POST /auth/login`. Con Bearer, nada del path, la query ni el body puede apuntar a otra empresa (`403 EMPRESA_NO_PERMITIDA`). Secretos solo en `.env` / panel de Render, nunca en el código ni en el repo |
-| IDs | Strings con prefijo: `EMP-0001`, `MOV-000123`, `FIA-0045`, `PED-0012`, `ALR-0007`, `BOR-…` (borrador) |
+| IDs | Strings con prefijo: `EMP-0001`, `MOV-014652`, `FIA-0045`, `PED-0012`, `ALR-0007`, `BOR-…` (borrador) |
 | Dinero | Número decimal en soles con 2 decimales (`2340.00`). Campo `moneda` = `"PEN"` por defecto |
 | Fechas | ISO 8601. Fecha: `2026-11-30`. Fecha-hora: `2026-11-14T10:42:00-05:00` (zona America/Lima) |
 | Paginación | `?limit=50&cursor=<token>` → respuesta con `next_cursor` (null si no hay más) |
@@ -85,12 +85,14 @@ tipo_alerta     : faltante_caja | pedido_excesivo | retiro_excesivo | obligacion
 Flujo: **interpretar → (aclarar) → confirmar → guardar**. Nada se guarda sin confirmación, salvo `billetera_api`.
 
 ### 1.0 `POST /media/subidas` (subir audio o foto a Cloudflare R2)
-Pide una **URL prefirmada** para subir el archivo directo a R2 (el archivo no pasa por el backend). Requiere `X-API-Key`.
+Pide una **URL prefirmada** para subir el archivo directo a R2 (el archivo no pasa por el backend). Requiere
+`Authorization: Bearer <token>` de la sesión (el `empresa_id` del body debe ser el de la sesión) o `X-API-Key` (§12.3);
+con Bearer cuenta para el límite de uso de las rutas de IA (§12.4).
 
 Flujo de 3 pasos:
 1. `POST /media/subidas` → devuelve `upload_url` y el `media_url` definitivo (`r2://…`).
 2. El cliente hace `PUT` del archivo a `upload_url` con el header `Content-Type` exacto de `headers_requeridos`
-   (sin `X-API-Key` ni otros headers; R2 responde `200` sin cuerpo).
+   (sin `Authorization`, `X-API-Key` ni otros headers; R2 responde `200` sin cuerpo).
 3. Llama a `/ingesta/interpretar` (canal `voz`), `/ingesta/cuaderno` o `/webhooks/whatsapp` con `media_url: "r2://…"`.
 
 **Request**
@@ -117,11 +119,12 @@ Flujo de 3 pasos:
 - El backend solo lee `r2://` con clave bajo `empresas/{empresa_id}/…` de la empresa que consulta; verifica tipo y tamaño
   del objeto antes de descargarlo y borra el temporal tras procesar.
 
-**Errores**: `400 VALIDACION` (tipo, `content_type` o tamaño no permitidos; campos faltantes), `401`, `404 NO_ENCONTRADO`
-(empresa), `503 SERVICIO_NO_DISPONIBLE` (R2 sin configurar o caído).
+**Errores**: `400 VALIDACION` (tipo, `content_type` o tamaño no permitidos; campos faltantes), `401 NO_AUTORIZADO` /
+`SESION_EXPIRADA`, `403 EMPRESA_NO_PERMITIDA` (con Bearer, `empresa_id` de otra empresa), `404 NO_ENCONTRADO` (empresa),
+`429 DEMASIADOS_INTENTOS` (límite de uso de IA por sesión, §12.4), `503 SERVICIO_NO_DISPONIBLE` (R2 sin configurar o caído).
 
 **Configuración del bucket (una vez, en Cloudflare)**
-- CORS del bucket: permitir `PUT` desde `http://localhost:5173` (y el dominio de la demo) con `AllowedHeaders: ["Content-Type"]`.
+- CORS del bucket: permitir `PUT` desde `http://localhost:5173` (y el dominio de la demo: `https://cclara.site`, `https://www.cclara.site`) con `AllowedHeaders: ["Content-Type"]`.
   Ejemplo: `[{"AllowedOrigins":["http://localhost:5173"],"AllowedMethods":["PUT"],"AllowedHeaders":["Content-Type"],"MaxAgeSeconds":3600}]`.
 - Recomendado: regla de lifecycle que borre los objetos tras N días (p. ej. 30 en `empresas/`); los audios son datos
   personales y el backend no los necesita después de transcribir.
@@ -151,8 +154,8 @@ Recibe mensajes del proveedor (sandbox de Twilio o chat simulado). Uso interno d
 {
   "respuesta_texto": "Anotado: 2 cervezas, S/ 13.00, efectivo ✅ ¿Correcto?",
   "botones": [
-    { "id": "confirmar:BOR-7781", "texto": "✅ Correcto" },
-    { "id": "corregir:BOR-7781", "texto": "✏️ Corregir" }
+    { "id": "confirmar:BOR-7793", "texto": "✅ Correcto" },
+    { "id": "corregir:BOR-7793", "texto": "✏️ Corregir" }
   ],
   "respuesta_audio_url": null
 }
@@ -177,7 +180,7 @@ Convierte texto, audio o foto en un **borrador** de movimiento.
 **Response 200**
 ```json
 {
-  "borrador_id": "BOR-7781",
+  "borrador_id": "BOR-7793",
   "transcripcion": "vendí dos cervezas",
   "movimiento_propuesto": {
     "tipo": "venta",
@@ -223,7 +226,7 @@ Tablas y campos: [modelo_datos.dbml](modelo_datos.dbml) · [diccionario_datos.md
 **Request**
 ```json
 {
-  "borrador_id": "BOR-7781",
+  "borrador_id": "BOR-7793",
   "confirmado": true,
   "correcciones": { "metodo_pago": "billetera_digital" }
 }
@@ -232,9 +235,9 @@ Tablas y campos: [modelo_datos.dbml](modelo_datos.dbml) · [diccionario_datos.md
 **Response 201**
 ```json
 {
-  "movimiento_id": "MOV-000123",
+  "movimiento_id": "MOV-014652",
   "registros_creados": [
-    { "tabla": "transacciones", "id": "MOV-000123" }
+    { "tabla": "transacciones", "id": "MOV-014652" }
   ],
   "alertas_disparadas": [],
   "saldo_caja_negocio": 2353.00
@@ -312,7 +315,7 @@ al LLM para clasificar (si el LLM no responde, siguen las reglas). La misma lóg
 
 **Request**
 ```json
-{ "texto": "fue por billetera", "canal": "texto", "media_url": null, "borrador_id": "BOR-7781", "conversacion_id": null }
+{ "texto": "fue por billetera", "canal": "texto", "media_url": null, "borrador_id": "BOR-7793", "conversacion_id": null }
 ```
 - `canal`: `texto | voz` (con `voz`, `media_url` como en §1.2; `texto` opcional como respaldo de la demo).
 - `borrador_id`: el borrador que el chat está esperando (confirmar/aclarar/corregir). Si no existe, es de otra empresa
@@ -324,7 +327,7 @@ al LLM para clasificar (si el LLM no responde, siguen las reglas). La misma lóg
   "tipo": "borrador_actualizado",
   "mensaje": "Listo, lo cambié: 2 Cerveza 620 ml, S/ 13.00, billetera. ¿Ahora sí lo guardo?",
   "transcripcion": null,
-  "interpretacion": { "borrador_id": "BOR-7781", "movimiento_propuesto": { "...": "..." }, "origen_monto": "catalogo",
+  "interpretacion": { "borrador_id": "BOR-7793", "movimiento_propuesto": { "...": "..." }, "origen_monto": "catalogo",
                       "confianza": 0.95, "campos_faltantes": [], "pregunta_aclaratoria": null, "meta": { } },
   "confirmacion": null,
   "asistente": null,
@@ -359,7 +362,7 @@ Query: `desde`, `hasta`, `tipo`, `categoria`, `canal`, `limit`, `cursor`.
 {
   "items": [
     {
-      "movimiento_id": "MOV-000123",
+      "movimiento_id": "MOV-014652",
       "fecha_hora": "2026-11-14T10:42:00-05:00",
       "tipo": "venta",
       "categoria": "bebidas",
@@ -395,13 +398,13 @@ Registro manual desde la app (`canal = manual`). Mismo esquema que `movimiento_p
   "periodo": "2026-11",
   "corte": "2026-11-14",
   "indicadores": {
-    "saldo_caja_negocio":   { "valor": 2340.00, "variacion_pct": null },
-    "ingresos_mes":         { "valor": 8540.00, "variacion_pct": -6.2 },
-    "egresos_mes":          { "valor": 7310.00, "variacion_pct": 4.8 },
-    "ganancia_neta":        { "valor": 980.00, "variacion_pct": -18.5, "es_aproximada": true, "rango": [760.00, 1210.00] },
-    "retiros_personales":   { "valor": 1900.00, "sueldo_fijo_definido": null, "promedio_historico": 1200.00 },
+    "saldo_caja_negocio":   { "valor": 2340.00, "variacion_pct": -37.1 },
+    "ingresos_mes":         { "valor": 7976.00, "variacion_pct": -3.0 },
+    "egresos_mes":          { "valor": 6697.70, "variacion_pct": 3.0 },
+    "ganancia_neta":        { "valor": 1782.09, "variacion_pct": -5.2, "es_aproximada": true, "rango": [1715.05, 1921.40] },
+    "retiros_personales":   { "valor": 1005.00, "sueldo_fijo_definido": 1350.00, "promedio_historico": 305.00 },
     "pendiente_cobro":      { "valor": 310.00, "n_fiados": 3 },
-    "pagos_pendientes":     { "valor": 2420.00, "n_obligaciones": 2 }
+    "pagos_pendientes":     { "valor": 5468.70, "n_obligaciones": 5 }
   },
   "variacion_vs": "2026-10 al mismo día de corte"
 }
@@ -436,24 +439,24 @@ Registro manual desde la app (`canal = manual`). Mismo esquema que `movimiento_p
   "saldo_actual": 2340.00,
   "minimo_operativo": 800.00,
   "serie": [
-    { "fecha": "2026-11-15", "ingresos_esperados": 650.00, "egresos_esperados": 380.00, "p10": 2420.00, "p50": 2610.00, "p90": 2790.00 },
-    { "fecha": "2026-11-30", "ingresos_esperados": 610.00, "egresos_esperados": 2400.00, "p10": -1180.00, "p50": -650.00, "p90": -90.00 }
+    { "fecha": "2026-11-15", "ingresos_esperados": 694.30, "egresos_esperados": 378.45, "p10": 2489.00, "p50": 2655.85, "p90": 2910.24 },
+    { "fecha": "2026-11-30", "ingresos_esperados": 619.60, "egresos_esperados": 4139.41, "p10": -1221.99, "p50": -650.00, "p90": 57.71 }
   ],
   "dia_critico": {
     "fecha": "2026-11-30",
     "saldo_p50": -650.00,
-    "probabilidad_deficit": 0.74,
+    "probabilidad_deficit": 0.94,
     "obligacion_asociada": { "tipo": "prestamo_proveedor", "id": "PED-0012", "proveedor": "Distribuidora Andina", "monto": 2400.00 }
   },
   "disponible_para_gastar": {
     "valor": 0.00,
     "formula": "saldo_actual + cobros_esperados − pagos_comprometidos_hasta_proximo_vencimiento − minimo_operativo − reserva_impuestos",
-    "componentes": { "saldo_actual": 2340.00, "cobros_esperados": 190.00, "pagos_comprometidos": 2420.00, "minimo_operativo": 800.00, "reserva_impuestos": 20.00 },
-    "mensaje": "Hoy no conviene sacar plata para la casa: comprometería el pago del 30/11."
+    "componentes": { "saldo_actual": 2340.00, "cobros_esperados": 194.20, "pagos_comprometidos": 7325.07, "minimo_operativo": 800.00, "reserva_impuestos": 20.00 },
+    "mensaje": "Hoy no conviene sacar plata de la caja: comprometería el pago del 30/11."
   },
   "ajustes_manuales_aplicados": [],
-  "baseline": { "nombre": "naive_estacional", "mae_backtest": 212.40 },
-  "modelo_metricas": { "mae_backtest": 158.10, "cobertura_p10_p90": 0.82 },
+  "baseline": { "nombre": "naive_estacional", "mae_backtest": 145.30 },
+  "modelo_metricas": { "mae_backtest": 82.05, "cobertura_p10_p90": 0.82 },
   "meta": { "modelo": "forecast-lgbm-quantile", "modelo_version": "lgbm_cuantiles-1.0", "fallback_usado": false }
 }
 ```
@@ -515,11 +518,11 @@ Ajuste manual de partidas ("este mes no pago alquiler").
       "fecha": "2026-10-27",
       "dias_transcurridos": 18,
       "estado": "vencido",
-      "riesgo_atraso": { "probabilidad": 0.72, "nivel": "alto", "baseline_probabilidad": 0.60 },
-      "accion_sugerida": { "tipo": "recordatorio", "texto_boton": "Recordar a la Sra. Carmen" }
+      "riesgo_atraso": { "probabilidad": 0.68, "nivel": "alto", "baseline_probabilidad": 0.36 },
+      "accion_sugerida": { "tipo": "recordatorio", "texto_boton": "Recordar a Sra. Carmen" }
     }
   ],
-  "meta": { "modelo": "riesgo-atraso-clf", "modelo_version": "0.2.0", "fallback_usado": false }
+  "meta": { "modelo": "riesgo-atraso-baseline", "modelo_version": "0.1.0", "fallback_usado": true }
 }
 ```
 
@@ -539,11 +542,14 @@ Ajuste manual de partidas ("este mes no pago alquiler").
 Préstamos de proveedor (cuentas por pagar). Lee la tabla `deudas` con `tipo = proveedor`; `pedido_id` es su `deuda_id`. `monto_pendiente`, `estado` y `dias_para_vencer` se calculan al momento de responder (no se guardan). Los préstamos de dinero (`tipo ≠ proveedor`) entran al forecast y al asistente; su endpoint de consulta queda como roadmap.
 ```json
 {
-  "total_pendiente": 2400.00,
+  "total_pendiente": 5448.70,
   "items": [
+    { "pedido_id": "PED-0040", "proveedor": "Lácteos del Sur", "monto": 233.40, "monto_pendiente": 233.40, "fecha_pedido": "2026-11-12", "fecha_vencimiento": "2026-11-19", "estado": "pendiente", "dias_para_vencer": 5 },
+    { "pedido_id": "PED-0041", "proveedor": "Mayorista Santa Anita", "monto": 475.30, "monto_pendiente": 475.30, "fecha_pedido": "2026-11-13", "fecha_vencimiento": "2026-11-20", "estado": "pendiente", "dias_para_vencer": 6 },
+    { "pedido_id": "PED-0042", "proveedor": "Abarrotes El Sol", "monto": 2340.00, "monto_pendiente": 2340.00, "fecha_pedido": "2026-11-12", "fecha_vencimiento": "2026-11-27", "estado": "pendiente", "dias_para_vencer": 13 },
     { "pedido_id": "PED-0012", "proveedor": "Distribuidora Andina", "monto": 2400.00, "monto_pendiente": 2400.00, "fecha_pedido": "2026-11-13", "fecha_vencimiento": "2026-11-30", "estado": "pendiente", "dias_para_vencer": 16 }
   ],
-  "impuestos": { "estado": "al_dia", "impuesto_id": "IMP-0004", "proximo_vencimiento": "2026-12-15", "monto_estimado": 20.00, "nombre": "RUS de noviembre" }
+  "impuestos": { "estado": "al_dia", "impuesto_id": "IMP-0010", "proximo_vencimiento": "2026-12-15", "monto_estimado": 20.00, "nombre": "RUS de noviembre" }
 }
 ```
 - `impuestos.impuesto_id`: el impuesto impago más próximo; `null` si no hay ninguno registrado y lo mostrado es la
@@ -582,10 +588,10 @@ Chequeo **antes de confirmar** un pedido a crédito.
   "sugerencias": [
     { "accion": "reducir_pedido", "monto_sugerido": 1800.00, "saldo_resultante": -50.00 },
     { "accion": "pagar_en_partes", "partes": 2, "saldo_resultante": 550.00 },
-    { "accion": "combinar", "detalle": "pedir 1 800 + pagar en 2 partes", "saldo_resultante": 850.00 }
+    { "accion": "combinar", "monto_sugerido": 1800.00, "partes": 2, "detalle": "pedir S/ 1 800 y pagar en 2 partes", "saldo_resultante": 850.00 }
   ],
-  "fundamento": "En 2 semanas sueles vender alrededor de S/ 2 000 y el 30/11 también vencen otros pagos.",
-  "limites": "Proyección basada en tus ventas de los últimos 3 meses; no considera eventos que no hayas registrado.",
+  "fundamento": "Hasta el 30/11 sueles vender alrededor de S/ 2 000 de lo que te trae Distribuidora Andina; este pedido es S/ 400 más. Hasta esa fecha también tienes otros pagos por S/ 4 925.07.",
+  "limites": "Proyección con un modelo entrenado con datos sintéticos, tus ventas y gastos del último mes y tus pagos con fecha; no considera eventos que no hayas registrado. El pago de S/ 1 200 del 15/12 queda fuera de esta proyección (llega hasta el 14/12): revisa tu caja antes de esa fecha.",
   "confianza": "media",
   "meta": { "modelo": "forecast-lgbm-quantile", "modelo_version": "lgbm_cuantiles-1.0", "fallback_usado": false }
 }
@@ -652,16 +658,16 @@ Query: `desde`, `hasta`, `agrupar_por` (`categoria | producto | proveedor | clie
   "tipo": "egreso",
   "periodo": { "desde": "2026-11-01", "hasta": "2026-11-14" },
   "grupos": [
-    { "clave": "mercaderia", "monto": 4980.00, "participacion_pct": 68.1, "variacion_pct": 12.4 },
-    { "clave": "retiros_personales", "monto": 1900.00, "participacion_pct": 26.0, "variacion_pct": 58.3 }
+    { "clave": "mercaderia", "monto": 6552.70, "participacion_pct": 85.1, "variacion_pct": 1.7 },
+    { "clave": "retiro_personal", "monto": 1005.00, "participacion_pct": 13.0, "variacion_pct": 113.8 }
   ],
   "comparacion_pares": {
     "metrica": "retiros_personales_sobre_ventas",
-    "valor_empresa": 0.35,
-    "mediana_pares": 0.22,
-    "grupo_pares": "bodegas · 1–3 trabajadores · Lima Este",
-    "n_pares": 120,
-    "nota": "Comparación anónima con datos sintéticos."
+    "valor_empresa": 0.12,
+    "mediana_pares": 0.06,
+    "grupo_pares": "bodega · Lima Este",
+    "n_pares": 20,
+    "nota": "Comparación anónima con negocios parecidos."
   }
 }
 ```
@@ -684,20 +690,21 @@ Query: `desde`, `hasta`, `agrupar_por` (`categoria | producto | proveedor | clie
       "alerta_id": "ALR-0007",
       "tipo": "faltante_caja",
       "prioridad": 1,
-      "creada_en": "2026-11-14T10:42:06-05:00",
+      "creada_en": "2026-11-14T08:05:00-05:00",
       "fecha_evento": "2026-11-30",
       "monto": 650.00,
-      "probabilidad": 0.74,
+      "probabilidad": 0.94,
       "nivel_riesgo": "alto",
-      "titulo": "El 30/11 no te alcanzará",
+      "titulo": "El 30/11 te faltarían S/ 650 para pagar a Distribuidora Andina",
+      "titulo_corto": "El 30/11 no te alcanzará",
       "insight": "Para pagar S/ 2 400 a Distribuidora Andina te faltarían S/ 650.",
       "causas": [
-        { "descripcion": "Retiraste más para la casa", "monto": 700.00 },
+        { "descripcion": "Sacaste más de la caja de lo usual", "monto": 700.00 },
         { "descripcion": "Pediste más de lo que vendes", "monto": 400.00 },
         { "descripcion": "Fiados sin cobrar", "monto": 310.00 }
       ],
       "accion": { "tipo": "abrir_simulador", "texto_boton": "Ver qué puedo hacer", "payload": { "pedido_id": "PED-0012" } },
-      "microexplicacion": "Cuando el dinero de la casa y del negocio se mezclan, es difícil saber cuánto puedes pedir.",
+      "microexplicacion": "Si sacas de la caja sin un monto fijo, es difícil saber cuánto puedes pedir.",
       "canales": ["whatsapp", "app"],
       "estado": "activa",
       "meta": { "modelo": "reglas-alertas + forecast-lgbm-quantile", "modelo_version": "0.2.0", "fallback_usado": false }
@@ -834,26 +841,26 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
 
 ```json
 {
-  "score": 72,
-  "score_anterior": 64,
-  "etapa_actual": "estabilizar",
+  "score": 91,
+  "score_anterior": 91,
+  "etapa_actual": "crecer",
   "etapas": ["organizar", "estabilizar", "proteger", "crecer"],
   "subindicadores": [
-    { "id": "constancia_registro", "nombre": "Anotar todos los días", "valor": 100, "detalle": "13 de 13 días anotando este mes", "peso": 0.35, "destacado": true },
-    { "id": "separacion_personal", "nombre": "Ponerte un sueldo fijo", "valor": 65, "detalle": "Sueldo fijo de S/ 400 por semana; este mes sacaste S/ 1 900 (S/ 1 100 más)", "peso": 0.40, "destacado": true },
+    { "id": "constancia_registro", "nombre": "Anotar todos los días", "valor": 100, "detalle": "14 de 14 días anotando este mes", "peso": 0.35, "destacado": true },
+    { "id": "separacion_personal", "nombre": "Ponerte un sueldo fijo", "valor": 78, "detalle": "Sueldo fijo de S/ 1 350 al mes; este mes sacaste S/ 1 005 (S/ 375 más)", "peso": 0.40, "destacado": true },
     { "id": "impuestos_al_dia", "nombre": "Impuestos al día", "valor": 100, "detalle": "Al día", "peso": 0.25, "destacado": true }
   ],
-  "historial": [ { "mes": "2026-08", "score": 38 }, { "mes": "2026-09", "score": 52 }, { "mes": "2026-10", "score": 64 }, { "mes": "2026-11", "score": 72 } ],
-  "rachas": [ { "tipo": "semanas_registrando", "valor": 14 }, { "tipo": "dias_seguidos", "valor": 13 } ],
-  "metas_activas": [ { "meta_id": "MET-0001", "plantilla": "apartar_para_pedido", "titulo": "Apartar para el pedido", "detalle": "S/ 1 de cada S/ 10 que vendes", "acumulado": 420.0, "estado": "activa" } ],
+  "historial": [ { "mes": "2026-08", "score": 79 }, { "mes": "2026-09", "score": 89 }, { "mes": "2026-10", "score": 91 }, { "mes": "2026-11", "score": 91 } ],
+  "rachas": [ { "tipo": "semanas_registrando", "valor": 14 }, { "tipo": "dias_seguidos", "valor": 66 } ],
+  "metas_activas": [ { "meta_id": "MET-0004", "plantilla": "apartar_para_pedido", "titulo": "Apartar para el pedido", "detalle": "S/ 1 de cada S/ 10 que vendes", "acumulado": 420.0, "estado": "activa" } ],
   "consentimiento_compartir_historial": false,
   "fundamento": "Sale de 3 hábitos: anotar todos los días, ponerte un sueldo fijo (el que más cuenta) y tener tus impuestos al día.",
   "score_crediticio": {
-    "disponible": true, "score": 90, "categoria": "Verde", "motivo": null,
+    "disponible": true, "score": 86, "categoria": "Verde", "motivo": null,
     "rangos": { "Rojo": "0-39", "Amarillo": "40-69", "Verde": "70-100" },
-    "features": { "antiguedad_meses": 2.0, "ingreso_mensual_prom": 17851.69, "pct_dias_con_venta": 1.0, "cv_ventas": 0.068,
+    "features": { "antiguedad_meses": 2.0, "ingreso_mensual_prom": 16929.68, "pct_dias_con_venta": 0.9348, "cv_ventas": 0.1317,
                   "pct_pagos_a_tiempo": 1.0, "dias_mora_promedio": 0.0, "dias_desde_ultimo_registro": 0.0,
-                  "pct_fiado_sobre_ventas": 0.0153, "pct_fiado_cobrado_a_tiempo": 0.6667, "n_alertas_quiebre_stock": 0.0,
+                  "pct_fiado_sobre_ventas": 0.0161, "pct_fiado_cobrado_a_tiempo": 0.6667, "n_alertas_quiebre_stock": 1.0,
                   "n_trabajadores": 1.0, "tiene_ruc": 1.0, "usa_billetera_digital": 0.0, "rubro": "bodega" },
     "features_imputados": [], "features_fuera_de_rango": ["ingreso_mensual_prom"], "ventana_dias": 92,
     "fundamento": "Estimación de un modelo de regresión logística que mira …",
@@ -951,7 +958,8 @@ Calcula el score del mes en curso y lo guarda en `score_salud` (reemplaza el del
 | F6 Alertas | `/alertas`, `/alertas/{id}/accion`, `/alertas/evaluar`, `/preferencias-alertas` | Backend + ML |
 | F7 Asistente | `/asistente/mensajes` | GenAI |
 | F8 Salud | `/salud`, `/metas`, `/consentimiento` | Backend |
-| Operación | `/health` | Backend |
+| Operación | `/health` (pública) | Backend |
+| Autenticación | `/auth/login` (pública), `/auth/sesion` (§12); el resto de rutas con Bearer de sesión o `X-API-Key` | Backend |
 
 ### Mock para trabajar en paralelo
 Hasta que los modelos estén listos, el backend publica respuestas fijas con estos mismos JSON (datos de Pedro: saldo S/ 2 340, déficit −S/ 650 el 30/11, pedido S/ 2 400 a Distribuidora Andina, fiados S/ 310). El front y el bot consumen el mock desde el primer momento.
@@ -960,7 +968,7 @@ Hasta que los modelos estén listos, el backend publica respuestas fijas con est
 
 ## 11. Observabilidad del LLM (interna)
 
-> Uso interno del equipo (costos, latencia, calidad de la salida del modelo). **No forma parte de las pantallas del producto**; llevan `X-API-Key` como el resto. Cada llamada al LLM/VLM (extractor, asistente, cuaderno) deja una fila en la tabla técnica `llm_llamadas`, también si falla. Parámetros: `LLM_TRAZA_ACTIVA`, `LLM_TRAZA_GUARDAR_CONTENIDO`.
+> Uso interno del equipo (costos, latencia, calidad de la salida del modelo). **No forma parte de las pantallas del producto**; como el resto, llevan Bearer de sesión (solo su empresa) o `X-API-Key` (§12.3). Cada llamada al LLM/VLM (extractor, asistente, cuaderno) deja una fila en la tabla técnica `llm_llamadas`, también si falla. Parámetros: `LLM_TRAZA_ACTIVA`, `LLM_TRAZA_GUARDAR_CONTENIDO`.
 
 ### 11.1 `GET /empresas/{empresa_id}/llm/llamadas`
 Query: `origen` (`extractor | asistente | vision`), `estado` (`ok | timeout | http_error | red | respuesta_invalida | sin_configurar`), `desde`, `hasta` (fechas, zona America/Lima), `limit`, `cursor`, `incluir_contenido` (`true` agrega `request` y `respuesta`; por defecto no). Orden: más reciente primero.
@@ -1032,7 +1040,7 @@ sal (`AUTH_CREDENCIALES`, credencial de `backend/.env` y del panel de Render). E
 | usuario | empresa (`AUTH_USUARIOS` en `parametros.env`) | demo del front |
 |---|---|---|
 | `demo1` | `EMP-0001` Bodega Don Pedro (3 meses) | `pedro` (no le alcanza el 30/11) |
-| `demo2` | `EMP-0003` Bodega Mi Barrio (provisional: la bodega sana del CSV la elige el equipo de datos) | `sano` |
+| `demo2` | `EMP-0030` Bodega SurAndina (4 meses, bodega sana) | `sano` (sí le alcanza) |
 | `demo3` | `EMP-0002` Bodega Nueva Esperanza (día 3) | `nuevo` |
 
 ### 12.1 `POST /auth/login` (pública)

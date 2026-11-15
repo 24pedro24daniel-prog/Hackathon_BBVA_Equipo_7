@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "generate": "node generate_synthetic_data.mjs",
+    "schema": "python pipeline_python/generar_schema.py",
+    "audit": "node audit_quality.mjs",
+    "audit:mutaciones": "node audit_mutations.mjs",
     "load": "node load_postgres.mjs",
-    "seed": "node generate_synthetic_data.mjs && node load_postgres.mjs"
+    "seed": "node generate_synthetic_data.mjs && node audit_quality.mjs && node load_postgres.mjs"
   },
   "dependencies": {
     "pg": "^8.13.1"
   }
 }
-

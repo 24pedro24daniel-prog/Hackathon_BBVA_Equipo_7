@@ -478,10 +478,24 @@ Entidad central: la bodega/empresa. Todas las tablas se relacionan con ella.
 ## 9. Storytelling para la demo (Pedro)
 
 1. **Inicio:** Pedro ve la caja de su negocio (S/ 2 340), separada de la plata de su casa, y una alerta: "El 30/11 no te alcanzará".
-2. **Anotar:** registra por voz "vendí dos cervezas" y el bot confirma.
-3. **Alerta y causas:** el 30/11 le faltarán S/ 650 para pagar S/ 2 400 a Distribuidora Andina. Causas: retiró S/ 700 más de lo usual para la casa, pidió S/ 400 más de lo que vende y tiene S/ 310 en fiados sin cobrar. Sin esas tres, cerraría con S/ 760.
-4. **Antes de pedir:** simula pedir menos, pagar en 2 partes o cobrar fiados, y ve cómo cambia su caja.
+2. **Anotar:** registra por voz "vendí dos cervezas" y el bot confirma (la caja pasa a S/ 2 353 y el faltante del 30/11 baja S/ 13: lo que anota cambia la proyección al instante). Sin precio, el monto sale del catálogo (2 × S/ 6.50 = S/ 13). Si en vivo se dice el precio, decir el total ("vendí dos cervezas por trece soles"): "a trece soles" se entiende como precio por unidad y anota S/ 26.
+3. **Alerta y causas:** el 30/11 le faltarán S/ 650 para pagar S/ 2 400 a Distribuidora Andina (ese día también toca su sueldo fijo de S/ 1 350, y antes paga a Santa Anita, Lácteos del Sur, El Sol, la luz y el alquiler). Causas: sacó S/ 700 más de lo usual de la caja, pidió S/ 400 más de lo que vende de esa mercadería (le vende ~S/ 2 000 hasta el 30/11) y tiene S/ 310 en fiados sin cobrar. Sin esas tres, cerraría con S/ 760.
+4. **Antes de pedir:** el chequeo del pedido a Andina sugiere pedir S/ 1 800 (quedaría en −S/ 50), pagar en 2 partes (S/ 550) o las dos cosas (S/ 850); el simulador también deja cobrar fiados o limitar retiros y muestra cómo cambia su caja.
 5. **Costo del préstamo informal:** ejemplo ilustrativo de recibir S/ 1 000 y devolver S/ 1 200 en 30 días; primero se muestran las alternativas propias.
-6. **Mi progreso:** su score de salud sube y construye un historial que, con su permiso, podría servir para acceder a un crédito formal.
+6. **Mi progreso:** su score de salud sube (79 en agosto → 89 → 91 en octubre; 91 al 14/11) y construye un historial que, con su permiso, podría servir para acceder a un crédito formal (estimación del modelo de credit scoring: 86, verde).
 
 > Todos los nombres, montos y negocios son ficticios.
+
+**Cifras reales del backend sobre `data/csv`** (hoy = 14/11, forecast LightGBM por defecto; las verifica
+`backend/tests/integracion_csv/test_csv_integracion.py`): saldo 2 340; 30/11 con p50 −650 (banda p10 −1 222 / p90 +58,
+probabilidad de déficit 0.94; con el baseline naive también hay déficit: −1 592); causas 700 / 400 / 310; chequeo
+−50 / 550 / 850; pedir S/ 1 800 en 2 partes → S/ 850. El recibo de luz de noviembre de Pedro (S/ 176.37) y su pedido de
+campaña a El Sol (S/ 2 340) se eligieron en el generador para que el p50 del 30/11 caiga en −650 (ver
+`data/generate_synthetic_data.mjs` §2.2); el resto de la historia sale de su patrón diario. Si el modelo o la data
+cambian, lo que debe mantenerse es el **tipo de caso** de cada demo:
+
+| Usuario | Empresa | Caso |
+|---|---|---|
+| demo1 | EMP-0001 Bodega Don Pedro (3 meses) | Le falta caja el 30/11 por pagos con fecha; el chequeo lo muestra y partir/reducir el pago lo rescata |
+| demo2 | EMP-0030 Bodega SurAndina (4 meses) | Sana: sin día crítico; su caja más baja del mes (30/11, p50 ≈ S/ 6 437, p10 ≈ S/ 4 935) queda muy por encima de su mínimo (S/ 500) |
+| demo3 | EMP-0002 Bodega Nueva Esperanza (día 3) | Recién empieza: el forecast cae al baseline (`fallback_usado`) porque no hay 30 días de historia |

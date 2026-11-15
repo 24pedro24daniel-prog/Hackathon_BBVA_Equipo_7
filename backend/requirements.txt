@@ -1,4 +1,6 @@
 # TuCaserito backend — versiones exactas (Python 3.12).
+# Solo dependencias directas. Las transitivas están congeladas en constraints.txt (el Dockerfile instala con
+# `pip install -r requirements.txt -c constraints.txt`; cómo regenerarlo: README > "Dependencias").
 # API
 fastapi==0.163.0
 uvicorn[standard]==0.54.0
@@ -13,6 +15,11 @@ tzdata==2026.6
 # IA: LLM por OpenRouter (HTTP) y Whisper local
 httpx==0.28.1
 faster-whisper==1.2.1
+# PyAV decodifica el audio para faster-whisper (webm/ogg/opus, mp4/aac, wav...). faster-whisper 1.2.1 declara solo
+# `av>=11`, pero llama a av.open(..., metadata_errors="ignore") y av 19 quitó ese argumento: con av 19 TODO audio falla
+# (TypeError: open() got an unexpected keyword argument 'metadata_errors'). 18.1.0 es la última que lo acepta.
+# No subir sin correr tests/test_f_audio.py.
+av==18.1.0
 # Media en Cloudflare R2 (S3-compatible)
 boto3==1.43.127
 # Modelos de ML del equipo de datos (modelo/artifacts): LightGBM por cuantiles (forecast) y regresión logística (score

@@ -20,115 +20,358 @@ PRD-0018,EMP-0001,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",4.00
 PRD-0019,EMP-0001,CAT-01,Jugo néctar 1 L,"[""jugo""]",4.80,3.60,true
 PRD-0020,EMP-0001,CAT-03,Panetón clásico 900g (Campaña Navideña),"[""paneton"",""panetones""]",22.00,16.50,true
 PRD-0031,EMP-0001,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza grande"",""cerveza"",""cervezas""]",6.50,4.80,true
-PRD-0100,EMP-0003,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0101,EMP-0003,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0102,EMP-0003,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0103,EMP-0003,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0104,EMP-0004,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0105,EMP-0004,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0106,EMP-0004,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0107,EMP-0004,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0108,EMP-0005,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0109,EMP-0005,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0110,EMP-0005,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0111,EMP-0005,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0112,EMP-0006,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0113,EMP-0006,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0114,EMP-0006,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0115,EMP-0006,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0116,EMP-0007,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0117,EMP-0007,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0118,EMP-0007,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0119,EMP-0007,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0120,EMP-0008,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0121,EMP-0008,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0122,EMP-0008,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0123,EMP-0008,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0124,EMP-0009,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0125,EMP-0009,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0126,EMP-0009,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0127,EMP-0009,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0128,EMP-0010,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0129,EMP-0010,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0130,EMP-0010,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0131,EMP-0010,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0132,EMP-0011,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0133,EMP-0011,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0134,EMP-0011,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0135,EMP-0011,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0136,EMP-0012,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0137,EMP-0012,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0138,EMP-0012,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0139,EMP-0012,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0140,EMP-0013,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0141,EMP-0013,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0142,EMP-0013,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0143,EMP-0013,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0144,EMP-0014,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0145,EMP-0014,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0146,EMP-0014,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0147,EMP-0014,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0148,EMP-0015,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0149,EMP-0015,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0150,EMP-0015,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0151,EMP-0015,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0152,EMP-0016,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0153,EMP-0016,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0154,EMP-0016,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0155,EMP-0016,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0156,EMP-0017,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0157,EMP-0017,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0158,EMP-0017,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0159,EMP-0017,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0160,EMP-0018,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0161,EMP-0018,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0162,EMP-0018,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0163,EMP-0018,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0164,EMP-0019,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0165,EMP-0019,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0166,EMP-0019,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0167,EMP-0019,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0168,EMP-0020,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0169,EMP-0020,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0170,EMP-0020,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0171,EMP-0020,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0172,EMP-0021,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0173,EMP-0021,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0174,EMP-0021,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0175,EMP-0021,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0176,EMP-0022,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0177,EMP-0022,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0178,EMP-0022,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0179,EMP-0022,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0180,EMP-0023,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0181,EMP-0023,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0182,EMP-0023,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0183,EMP-0023,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0184,EMP-0024,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0185,EMP-0024,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0186,EMP-0024,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0187,EMP-0024,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0188,EMP-0025,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0189,EMP-0025,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0190,EMP-0025,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0191,EMP-0025,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0192,EMP-0026,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0193,EMP-0026,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0194,EMP-0026,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0195,EMP-0026,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0196,EMP-0027,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0197,EMP-0027,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0198,EMP-0027,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0199,EMP-0027,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0200,EMP-0028,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0201,EMP-0028,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0202,EMP-0028,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0203,EMP-0028,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0204,EMP-0029,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0205,EMP-0029,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0206,EMP-0029,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0207,EMP-0029,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
-PRD-0208,EMP-0030,CAT-01,Bebida gaseosa 1.5L,"[""bebida""]",7.50,5.50,true
-PRD-0209,EMP-0030,CAT-02,Arroz superior 1kg,"[""arroz""]",4.20,3.20,true
-PRD-0210,EMP-0030,CAT-03,Leche evaporada,"[""leche""]",4.50,3.50,true
-PRD-0211,EMP-0030,CAT-04,Detergente multiusos,"[""detergente""]",5.80,4.30,true
+PRD-0100,EMP-0002,CAT-05,Galletas paquete x6,"[""galleta"",""galletas""]",3.80,2.70,true
+PRD-0101,EMP-0002,CAT-01,Gaseosa familiar 1.5 L,"[""gaseosa"",""gaseosas""]",8.20,6.10,true
+PRD-0102,EMP-0002,CAT-02,Harina preparada 1 kg,"[""harina""]",4.10,3.00,true
+PRD-0103,EMP-0002,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.60,1.10,true
+PRD-0104,EMP-0002,CAT-02,Sal yodada 1 kg,"[""sal""]",1.80,1.30,true
+PRD-0105,EMP-0002,CAT-04,Lavavajilla 500 ml,"[""lavavajilla"",""lava platos""]",6.80,5.00,true
+PRD-0106,EMP-0002,CAT-01,Gaseosa personal 500 ml,"[""gaseosita"",""personal""]",2.60,1.80,true
+PRD-0107,EMP-0002,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza"",""cervezas""]",7.00,5.20,true
+PRD-0108,EMP-0002,CAT-04,Papel higiénico paquete x4,"[""papel"",""papel higienico""]",4.90,3.70,true
+PRD-0109,EMP-0002,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",7.30,5.60,true
+PRD-0110,EMP-0002,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",9.10,7.20,true
+PRD-0111,EMP-0002,CAT-04,Detergente en polvo 500g,"[""detergente""]",5.90,4.50,true
+PRD-0112,EMP-0003,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",3.00,2.30,true
+PRD-0113,EMP-0003,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",6.50,5.00,true
+PRD-0114,EMP-0003,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.40,4.10,true
+PRD-0115,EMP-0003,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.50,1.00,true
+PRD-0116,EMP-0003,CAT-04,Jabón de lavar barra,"[""jabon"",""barra de jabon""]",3.00,2.10,true
+PRD-0117,EMP-0003,CAT-03,Huevos pardos (1 kg),"[""huevos"",""kilo de huevo""]",9.90,8.10,true
+PRD-0118,EMP-0003,CAT-01,Gaseosa personal 500 ml,"[""gaseosita"",""personal""]",2.70,1.80,true
+PRD-0119,EMP-0003,CAT-05,Papas fritas snack,"[""papitas"",""snack""]",2.60,1.80,true
+PRD-0120,EMP-0003,CAT-02,Harina preparada 1 kg,"[""harina""]",4.00,3.00,true
+PRD-0121,EMP-0003,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.10,5.50,true
+PRD-0122,EMP-0003,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",4.30,3.30,true
+PRD-0123,EMP-0003,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""bolsa de pan""]",2.50,1.80,true
+PRD-0124,EMP-0004,CAT-03,Postre del día,"[""postre""]",3.90,1.80,true
+PRD-0125,EMP-0004,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza""]",8.40,5.80,true
+PRD-0126,EMP-0004,CAT-01,Gaseosa 500 ml,"[""gaseosa""]",3.60,2.20,true
+PRD-0127,EMP-0004,CAT-06,Menú del día (entrada y segundo),"[""menu"",""menú del día""]",9.80,4.90,true
+PRD-0128,EMP-0004,CAT-01,Chicha morada vaso,"[""chicha""]",2.50,0.80,true
+PRD-0129,EMP-0004,CAT-06,Caldo de gallina,"[""caldo""]",7.60,3.80,true
+PRD-0130,EMP-0004,CAT-06,Ají de gallina,"[""aji de gallina""]",13.10,7.10,true
+PRD-0131,EMP-0004,CAT-03,Sándwich de pollo,"[""sandwich""]",4.80,2.70,true
+PRD-0132,EMP-0004,CAT-03,Desayuno pan con café,"[""desayuno""]",6.00,3.00,true
+PRD-0133,EMP-0005,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",4.00,3.10,true
+PRD-0134,EMP-0005,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",4.10,3.10,true
+PRD-0135,EMP-0005,CAT-02,Arroz extra 1 kg,"[""arroz"",""kilo de arroz""]",4.40,3.50,true
+PRD-0136,EMP-0005,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.10,5.50,true
+PRD-0137,EMP-0005,CAT-01,Gaseosa familiar 1.5 L,"[""gaseosa"",""gaseosas""]",7.50,5.60,true
+PRD-0138,EMP-0005,CAT-01,Jugo néctar 1 L,"[""jugo""]",5.00,3.70,true
+PRD-0139,EMP-0005,CAT-03,Huevos pardos (1 kg),"[""huevos"",""kilo de huevo""]",9.90,8.10,true
+PRD-0140,EMP-0005,CAT-04,Papel higiénico paquete x4,"[""papel"",""papel higienico""]",5.10,3.80,true
+PRD-0141,EMP-0005,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.60,4.30,true
+PRD-0142,EMP-0005,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.30,3.50,true
+PRD-0143,EMP-0005,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",9.20,7.30,true
+PRD-0144,EMP-0005,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.60,1.10,true
+PRD-0145,EMP-0006,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",2.70,2.00,true
+PRD-0146,EMP-0006,CAT-04,Detergente en polvo 500g,"[""detergente""]",6.00,4.50,true
+PRD-0147,EMP-0006,CAT-02,Arroz extra 1 kg,"[""arroz"",""kilo de arroz""]",4.30,3.40,true
+PRD-0148,EMP-0006,CAT-05,Galletas paquete x6,"[""galleta"",""galletas""]",3.60,2.60,true
+PRD-0149,EMP-0006,CAT-03,Huevos pardos (1 kg),"[""huevos"",""kilo de huevo""]",9.70,8.00,true
+PRD-0150,EMP-0006,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""bolsa de pan""]",2.60,1.90,true
+PRD-0151,EMP-0006,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.60,5.90,true
+PRD-0152,EMP-0006,CAT-04,Lavavajilla 500 ml,"[""lavavajilla"",""lava platos""]",6.70,5.00,true
+PRD-0153,EMP-0006,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",4.10,3.20,true
+PRD-0154,EMP-0006,CAT-03,Yogurt botella 1 L,"[""yogurt""]",7.50,6.00,true
+PRD-0155,EMP-0006,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",3.80,3.00,true
+PRD-0156,EMP-0006,CAT-01,Gaseosa personal 500 ml,"[""gaseosita"",""personal""]",2.70,1.80,true
+PRD-0157,EMP-0006,CAT-02,Harina preparada 1 kg,"[""harina""]",4.30,3.20,true
+PRD-0158,EMP-0007,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.40,3.50,true
+PRD-0159,EMP-0007,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",3.90,3.10,true
+PRD-0160,EMP-0007,CAT-02,Sal yodada 1 kg,"[""sal""]",1.90,1.40,true
+PRD-0161,EMP-0007,CAT-01,Jugo néctar 1 L,"[""jugo""]",5.10,3.80,true
+PRD-0162,EMP-0007,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",8.90,7.10,true
+PRD-0163,EMP-0007,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.60,1.00,true
+PRD-0164,EMP-0007,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.00,5.40,true
+PRD-0165,EMP-0007,CAT-05,Papas fritas snack,"[""papitas"",""snack""]",2.70,1.80,true
+PRD-0166,EMP-0007,CAT-04,Lavavajilla 500 ml,"[""lavavajilla"",""lava platos""]",7.10,5.20,true
+PRD-0167,EMP-0007,CAT-03,Yogurt botella 1 L,"[""yogurt""]",7.30,5.80,true
+PRD-0168,EMP-0007,CAT-03,Huevos pardos (1 kg),"[""huevos"",""kilo de huevo""]",10.00,8.20,true
+PRD-0169,EMP-0007,CAT-02,Arroz extra 1 kg,"[""arroz"",""kilo de arroz""]",4.10,3.20,true
+PRD-0170,EMP-0007,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.30,4.10,true
+PRD-0171,EMP-0007,CAT-05,Galletas paquete x6,"[""galleta"",""galletas""]",3.50,2.50,true
+PRD-0172,EMP-0007,CAT-01,Gaseosa familiar 1.5 L,"[""gaseosa"",""gaseosas""]",7.20,5.40,true
+PRD-0173,EMP-0007,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",3.10,2.30,true
+PRD-0174,EMP-0008,CAT-04,Líquido de frenos,"[""liquido de frenos""]",12.10,8.10,true
+PRD-0175,EMP-0008,CAT-06,Batería con instalación,"[""bateria""]",212.10,163.90,true
+PRD-0176,EMP-0008,CAT-06,Alineamiento y balanceo,"[""alineamiento""]",62.50,31.30,true
+PRD-0177,EMP-0008,CAT-06,Revisión de frenos,"[""frenos""]",33.80,11.60,true
+PRD-0178,EMP-0008,CAT-06,Lavado y engrase,"[""engrase"",""lavado""]",20.70,8.30,true
+PRD-0179,EMP-0008,CAT-06,Cambio de llanta,"[""llanta""]",15.70,,true
+PRD-0180,EMP-0008,CAT-06,Mano de obra (hora),"[""mano de obra""]",31.60,,true
+PRD-0181,EMP-0008,CAT-06,Cambio de filtro de aire,"[""filtro""]",24.10,14.50,true
+PRD-0182,EMP-0008,CAT-04,Escobilla y limpiaparabrisas,"[""escobilla""]",17.70,10.80,true
+PRD-0183,EMP-0008,CAT-06,Cambio de aceite y filtro,"[""cambio de aceite""]",46.30,28.80,true
+PRD-0184,EMP-0009,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza"",""cervezas""]",6.70,4.90,true
+PRD-0185,EMP-0009,CAT-04,Jabón de lavar barra,"[""jabon"",""barra de jabon""]",3.00,2.10,true
+PRD-0186,EMP-0009,CAT-04,Detergente en polvo 500g,"[""detergente""]",5.80,4.40,true
+PRD-0187,EMP-0009,CAT-04,Papel higiénico paquete x4,"[""papel"",""papel higienico""]",5.60,4.20,true
+PRD-0188,EMP-0009,CAT-03,Yogurt botella 1 L,"[""yogurt""]",8.00,6.40,true
+PRD-0189,EMP-0009,CAT-02,Sal yodada 1 kg,"[""sal""]",1.80,1.30,true
+PRD-0190,EMP-0009,CAT-05,Papas fritas snack,"[""papitas"",""snack""]",2.50,1.70,true
+PRD-0191,EMP-0009,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",6.70,5.20,true
+PRD-0192,EMP-0009,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.50,3.60,true
+PRD-0193,EMP-0009,CAT-01,Agua mineral 625 ml,"[""agua"",""botella de agua""]",2.00,1.20,true
+PRD-0194,EMP-0009,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",2.80,2.10,true
+PRD-0195,EMP-0009,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",9.20,7.40,true
+PRD-0196,EMP-0009,CAT-01,Jugo néctar 1 L,"[""jugo""]",5.00,3.70,true
+PRD-0197,EMP-0009,CAT-02,Harina preparada 1 kg,"[""harina""]",3.90,3.00,true
+PRD-0198,EMP-0009,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",7.30,5.60,true
+PRD-0199,EMP-0010,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""bolsa de pan""]",2.50,1.80,true
+PRD-0200,EMP-0010,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.50,3.60,true
+PRD-0201,EMP-0010,CAT-02,Arroz extra 1 kg,"[""arroz"",""kilo de arroz""]",4.30,3.40,true
+PRD-0202,EMP-0010,CAT-01,Jugo néctar 1 L,"[""jugo""]",5.20,3.90,true
+PRD-0203,EMP-0010,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",3.90,3.00,true
+PRD-0204,EMP-0010,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",9.20,7.40,true
+PRD-0205,EMP-0010,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",2.80,2.10,true
+PRD-0206,EMP-0010,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",7.10,5.50,true
+PRD-0207,EMP-0010,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza"",""cervezas""]",7.00,5.20,true
+PRD-0208,EMP-0010,CAT-04,Papel higiénico paquete x4,"[""papel"",""papel higienico""]",5.00,3.70,true
+PRD-0209,EMP-0010,CAT-02,Harina preparada 1 kg,"[""harina""]",4.30,3.20,true
+PRD-0210,EMP-0010,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.50,1.00,true
+PRD-0211,EMP-0011,CAT-03,Sándwich de pollo,"[""sandwich""]",5.20,2.90,true
+PRD-0212,EMP-0011,CAT-06,Almuerzo ejecutivo,"[""ejecutivo"",""almuerzo""]",12.90,6.50,true
+PRD-0213,EMP-0011,CAT-01,Chicha morada vaso,"[""chicha""]",2.50,0.80,true
+PRD-0214,EMP-0011,CAT-06,Ají de gallina,"[""aji de gallina""]",13.10,7.10,true
+PRD-0215,EMP-0011,CAT-06,Menú del día (entrada y segundo),"[""menu"",""menú del día""]",8.70,4.40,true
+PRD-0216,EMP-0011,CAT-01,Gaseosa 500 ml,"[""gaseosa""]",3.80,2.40,true
+PRD-0217,EMP-0011,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza""]",8.40,5.80,true
+PRD-0218,EMP-0011,CAT-01,Jugo de fruta,"[""jugo""]",4.80,1.90,true
+PRD-0219,EMP-0011,CAT-03,Desayuno pan con café,"[""desayuno""]",6.30,3.10,true
+PRD-0220,EMP-0011,CAT-06,Caldo de gallina,"[""caldo""]",7.80,3.90,true
+PRD-0221,EMP-0012,CAT-03,Huevos pardos (1 kg),"[""huevos"",""kilo de huevo""]",9.50,7.80,true
+PRD-0222,EMP-0012,CAT-02,Sal yodada 1 kg,"[""sal""]",1.90,1.40,true
+PRD-0223,EMP-0012,CAT-04,Detergente en polvo 500g,"[""detergente""]",6.40,4.80,true
+PRD-0224,EMP-0012,CAT-04,Lavavajilla 500 ml,"[""lavavajilla"",""lava platos""]",6.20,4.60,true
+PRD-0225,EMP-0012,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",3.90,3.10,true
+PRD-0226,EMP-0012,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.80,4.40,true
+PRD-0227,EMP-0012,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.60,1.10,true
+PRD-0228,EMP-0012,CAT-05,Papas fritas snack,"[""papitas"",""snack""]",2.40,1.70,true
+PRD-0229,EMP-0012,CAT-05,Galletas paquete x6,"[""galleta"",""galletas""]",3.60,2.60,true
+PRD-0230,EMP-0012,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",3.80,3.00,true
+PRD-0231,EMP-0012,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.60,5.80,true
+PRD-0232,EMP-0012,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""bolsa de pan""]",2.40,1.80,true
+PRD-0233,EMP-0012,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",8.30,6.60,true
+PRD-0234,EMP-0012,CAT-01,Gaseosa personal 500 ml,"[""gaseosita"",""personal""]",2.40,1.70,true
+PRD-0235,EMP-0012,CAT-03,Yogurt botella 1 L,"[""yogurt""]",7.90,6.30,true
+PRD-0236,EMP-0012,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza"",""cervezas""]",6.90,5.10,true
+PRD-0237,EMP-0013,CAT-02,Aceite vegetal caja 12 L,"[""aceite caja""]",98.00,84.00,true
+PRD-0238,EMP-0013,CAT-02,Arroz saco 50 kg,"[""arroz saco"",""saco de arroz""]",167.00,144.00,true
+PRD-0239,EMP-0013,CAT-01,Gaseosa caja 12 x 1.5 L,"[""gaseosa caja""]",72.00,60.00,true
+PRD-0240,EMP-0013,CAT-01,Agua mineral caja 24 u,"[""agua caja""]",36.00,28.00,true
+PRD-0241,EMP-0013,CAT-03,Leche evaporada caja 48 u,"[""leche caja""]",188.00,166.00,true
+PRD-0242,EMP-0013,CAT-02,Azúcar saco 50 kg,"[""azucar saco""]",169.00,149.00,true
+PRD-0243,EMP-0013,CAT-05,Galletas caja 24 paquetes,"[""galletas caja""]",61.00,49.00,true
+PRD-0244,EMP-0014,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""bolsa de pan""]",2.50,1.80,true
+PRD-0245,EMP-0014,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",7.10,5.40,true
+PRD-0246,EMP-0014,CAT-01,Agua mineral 625 ml,"[""agua"",""botella de agua""]",2.00,1.20,true
+PRD-0247,EMP-0014,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",2.70,2.00,true
+PRD-0248,EMP-0014,CAT-01,Gaseosa familiar 1.5 L,"[""gaseosa"",""gaseosas""]",8.20,6.20,true
+PRD-0249,EMP-0014,CAT-04,Lavavajilla 500 ml,"[""lavavajilla"",""lava platos""]",6.70,5.00,true
+PRD-0250,EMP-0014,CAT-02,Sal yodada 1 kg,"[""sal""]",1.90,1.40,true
+PRD-0251,EMP-0014,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",6.80,5.30,true
+PRD-0252,EMP-0014,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",8.10,6.50,true
+PRD-0253,EMP-0014,CAT-04,Papel higiénico paquete x4,"[""papel"",""papel higienico""]",5.70,4.30,true
+PRD-0254,EMP-0014,CAT-04,Jabón de lavar barra,"[""jabon"",""barra de jabon""]",2.90,2.00,true
+PRD-0255,EMP-0014,CAT-05,Papas fritas snack,"[""papitas"",""snack""]",2.70,1.80,true
+PRD-0256,EMP-0014,CAT-01,Jugo néctar 1 L,"[""jugo""]",5.20,3.90,true
+PRD-0257,EMP-0014,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.30,3.40,true
+PRD-0258,EMP-0015,CAT-06,Cambio de filtro de aire,"[""filtro""]",25.80,15.50,true
+PRD-0259,EMP-0015,CAT-04,Líquido de frenos,"[""liquido de frenos""]",11.60,7.70,true
+PRD-0260,EMP-0015,CAT-06,Mano de obra (hora),"[""mano de obra""]",31.10,,true
+PRD-0261,EMP-0015,CAT-06,Cambio de llanta,"[""llanta""]",14.70,,true
+PRD-0262,EMP-0015,CAT-04,Escobilla y limpiaparabrisas,"[""escobilla""]",18.00,11.00,true
+PRD-0263,EMP-0015,CAT-06,Revisión de frenos,"[""frenos""]",34.50,11.80,true
+PRD-0264,EMP-0015,CAT-06,Batería con instalación,"[""bateria""]",226.80,175.30,true
+PRD-0265,EMP-0015,CAT-06,Alineamiento y balanceo,"[""alineamiento""]",61.90,30.90,true
+PRD-0266,EMP-0016,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.40,3.50,true
+PRD-0267,EMP-0016,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""bolsa de pan""]",2.40,1.80,true
+PRD-0268,EMP-0016,CAT-03,Yogurt botella 1 L,"[""yogurt""]",8.00,6.40,true
+PRD-0269,EMP-0016,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",7.00,5.40,true
+PRD-0270,EMP-0016,CAT-04,Papel higiénico paquete x4,"[""papel"",""papel higienico""]",5.40,4.00,true
+PRD-0271,EMP-0016,CAT-02,Arroz extra 1 kg,"[""arroz"",""kilo de arroz""]",4.60,3.60,true
+PRD-0272,EMP-0016,CAT-01,Jugo néctar 1 L,"[""jugo""]",4.70,3.50,true
+PRD-0273,EMP-0016,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",3.00,2.30,true
+PRD-0274,EMP-0016,CAT-01,Gaseosa personal 500 ml,"[""gaseosita"",""personal""]",2.50,1.70,true
+PRD-0275,EMP-0016,CAT-03,Huevos pardos (1 kg),"[""huevos"",""kilo de huevo""]",10.10,8.30,true
+PRD-0276,EMP-0016,CAT-04,Lavavajilla 500 ml,"[""lavavajilla"",""lava platos""]",6.70,4.90,true
+PRD-0277,EMP-0016,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.20,4.00,true
+PRD-0278,EMP-0017,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.10,5.50,true
+PRD-0279,EMP-0017,CAT-05,Galletas paquete x6,"[""galleta"",""galletas""]",3.80,2.70,true
+PRD-0280,EMP-0017,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.90,4.50,true
+PRD-0281,EMP-0017,CAT-04,Lavavajilla 500 ml,"[""lavavajilla"",""lava platos""]",6.20,4.60,true
+PRD-0282,EMP-0017,CAT-02,Harina preparada 1 kg,"[""harina""]",4.20,3.10,true
+PRD-0283,EMP-0017,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""bolsa de pan""]",2.70,2.00,true
+PRD-0284,EMP-0017,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza"",""cervezas""]",6.50,4.80,true
+PRD-0285,EMP-0017,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",2.70,2.00,true
+PRD-0286,EMP-0017,CAT-04,Jabón de lavar barra,"[""jabon"",""barra de jabon""]",3.10,2.20,true
+PRD-0287,EMP-0017,CAT-01,Gaseosa familiar 1.5 L,"[""gaseosa"",""gaseosas""]",7.30,5.40,true
+PRD-0288,EMP-0017,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",3.80,3.00,true
+PRD-0289,EMP-0017,CAT-03,Yogurt botella 1 L,"[""yogurt""]",7.60,6.10,true
+PRD-0290,EMP-0017,CAT-05,Papas fritas snack,"[""papitas"",""snack""]",2.70,1.80,true
+PRD-0291,EMP-0017,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.60,1.10,true
+PRD-0292,EMP-0017,CAT-02,Arroz extra 1 kg,"[""arroz"",""kilo de arroz""]",4.00,3.10,true
+PRD-0293,EMP-0017,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.50,3.60,true
+PRD-0294,EMP-0018,CAT-06,Pollo a la brasa 1/4,"[""pollo"",""cuarto de pollo""]",14.60,8.30,true
+PRD-0295,EMP-0018,CAT-06,Ají de gallina,"[""aji de gallina""]",13.70,7.40,true
+PRD-0296,EMP-0018,CAT-01,Chicha morada vaso,"[""chicha""]",2.60,0.80,true
+PRD-0297,EMP-0018,CAT-03,Postre del día,"[""postre""]",4.00,1.80,true
+PRD-0298,EMP-0018,CAT-01,Gaseosa 500 ml,"[""gaseosa""]",3.90,2.40,true
+PRD-0299,EMP-0018,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza""]",8.70,6.00,true
+PRD-0300,EMP-0018,CAT-03,Sándwich de pollo,"[""sandwich""]",5.50,3.10,true
+PRD-0301,EMP-0018,CAT-06,Menú del día (entrada y segundo),"[""menu"",""menú del día""]",8.90,4.40,true
+PRD-0302,EMP-0018,CAT-06,Almuerzo ejecutivo,"[""ejecutivo"",""almuerzo""]",12.80,6.40,true
+PRD-0303,EMP-0019,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.80,3.90,true
+PRD-0304,EMP-0019,CAT-05,Papas fritas snack,"[""papitas"",""snack""]",2.60,1.80,true
+PRD-0305,EMP-0019,CAT-04,Lavavajilla 500 ml,"[""lavavajilla"",""lava platos""]",7.10,5.30,true
+PRD-0306,EMP-0019,CAT-04,Detergente en polvo 500g,"[""detergente""]",6.10,4.60,true
+PRD-0307,EMP-0019,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.60,4.20,true
+PRD-0308,EMP-0019,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",8.40,6.70,true
+PRD-0309,EMP-0019,CAT-02,Arroz extra 1 kg,"[""arroz"",""kilo de arroz""]",4.20,3.30,true
+PRD-0310,EMP-0019,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.60,1.10,true
+PRD-0311,EMP-0019,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",4.10,3.30,true
+PRD-0312,EMP-0019,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.40,5.70,true
+PRD-0313,EMP-0019,CAT-02,Sal yodada 1 kg,"[""sal""]",1.80,1.30,true
+PRD-0314,EMP-0019,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",7.40,5.70,true
+PRD-0315,EMP-0019,CAT-01,Gaseosa personal 500 ml,"[""gaseosita"",""personal""]",2.70,1.90,true
+PRD-0316,EMP-0020,CAT-02,Sal yodada 1 kg,"[""sal""]",1.90,1.40,true
+PRD-0317,EMP-0020,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",4.10,3.20,true
+PRD-0318,EMP-0020,CAT-04,Lavavajilla 500 ml,"[""lavavajilla"",""lava platos""]",6.90,5.10,true
+PRD-0319,EMP-0020,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.90,3.90,true
+PRD-0320,EMP-0020,CAT-01,Gaseosa familiar 1.5 L,"[""gaseosa"",""gaseosas""]",7.30,5.50,true
+PRD-0321,EMP-0020,CAT-05,Papas fritas snack,"[""papitas"",""snack""]",2.70,1.90,true
+PRD-0322,EMP-0020,CAT-04,Detergente en polvo 500g,"[""detergente""]",5.90,4.40,true
+PRD-0323,EMP-0020,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",4.30,3.30,true
+PRD-0324,EMP-0020,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.90,4.50,true
+PRD-0325,EMP-0020,CAT-04,Papel higiénico paquete x4,"[""papel"",""papel higienico""]",5.60,4.20,true
+PRD-0326,EMP-0020,CAT-01,Agua mineral 625 ml,"[""agua"",""botella de agua""]",2.10,1.30,true
+PRD-0327,EMP-0020,CAT-03,Huevos pardos (1 kg),"[""huevos"",""kilo de huevo""]",10.10,8.30,true
+PRD-0328,EMP-0020,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",7.50,5.70,true
+PRD-0329,EMP-0020,CAT-02,Arroz extra 1 kg,"[""arroz"",""kilo de arroz""]",4.10,3.20,true
+PRD-0330,EMP-0021,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",6.50,4.90,true
+PRD-0331,EMP-0021,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",2.90,2.10,true
+PRD-0332,EMP-0021,CAT-01,Gaseosa personal 500 ml,"[""gaseosita"",""personal""]",2.60,1.80,true
+PRD-0333,EMP-0021,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",4.00,3.10,true
+PRD-0334,EMP-0021,CAT-02,Arroz extra 1 kg,"[""arroz"",""kilo de arroz""]",4.50,3.60,true
+PRD-0335,EMP-0021,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.40,1.00,true
+PRD-0336,EMP-0021,CAT-04,Detergente en polvo 500g,"[""detergente""]",6.40,4.80,true
+PRD-0337,EMP-0021,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.90,4.50,true
+PRD-0338,EMP-0021,CAT-03,Yogurt botella 1 L,"[""yogurt""]",7.30,5.80,true
+PRD-0339,EMP-0021,CAT-01,Gaseosa familiar 1.5 L,"[""gaseosa"",""gaseosas""]",7.70,5.70,true
+PRD-0340,EMP-0021,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",4.00,3.10,true
+PRD-0341,EMP-0021,CAT-02,Sal yodada 1 kg,"[""sal""]",1.70,1.20,true
+PRD-0342,EMP-0021,CAT-01,Agua mineral 625 ml,"[""agua"",""botella de agua""]",2.20,1.30,true
+PRD-0343,EMP-0022,CAT-06,Cambio de filtro de aire,"[""filtro""]",24.60,14.80,true
+PRD-0344,EMP-0022,CAT-06,Alineamiento y balanceo,"[""alineamiento""]",59.00,29.50,true
+PRD-0345,EMP-0022,CAT-06,Lavado y engrase,"[""engrase"",""lavado""]",20.40,8.20,true
+PRD-0346,EMP-0022,CAT-06,Cambio de aceite y filtro,"[""cambio de aceite""]",43.70,27.20,true
+PRD-0347,EMP-0022,CAT-04,Escobilla y limpiaparabrisas,"[""escobilla""]",17.60,10.70,true
+PRD-0348,EMP-0022,CAT-06,Revisión de frenos,"[""frenos""]",36.20,12.40,true
+PRD-0349,EMP-0022,CAT-06,Cambio de llanta,"[""llanta""]",15.10,,true
+PRD-0350,EMP-0022,CAT-06,Batería con instalación,"[""bateria""]",216.90,167.60,true
+PRD-0351,EMP-0022,CAT-04,Líquido de frenos,"[""liquido de frenos""]",12.50,8.30,true
+PRD-0352,EMP-0022,CAT-06,Mano de obra (hora),"[""mano de obra""]",29.20,,true
+PRD-0353,EMP-0023,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",3.70,2.90,true
+PRD-0354,EMP-0023,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.50,5.80,true
+PRD-0355,EMP-0023,CAT-04,Detergente en polvo 500g,"[""detergente""]",6.50,4.90,true
+PRD-0356,EMP-0023,CAT-05,Galletas paquete x6,"[""galleta"",""galletas""]",3.50,2.50,true
+PRD-0357,EMP-0023,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.40,3.50,true
+PRD-0358,EMP-0023,CAT-01,Gaseosa familiar 1.5 L,"[""gaseosa"",""gaseosas""]",8.20,6.10,true
+PRD-0359,EMP-0023,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza"",""cervezas""]",6.40,4.70,true
+PRD-0360,EMP-0023,CAT-03,Huevos pardos (1 kg),"[""huevos"",""kilo de huevo""]",9.90,8.10,true
+PRD-0361,EMP-0023,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.60,1.10,true
+PRD-0362,EMP-0023,CAT-04,Jabón de lavar barra,"[""jabon"",""barra de jabon""]",3.30,2.30,true
+PRD-0363,EMP-0023,CAT-05,Papas fritas snack,"[""papitas"",""snack""]",2.70,1.80,true
+PRD-0364,EMP-0023,CAT-04,Papel higiénico paquete x4,"[""papel"",""papel higienico""]",5.70,4.30,true
+PRD-0365,EMP-0024,CAT-01,Gaseosa personal 500 ml,"[""gaseosita"",""personal""]",2.70,1.80,true
+PRD-0366,EMP-0024,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""bolsa de pan""]",2.60,1.90,true
+PRD-0367,EMP-0024,CAT-03,Yogurt botella 1 L,"[""yogurt""]",8.00,6.40,true
+PRD-0368,EMP-0024,CAT-04,Detergente en polvo 500g,"[""detergente""]",6.20,4.60,true
+PRD-0369,EMP-0024,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.20,5.60,true
+PRD-0370,EMP-0024,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",7.00,5.40,true
+PRD-0371,EMP-0024,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",8.50,6.80,true
+PRD-0372,EMP-0024,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.30,3.40,true
+PRD-0373,EMP-0024,CAT-02,Sal yodada 1 kg,"[""sal""]",1.80,1.30,true
+PRD-0374,EMP-0024,CAT-01,Agua mineral 625 ml,"[""agua"",""botella de agua""]",2.20,1.30,true
+PRD-0375,EMP-0024,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza"",""cervezas""]",6.70,4.90,true
+PRD-0376,EMP-0024,CAT-05,Galletas paquete x6,"[""galleta"",""galletas""]",3.70,2.60,true
+PRD-0377,EMP-0024,CAT-01,Jugo néctar 1 L,"[""jugo""]",5.30,3.90,true
+PRD-0378,EMP-0024,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.60,1.10,true
+PRD-0379,EMP-0025,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza""]",8.60,5.90,true
+PRD-0380,EMP-0025,CAT-06,Caldo de gallina,"[""caldo""]",7.70,3.80,true
+PRD-0381,EMP-0025,CAT-06,Almuerzo ejecutivo,"[""ejecutivo"",""almuerzo""]",13.10,6.60,true
+PRD-0382,EMP-0025,CAT-06,Ají de gallina,"[""aji de gallina""]",12.40,6.70,true
+PRD-0383,EMP-0025,CAT-03,Desayuno pan con café,"[""desayuno""]",5.80,2.90,true
+PRD-0384,EMP-0025,CAT-03,Sándwich de pollo,"[""sandwich""]",5.20,2.90,true
+PRD-0385,EMP-0025,CAT-01,Gaseosa 500 ml,"[""gaseosa""]",3.80,2.40,true
+PRD-0386,EMP-0025,CAT-01,Jugo de fruta,"[""jugo""]",5.00,2.00,true
+PRD-0387,EMP-0025,CAT-03,Postre del día,"[""postre""]",4.00,1.80,true
+PRD-0388,EMP-0025,CAT-01,Chicha morada vaso,"[""chicha""]",2.70,0.90,true
+PRD-0389,EMP-0026,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""bolsa de pan""]",2.60,1.80,true
+PRD-0390,EMP-0026,CAT-03,Huevos pardos (1 kg),"[""huevos"",""kilo de huevo""]",9.90,8.10,true
+PRD-0391,EMP-0026,CAT-04,Papel higiénico paquete x4,"[""papel"",""papel higienico""]",5.30,4.00,true
+PRD-0392,EMP-0026,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.40,3.50,true
+PRD-0393,EMP-0026,CAT-04,Lavavajilla 500 ml,"[""lavavajilla"",""lava platos""]",6.50,4.80,true
+PRD-0394,EMP-0026,CAT-01,Jugo néctar 1 L,"[""jugo""]",5.30,3.90,true
+PRD-0395,EMP-0026,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",6.80,5.20,true
+PRD-0396,EMP-0026,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",4.20,3.20,true
+PRD-0397,EMP-0026,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",2.70,2.00,true
+PRD-0398,EMP-0026,CAT-02,Sal yodada 1 kg,"[""sal""]",1.90,1.40,true
+PRD-0399,EMP-0026,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.00,5.40,true
+PRD-0400,EMP-0026,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",8.70,7.00,true
+PRD-0401,EMP-0026,CAT-01,Agua mineral 625 ml,"[""agua"",""botella de agua""]",2.10,1.30,true
+PRD-0402,EMP-0026,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",4.00,3.20,true
+PRD-0403,EMP-0026,CAT-04,Detergente en polvo 500g,"[""detergente""]",5.80,4.30,true
+PRD-0404,EMP-0027,CAT-02,Fideos caja 20 paquetes,"[""fideos caja""]",56.00,46.00,true
+PRD-0405,EMP-0027,CAT-04,Detergente caja 12 u,"[""detergente caja""]",55.00,45.00,true
+PRD-0406,EMP-0027,CAT-05,Galletas caja 24 paquetes,"[""galletas caja""]",64.00,51.00,true
+PRD-0407,EMP-0027,CAT-03,Leche evaporada caja 48 u,"[""leche caja""]",198.00,175.00,true
+PRD-0408,EMP-0027,CAT-01,Agua mineral caja 24 u,"[""agua caja""]",37.00,29.00,true
+PRD-0409,EMP-0027,CAT-02,Aceite vegetal caja 12 L,"[""aceite caja""]",103.00,88.00,true
+PRD-0410,EMP-0027,CAT-02,Arroz saco 50 kg,"[""arroz saco"",""saco de arroz""]",167.00,144.00,true
+PRD-0411,EMP-0027,CAT-02,Azúcar saco 50 kg,"[""azucar saco""]",179.00,158.00,true
+PRD-0412,EMP-0027,CAT-01,Gaseosa caja 12 x 1.5 L,"[""gaseosa caja""]",75.00,62.00,true
+PRD-0413,EMP-0028,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.80,3.80,true
+PRD-0414,EMP-0028,CAT-01,Gaseosa familiar 1.5 L,"[""gaseosa"",""gaseosas""]",7.40,5.50,true
+PRD-0415,EMP-0028,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.50,1.00,true
+PRD-0416,EMP-0028,CAT-04,Jabón de lavar barra,"[""jabon"",""barra de jabon""]",2.90,2.10,true
+PRD-0417,EMP-0028,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",3.90,3.10,true
+PRD-0418,EMP-0028,CAT-01,Jugo néctar 1 L,"[""jugo""]",5.20,3.90,true
+PRD-0419,EMP-0028,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza"",""cervezas""]",6.50,4.80,true
+PRD-0420,EMP-0028,CAT-01,Agua mineral 625 ml,"[""agua"",""botella de agua""]",2.10,1.30,true
+PRD-0421,EMP-0028,CAT-02,Harina preparada 1 kg,"[""harina""]",3.90,2.90,true
+PRD-0422,EMP-0028,CAT-03,Queso fresco 250g,"[""queso"",""queso fresco""]",7.20,5.50,true
+PRD-0423,EMP-0028,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",6.90,5.30,true
+PRD-0424,EMP-0028,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",3.00,2.20,true
+PRD-0425,EMP-0029,CAT-01,Gaseosa personal 500 ml,"[""gaseosita"",""personal""]",2.60,1.80,true
+PRD-0426,EMP-0029,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.60,4.30,true
+PRD-0427,EMP-0029,CAT-05,Galletas paquete x6,"[""galleta"",""galletas""]",3.70,2.70,true
+PRD-0428,EMP-0029,CAT-03,Leche evaporada tarro 400g,"[""leche"",""tarro de leche""]",4.60,3.70,true
+PRD-0429,EMP-0029,CAT-01,Jugo néctar 1 L,"[""jugo""]",5.10,3.80,true
+PRD-0430,EMP-0029,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",4.40,3.40,true
+PRD-0431,EMP-0029,CAT-04,Papel higiénico paquete x4,"[""papel"",""papel higienico""]",5.40,4.00,true
+PRD-0432,EMP-0029,CAT-02,Arroz extra 1 kg,"[""arroz"",""kilo de arroz""]",4.50,3.60,true
+PRD-0433,EMP-0029,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",7.00,5.40,true
+PRD-0434,EMP-0029,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",2.70,2.10,true
+PRD-0435,EMP-0029,CAT-02,Harina preparada 1 kg,"[""harina""]",3.90,2.90,true
+PRD-0436,EMP-0029,CAT-05,Chocolate barra,"[""chocolate"",""barrita""]",1.60,1.00,true
+PRD-0437,EMP-0029,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""bolsa de pan""]",2.50,1.80,true
+PRD-0438,EMP-0029,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza"",""cervezas""]",6.70,5.00,true
+PRD-0439,EMP-0029,CAT-05,Papas fritas snack,"[""papitas"",""snack""]",2.40,1.60,true
+PRD-0440,EMP-0029,CAT-01,Agua mineral 625 ml,"[""agua"",""botella de agua""]",2.10,1.30,true
+PRD-0441,EMP-0030,CAT-01,Cerveza 620 ml,"[""chela"",""cerveza"",""cervezas""]",7.00,5.20,true
+PRD-0442,EMP-0030,CAT-01,Agua mineral 625 ml,"[""agua"",""botella de agua""]",2.10,1.20,true
+PRD-0443,EMP-0030,CAT-02,Aceite vegetal 1 L,"[""aceite"",""botella de aceite""]",8.90,7.20,true
+PRD-0444,EMP-0030,CAT-02,Azúcar rubia 1 kg,"[""azucar"",""kilo de azucar""]",3.90,3.10,true
+PRD-0445,EMP-0030,CAT-02,Sal yodada 1 kg,"[""sal""]",1.80,1.30,true
+PRD-0446,EMP-0030,CAT-02,Fideos tallarín 500g,"[""fideos"",""tallarin""]",3.00,2.30,true
+PRD-0447,EMP-0030,CAT-01,Gaseosa familiar 1.5 L,"[""gaseosa"",""gaseosas""]",7.80,5.80,true
+PRD-0448,EMP-0030,CAT-02,Atún en trozos lata,"[""atun"",""lata de atun""]",5.40,4.10,true
+PRD-0449,EMP-0030,CAT-04,Detergente en polvo 500g,"[""detergente""]",6.00,4.50,true
+PRD-0450,EMP-0030,CAT-03,Pan francés (bolsa 10 unid),"[""pan"",""bolsa de pan""]",2.50,1.80,true
+PRD-0451,EMP-0030,CAT-01,Jugo néctar 1 L,"[""jugo""]",4.80,3.60,true
+PRD-0452,EMP-0030,CAT-04,Jabón de lavar barra,"[""jabon"",""barra de jabon""]",3.10,2.20,true
+PRD-0453,EMP-0030,CAT-02,Menestra lenteja 500g,"[""lenteja"",""menestra""]",4.40,3.40,true
+PRD-0454,EMP-0030,CAT-03,Mantequilla pote 200g,"[""mantequilla""]",7.10,5.40,true

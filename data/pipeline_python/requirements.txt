@@ -1,9 +1,5 @@
-# Dependencias recomendadas para el pipeline Python de Datos Sintéticos y Auditoría
-faker>=30.0.0
-numpy>=1.26.0
+# Dependencias OPCIONALES del pipeline Python de data/ (el generador y el auditor principal son Node, sin dependencias).
+# generar_schema.py necesita las del backend (sqlalchemy, pydantic): PYTHONPATH=backend.
 pandas>=2.2.0
 pandera>=0.20.0
-pydantic>=2.8.0
-nlpaug>=1.1.11
 psycopg[binary]>=3.2.0
-

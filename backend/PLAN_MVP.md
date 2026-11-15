@@ -365,6 +365,7 @@ Estado: A1–A13 y B1–B14 implementados; ~850 tests en verde (incluida la suit
 | ✅ `GET /alertas` escribía en la tabla `alertas` (y `GET /salud` en `score_salud`) | Resuelto: los GET calculan sin escribir (alertas pendientes con `persistida = false` e ID estable `ALR-PEND.…`); se guardan en `POST /alertas/evaluar`, al confirmar y al accionar; el score se guarda con `POST /salud/recalcular`. |
 | Simulador mide el mínimo solo hasta el día crítico | Si la 2.ª cuota cae dentro del horizonte (p. ej. 10/12), el resultado es −712: el baseline proyecta ≈ −250 por semana. |
 | Forecast sobreestima ≈ +200 a 7–14 días | Los pedidos que se hacen después del corte no se pueden prever con el baseline. |
+| `pedido_excesivo` puede dar alertas falsas en pedidos de rutina (limitación conocida, no se cambia antes de la demo) | Compara un pedido (p. ej. semanal) con lo vendido de eso solo en los días que faltan hasta su vencimiento: un pedido de rutina que vence pronto parece "excesivo". La historia de Pedro (`PED-0012`, S/ 400 más) depende de la regla tal cual; mejora posible: comparar con el periodo habitual de reposición o con los pedidos anteriores al mismo proveedor. |
 
 ### 9.4 Infraestructura y producción
 

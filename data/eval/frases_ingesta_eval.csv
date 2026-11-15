@@ -1,151 +1,154 @@
-caso_id,canal,frase,tipo_esperado,metodo_pago_esperado,monto_esperado,producto_id_esperado,origen_monto_esperado,confianza_simulada,requiere_doble_confirmacion,pregunta_aclaratoria,posible_duplicado,dentro_alcance
-EVF-001,voz,vendí dos cervezas,venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
-EVF-002,voz,bendi 3 chelas bien heladas pero no se oye bien el monto,venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
-EVF-003,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90",venta,efectivo,16.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
-EVF-004,voz,saqué 50 para la casa,retiro_personal,efectivo,50,,dicho_por_usuario,0.95,false,,false,true
-EVF-005,texto,agarré 80 soles de la caja para el almuerzo familiar,retiro_personal,efectivo,80,,dicho_por_usuario,0.9,false,,false,true
-EVF-006,voz,pagué el colegio de mi hijo con mi plata,,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
-EVF-007,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50",venta,credito,9.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
-EVF-008,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz)",venta,credito,95,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
-EVF-009,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno,cobro_fiado,efectivo,50,,dicho_por_usuario,0.94,false,,false,true
-EVF-010,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330),compra,efectivo,380,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
-EVF-011,voz,pedí 2400 a Andina por campaña navideña para pagar el 30,compra,credito,2400,,dicho_por_usuario,0.9,false,,false,true
-EVF-012,voz,le pagué 1200 a Distribuidora Andina en efectivo,pago_proveedor,efectivo,1200,,dicho_por_usuario,0.93,false,,false,true
-EVF-013,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios",prestamo_recibido,efectivo,1000,,dicho_por_usuario,0.91,false,,false,true
-EVF-014,texto,"pagué la luz del local en efectivo, 180 soles",gasto_negocio,efectivo,180,,dicho_por_usuario,0.95,false,,false,true
-EVF-015,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
-EVF-016,voz,vendí dos cervezas (muestra 2),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
-EVF-017,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 2),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
-EVF-018,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 2)",venta,efectivo,21.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
-EVF-019,voz,saqué 50 para la casa (muestra 2),retiro_personal,efectivo,55,,dicho_por_usuario,0.95,false,,false,true
-EVF-020,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 2),retiro_personal,efectivo,85,,dicho_por_usuario,0.9,false,,false,true
-EVF-021,voz,pagué el colegio de mi hijo con mi plata (muestra 2),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
-EVF-022,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 2)",venta,credito,14.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
-EVF-023,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 2)",venta,credito,100,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
-EVF-024,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 2),cobro_fiado,efectivo,55,,dicho_por_usuario,0.94,false,,false,true
-EVF-025,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 2),compra,efectivo,385,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
-EVF-026,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 2),compra,credito,2405,,dicho_por_usuario,0.9,false,,false,true
-EVF-027,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 2),pago_proveedor,efectivo,1205,,dicho_por_usuario,0.93,false,,false,true
-EVF-028,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 2)",prestamo_recibido,efectivo,1005,,dicho_por_usuario,0.91,false,,false,true
-EVF-029,texto,"pagué la luz del local en efectivo, 180 soles (muestra 2)",gasto_negocio,efectivo,185,,dicho_por_usuario,0.95,false,,false,true
-EVF-030,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 2)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
-EVF-031,voz,vendí dos cervezas (muestra 3),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
-EVF-032,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 3),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
-EVF-033,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 3)",venta,efectivo,26.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
-EVF-034,voz,saqué 50 para la casa (muestra 3),retiro_personal,efectivo,60,,dicho_por_usuario,0.95,false,,false,true
-EVF-035,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 3),retiro_personal,efectivo,90,,dicho_por_usuario,0.9,false,,false,true
-EVF-036,voz,pagué el colegio de mi hijo con mi plata (muestra 3),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
-EVF-037,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 3)",venta,credito,19.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
-EVF-038,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 3)",venta,credito,105,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
-EVF-039,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 3),cobro_fiado,efectivo,60,,dicho_por_usuario,0.94,false,,false,true
-EVF-040,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 3),compra,efectivo,390,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
-EVF-041,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 3),compra,credito,2410,,dicho_por_usuario,0.9,false,,false,true
-EVF-042,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 3),pago_proveedor,efectivo,1210,,dicho_por_usuario,0.93,false,,false,true
-EVF-043,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 3)",prestamo_recibido,efectivo,1010,,dicho_por_usuario,0.91,false,,false,true
-EVF-044,texto,"pagué la luz del local en efectivo, 180 soles (muestra 3)",gasto_negocio,efectivo,190,,dicho_por_usuario,0.95,false,,false,true
-EVF-045,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 3)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
-EVF-046,voz,vendí dos cervezas (muestra 4),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
-EVF-047,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 4),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
-EVF-048,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 4)",venta,efectivo,31.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
-EVF-049,voz,saqué 50 para la casa (muestra 4),retiro_personal,efectivo,65,,dicho_por_usuario,0.95,false,,false,true
-EVF-050,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 4),retiro_personal,efectivo,95,,dicho_por_usuario,0.9,false,,false,true
-EVF-051,voz,pagué el colegio de mi hijo con mi plata (muestra 4),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
-EVF-052,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 4)",venta,credito,24.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
-EVF-053,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 4)",venta,credito,110,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
-EVF-054,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 4),cobro_fiado,efectivo,65,,dicho_por_usuario,0.94,false,,false,true
-EVF-055,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 4),compra,efectivo,395,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
-EVF-056,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 4),compra,credito,2415,,dicho_por_usuario,0.9,false,,false,true
-EVF-057,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 4),pago_proveedor,efectivo,1215,,dicho_por_usuario,0.93,false,,false,true
-EVF-058,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 4)",prestamo_recibido,efectivo,1015,,dicho_por_usuario,0.91,false,,false,true
-EVF-059,texto,"pagué la luz del local en efectivo, 180 soles (muestra 4)",gasto_negocio,efectivo,195,,dicho_por_usuario,0.95,false,,false,true
-EVF-060,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 4)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
-EVF-061,voz,vendí dos cervezas (muestra 5),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
-EVF-062,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 5),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
-EVF-063,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 5)",venta,efectivo,36.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
-EVF-064,voz,saqué 50 para la casa (muestra 5),retiro_personal,efectivo,70,,dicho_por_usuario,0.95,false,,false,true
-EVF-065,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 5),retiro_personal,efectivo,100,,dicho_por_usuario,0.9,false,,false,true
-EVF-066,voz,pagué el colegio de mi hijo con mi plata (muestra 5),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
-EVF-067,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 5)",venta,credito,29.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
-EVF-068,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 5)",venta,credito,115,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
-EVF-069,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 5),cobro_fiado,efectivo,70,,dicho_por_usuario,0.94,false,,false,true
-EVF-070,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 5),compra,efectivo,400,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
-EVF-071,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 5),compra,credito,2420,,dicho_por_usuario,0.9,false,,false,true
-EVF-072,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 5),pago_proveedor,efectivo,1220,,dicho_por_usuario,0.93,false,,false,true
-EVF-073,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 5)",prestamo_recibido,efectivo,1020,,dicho_por_usuario,0.91,false,,false,true
-EVF-074,texto,"pagué la luz del local en efectivo, 180 soles (muestra 5)",gasto_negocio,efectivo,200,,dicho_por_usuario,0.95,false,,false,true
-EVF-075,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 5)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
-EVF-076,voz,vendí dos cervezas (muestra 6),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
-EVF-077,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 6),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
-EVF-078,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 6)",venta,efectivo,41.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
-EVF-079,voz,saqué 50 para la casa (muestra 6),retiro_personal,efectivo,75,,dicho_por_usuario,0.95,false,,false,true
-EVF-080,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 6),retiro_personal,efectivo,105,,dicho_por_usuario,0.9,false,,false,true
-EVF-081,voz,pagué el colegio de mi hijo con mi plata (muestra 6),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
-EVF-082,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 6)",venta,credito,34.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
-EVF-083,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 6)",venta,credito,120,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
-EVF-084,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 6),cobro_fiado,efectivo,75,,dicho_por_usuario,0.94,false,,false,true
-EVF-085,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 6),compra,efectivo,405,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
-EVF-086,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 6),compra,credito,2425,,dicho_por_usuario,0.9,false,,false,true
-EVF-087,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 6),pago_proveedor,efectivo,1225,,dicho_por_usuario,0.93,false,,false,true
-EVF-088,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 6)",prestamo_recibido,efectivo,1025,,dicho_por_usuario,0.91,false,,false,true
-EVF-089,texto,"pagué la luz del local en efectivo, 180 soles (muestra 6)",gasto_negocio,efectivo,205,,dicho_por_usuario,0.95,false,,false,true
-EVF-090,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 6)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
-EVF-091,voz,vendí dos cervezas (muestra 7),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
-EVF-092,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 7),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
-EVF-093,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 7)",venta,efectivo,46.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
-EVF-094,voz,saqué 50 para la casa (muestra 7),retiro_personal,efectivo,80,,dicho_por_usuario,0.95,false,,false,true
-EVF-095,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 7),retiro_personal,efectivo,110,,dicho_por_usuario,0.9,false,,false,true
-EVF-096,voz,pagué el colegio de mi hijo con mi plata (muestra 7),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
-EVF-097,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 7)",venta,credito,39.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
-EVF-098,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 7)",venta,credito,125,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
-EVF-099,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 7),cobro_fiado,efectivo,80,,dicho_por_usuario,0.94,false,,false,true
-EVF-100,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 7),compra,efectivo,410,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
-EVF-101,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 7),compra,credito,2430,,dicho_por_usuario,0.9,false,,false,true
-EVF-102,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 7),pago_proveedor,efectivo,1230,,dicho_por_usuario,0.93,false,,false,true
-EVF-103,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 7)",prestamo_recibido,efectivo,1030,,dicho_por_usuario,0.91,false,,false,true
-EVF-104,texto,"pagué la luz del local en efectivo, 180 soles (muestra 7)",gasto_negocio,efectivo,210,,dicho_por_usuario,0.95,false,,false,true
-EVF-105,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 7)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
-EVF-106,voz,vendí dos cervezas (muestra 8),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
-EVF-107,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 8),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
-EVF-108,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 8)",venta,efectivo,51.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
-EVF-109,voz,saqué 50 para la casa (muestra 8),retiro_personal,efectivo,85,,dicho_por_usuario,0.95,false,,false,true
-EVF-110,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 8),retiro_personal,efectivo,115,,dicho_por_usuario,0.9,false,,false,true
-EVF-111,voz,pagué el colegio de mi hijo con mi plata (muestra 8),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
-EVF-112,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 8)",venta,credito,44.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
-EVF-113,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 8)",venta,credito,130,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
-EVF-114,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 8),cobro_fiado,efectivo,85,,dicho_por_usuario,0.94,false,,false,true
-EVF-115,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 8),compra,efectivo,415,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
-EVF-116,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 8),compra,credito,2435,,dicho_por_usuario,0.9,false,,false,true
-EVF-117,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 8),pago_proveedor,efectivo,1235,,dicho_por_usuario,0.93,false,,false,true
-EVF-118,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 8)",prestamo_recibido,efectivo,1035,,dicho_por_usuario,0.91,false,,false,true
-EVF-119,texto,"pagué la luz del local en efectivo, 180 soles (muestra 8)",gasto_negocio,efectivo,215,,dicho_por_usuario,0.95,false,,false,true
-EVF-120,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 8)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
-EVF-121,voz,vendí dos cervezas (muestra 9),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
-EVF-122,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 9),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
-EVF-123,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 9)",venta,efectivo,56.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
-EVF-124,voz,saqué 50 para la casa (muestra 9),retiro_personal,efectivo,90,,dicho_por_usuario,0.95,false,,false,true
-EVF-125,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 9),retiro_personal,efectivo,120,,dicho_por_usuario,0.9,false,,false,true
-EVF-126,voz,pagué el colegio de mi hijo con mi plata (muestra 9),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
-EVF-127,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 9)",venta,credito,49.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
-EVF-128,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 9)",venta,credito,135,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
-EVF-129,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 9),cobro_fiado,efectivo,90,,dicho_por_usuario,0.94,false,,false,true
-EVF-130,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 9),compra,efectivo,420,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
-EVF-131,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 9),compra,credito,2440,,dicho_por_usuario,0.9,false,,false,true
-EVF-132,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 9),pago_proveedor,efectivo,1240,,dicho_por_usuario,0.93,false,,false,true
-EVF-133,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 9)",prestamo_recibido,efectivo,1040,,dicho_por_usuario,0.91,false,,false,true
-EVF-134,texto,"pagué la luz del local en efectivo, 180 soles (muestra 9)",gasto_negocio,efectivo,220,,dicho_por_usuario,0.95,false,,false,true
-EVF-135,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 9)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
-EVF-136,voz,vendí dos cervezas (muestra 10),venta,efectivo,13,PRD-0031,catalogo,0.93,false,,false,true
-EVF-137,voz,bendi 3 chelas bien heladas pero no se oye bien el monto (muestra 10),venta,efectivo,19.5,PRD-0031,catalogo,0.68,true,Entendí 3 cervezas (S/ 19.50) en efectivo. ¿Es correcto ese monto?,false,true
-EVF-138,voz,"me compraron 2 kilos de arroz y un aceite en efectivo, fueron 16.90 (muestra 10)",venta,efectivo,61.9,PRD-0003,dicho_por_usuario,0.91,false,,false,true
-EVF-139,voz,saqué 50 para la casa (muestra 10),retiro_personal,efectivo,95,,dicho_por_usuario,0.95,false,,false,true
-EVF-140,texto,agarré 80 soles de la caja para el almuerzo familiar (muestra 10),retiro_personal,efectivo,125,,dicho_por_usuario,0.9,false,,false,true
-EVF-141,voz,pagué el colegio de mi hijo con mi plata (muestra 10),,,,,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
-EVF-142,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50 (muestra 10)",venta,credito,54.5,PRD-0001,dicho_por_usuario,0.92,false,,false,true
-EVF-143,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85, ya dictado antes por voz) (muestra 10)",venta,credito,140,PRD-0003,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
-EVF-144,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno (muestra 10),cobro_fiado,efectivo,95,,dicho_por_usuario,0.94,false,,false,true
-EVF-145,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330) (muestra 10),compra,efectivo,425,,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
-EVF-146,voz,pedí 2400 a Andina por campaña navideña para pagar el 30 (muestra 10),compra,credito,2445,,dicho_por_usuario,0.9,false,,false,true
-EVF-147,voz,le pagué 1200 a Distribuidora Andina en efectivo (muestra 10),pago_proveedor,efectivo,1245,,dicho_por_usuario,0.93,false,,false,true
-EVF-148,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios (muestra 10)",prestamo_recibido,efectivo,1045,,dicho_por_usuario,0.91,false,,false,true
-EVF-149,texto,"pagué la luz del local en efectivo, 180 soles (muestra 10)",gasto_negocio,efectivo,225,,dicho_por_usuario,0.95,false,,false,true
-EVF-150,texto,"pagué mi RUS en efectivo, 20 soles (aunque vendí más de 5000 por campaña) (muestra 10)",pago_impuesto,efectivo,20,,dicho_por_usuario,0.92,false,,false,true
+caso_id,canal,frase,tipo_esperado,metodo_pago_esperado,monto_esperado,producto_id_esperado,items_esperados,contraparte_esperada,origen_monto_esperado,confianza_simulada,requiere_doble_confirmacion,pregunta_aclaratoria,posible_duplicado,dentro_alcance
+EVF-001,voz,vendí dos cervezas,venta,efectivo,13,PRD-0031,"[{""producto_id"":""PRD-0031"",""cantidad"":2}]",,catalogo,0.93,false,,false,true
+EVF-002,voz,"le fié a la señora Carmen 2 panes y una leche, son 9.50",venta,credito,9.5,PRD-0001,"[{""producto_id"":""PRD-0001"",""cantidad"":2},{""producto_id"":""PRD-0002"",""cantidad"":1}]",Sra. Carmen,dicho_por_usuario,0.92,false,,false,true
+EVF-003,voz,la señora Carmen me pagó 50 en efectivo de su cuenta del cuaderno,cobro_fiado,efectivo,50,,[],Sra. Carmen,dicho_por_usuario,0.94,false,,false,true
+EVF-004,voz,saqué 50 para la casa,retiro_personal,efectivo,50,,[],,dicho_por_usuario,0.95,false,,false,true
+EVF-005,voz,pedí 2400 a Andina por campaña navideña para pagar el 30,compra,credito,2400,,[],Distribuidora Andina,dicho_por_usuario,0.9,false,,false,true
+EVF-006,voz,le pagué 1200 a Distribuidora Andina en efectivo,pago_proveedor,efectivo,1200,,[],Distribuidora Andina,dicho_por_usuario,0.93,false,,false,true
+EVF-007,voz,"me prestaron 1000 soles en efectivo, pago 40 diarios",prestamo_recibido,efectivo,1000,,[],,dicho_por_usuario,0.91,false,,false,true
+EVF-008,texto,"pagué la luz del local en efectivo, 180 soles",gasto_negocio,efectivo,180,,[],,dicho_por_usuario,0.95,false,,false,true
+EVF-009,texto,"pagué mi RUS en efectivo, 20 soles",pago_impuesto,efectivo,20,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-010,voz,pagué el colegio de mi hijo con mi plata,,,,,[],,,0.89,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-011,voz,bendi 3 chelas y pan pero no se escucho el vuelto,venta,efectivo,22,PRD-0031,"[{""producto_id"":""PRD-0031"",""cantidad"":3},{""producto_id"":""PRD-0001"",""cantidad"":1}]",,estimado,0.68,true,Entendí 3 cervezas (S/ 19.50) más pan en efectivo. ¿El total fue S/ 22.00 o cuánto cobraste por el pan?,false,true
+EVF-012,texto,"se llevaron una bolsa de pan, cuatro kilos de arroz y una gaseosa familiar",venta,efectivo,26.8,PRD-0001,"[{""producto_id"":""PRD-0001"",""cantidad"":1},{""producto_id"":""PRD-0003"",""cantidad"":4},{""producto_id"":""PRD-0008"",""cantidad"":1}]",,catalogo,0.95,false,,false,true
+EVF-013,texto,se llevaron tres paquetes de galletas en efectivo,venta,efectivo,10.5,PRD-0014,"[{""producto_id"":""PRD-0014"",""cantidad"":3}]",,catalogo,0.94,false,,false,true
+EVF-014,voz,"vendí dos kilos de arroz, cuatro bolsas de pan y cuatro paquetes de papel higiénico",venta,efectivo,39.2,PRD-0003,"[{""producto_id"":""PRD-0003"",""cantidad"":2},{""producto_id"":""PRD-0001"",""cantidad"":4},{""producto_id"":""PRD-0012"",""cantidad"":4}]",,catalogo,0.9,false,,false,true
+EVF-015,voz,"despaché una botella de agua, cuatro tarros de leche y tres gaseosas familiares",venta,efectivo,42.5,PRD-0009,"[{""producto_id"":""PRD-0009"",""cantidad"":1},{""producto_id"":""PRD-0002"",""cantidad"":4},{""producto_id"":""PRD-0008"",""cantidad"":3}]",,catalogo,0.89,false,,false,true
+EVF-016,texto,"salieron tres cervezas, cinco kilos de arroz y dos paquetes de papel higiénico",venta,efectivo,50.9,PRD-0031,"[{""producto_id"":""PRD-0031"",""cantidad"":3},{""producto_id"":""PRD-0003"",""cantidad"":5},{""producto_id"":""PRD-0012"",""cantidad"":2}]",,catalogo,0.89,false,,false,true
+EVF-017,voz,anota que vendí cuatro kilos de azúcar en efectivo,venta,efectivo,15.2,PRD-0005,"[{""producto_id"":""PRD-0005"",""cantidad"":4}]",,catalogo,0.89,false,,false,true
+EVF-018,texto,salieron tres kilos de azúcar,venta,efectivo,11.4,PRD-0005,"[{""producto_id"":""PRD-0005"",""cantidad"":3}]",,catalogo,0.95,false,,false,true
+EVF-019,voz,"me compraron dos mantequillas, cuatro paquetes de galletas y dos quesos frescos",venta,efectivo,41.6,PRD-0016,"[{""producto_id"":""PRD-0016"",""cantidad"":2},{""producto_id"":""PRD-0014"",""cantidad"":4},{""producto_id"":""PRD-0017"",""cantidad"":2}]",,catalogo,0.89,false,,false,true
+EVF-020,texto,acabo de vender tres quesos frescos,venta,efectivo,21,PRD-0017,"[{""producto_id"":""PRD-0017"",""cantidad"":3}]",,catalogo,0.92,false,,false,true
+EVF-021,voz,"anota que vendí un detergente, tres gaseosas familiares y dos paquetes de fideos",venta,efectivo,34.1,PRD-0011,"[{""producto_id"":""PRD-0011"",""cantidad"":1},{""producto_id"":""PRD-0008"",""cantidad"":3},{""producto_id"":""PRD-0006"",""cantidad"":2}]",,catalogo,0.89,false,,false,true
+EVF-022,voz,"se llevaron cinco menestras de lenteja, cuatro leches y cinco paquetes de fideos",venta,efectivo,52,PRD-0018,"[{""producto_id"":""PRD-0018"",""cantidad"":5},{""producto_id"":""PRD-0002"",""cantidad"":4},{""producto_id"":""PRD-0006"",""cantidad"":5}]",,catalogo,0.91,false,,false,true
+EVF-023,voz,anota que vendí dos kilos de arroz,venta,efectivo,8.4,PRD-0003,"[{""producto_id"":""PRD-0003"",""cantidad"":2}]",,catalogo,0.93,false,,false,true
+EVF-024,voz,"me compraron un kilo de azúcar, una botella de aceite y un paquete de papel higiénico",venta,efectivo,17.5,PRD-0005,"[{""producto_id"":""PRD-0005"",""cantidad"":1},{""producto_id"":""PRD-0004"",""cantidad"":1},{""producto_id"":""PRD-0012"",""cantidad"":1}]",,catalogo,0.96,false,,false,true
+EVF-025,voz,me compraron un kilo de arroz,venta,efectivo,4.2,PRD-0003,"[{""producto_id"":""PRD-0003"",""cantidad"":1}]",,catalogo,0.91,false,,false,true
+EVF-026,voz,vendí cinco kilos de arroz y dos quesos frescos en efectivo,venta,efectivo,35,PRD-0003,"[{""producto_id"":""PRD-0003"",""cantidad"":5},{""producto_id"":""PRD-0017"",""cantidad"":2}]",,catalogo,0.92,false,,false,true
+EVF-027,voz,salieron dos botellas de aceite,venta,efectivo,17,PRD-0004,"[{""producto_id"":""PRD-0004"",""cantidad"":2}]",,catalogo,0.92,false,,false,true
+EVF-028,voz,salieron dos cervezas en efectivo,venta,efectivo,13,PRD-0031,"[{""producto_id"":""PRD-0031"",""cantidad"":2}]",,catalogo,0.89,false,,false,true
+EVF-029,voz,salieron tres menestras de lenteja en efectivo,venta,efectivo,12,PRD-0018,"[{""producto_id"":""PRD-0018"",""cantidad"":3}]",,catalogo,0.96,false,,false,true
+EVF-030,voz,salieron cinco aguas y dos chelas,venta,efectivo,23,PRD-0009,"[{""producto_id"":""PRD-0009"",""cantidad"":5},{""producto_id"":""PRD-0031"",""cantidad"":2}]",,catalogo,0.96,false,,false,true
+EVF-031,texto,despaché cinco kilos de arroz,venta,efectivo,21,PRD-0003,"[{""producto_id"":""PRD-0003"",""cantidad"":5}]",,catalogo,0.91,false,,false,true
+EVF-032,voz,me compraron una menestra de lenteja y dos kilos de huevos,venta,efectivo,23,PRD-0018,"[{""producto_id"":""PRD-0018"",""cantidad"":1},{""producto_id"":""PRD-0007"",""cantidad"":2}]",,catalogo,0.94,false,,false,true
+EVF-033,texto,salieron tres latas de atún y dos menestras de lenteja en efectivo,venta,efectivo,24.5,PRD-0010,"[{""producto_id"":""PRD-0010"",""cantidad"":3},{""producto_id"":""PRD-0018"",""cantidad"":2}]",,catalogo,0.96,false,,false,true
+EVF-034,voz,despaché cuatro panes y cuatro kilos de azúcar,venta,efectivo,25.2,PRD-0001,"[{""producto_id"":""PRD-0001"",""cantidad"":4},{""producto_id"":""PRD-0005"",""cantidad"":4}]",,catalogo,0.95,false,,false,true
+EVF-035,voz,vendí tres paquetes de papel higiénico y dos tarros de leche,venta,efectivo,24.6,PRD-0012,"[{""producto_id"":""PRD-0012"",""cantidad"":3},{""producto_id"":""PRD-0002"",""cantidad"":2}]",,catalogo,0.94,false,,false,true
+EVF-036,voz,vendí cuatro latas de atún y una bolsa de pan,venta,efectivo,24.5,PRD-0010,"[{""producto_id"":""PRD-0010"",""cantidad"":4},{""producto_id"":""PRD-0001"",""cantidad"":1}]",,catalogo,0.95,false,,false,true
+EVF-037,voz,salieron cinco kilos de arroz en efectivo,venta,efectivo,21,PRD-0003,"[{""producto_id"":""PRD-0003"",""cantidad"":5}]",,catalogo,0.94,false,,false,true
+EVF-038,voz,"me compraron 5 jugos, me pagaron 24",venta,efectivo,24,PRD-0019,"[{""producto_id"":""PRD-0019"",""cantidad"":5}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-039,voz,"despaché 4 paquetes de papel higiénico, 3 kilos de azúcar y 2 kilos de huevos, 52 soles en total",venta,efectivo,52,PRD-0012,"[{""producto_id"":""PRD-0012"",""cantidad"":4},{""producto_id"":""PRD-0005"",""cantidad"":3},{""producto_id"":""PRD-0007"",""cantidad"":2}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-040,voz,"vendí una barra de jabón y 2 botellas de aceite, fueron 20",venta,efectivo,20,PRD-0013,"[{""producto_id"":""PRD-0013"",""cantidad"":1},{""producto_id"":""PRD-0004"",""cantidad"":2}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-041,voz,"me compraron 4 tarros de leche, 3 bolsas de pan y 3 barras de jabón, 34.50 soles en total",venta,efectivo,34.5,PRD-0002,"[{""producto_id"":""PRD-0002"",""cantidad"":4},{""producto_id"":""PRD-0001"",""cantidad"":3},{""producto_id"":""PRD-0013"",""cantidad"":3}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-042,voz,me compraron 2 gaseosas familiares por 15 soles,venta,efectivo,15,PRD-0008,"[{""producto_id"":""PRD-0008"",""cantidad"":2}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-043,voz,"despaché una gaseosa familiar y 5 paquetes de papel higiénico, fueron 34",venta,efectivo,34,PRD-0008,"[{""producto_id"":""PRD-0008"",""cantidad"":1},{""producto_id"":""PRD-0012"",""cantidad"":5}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-044,voz,"vendí 4 paquetes de galletas y una gaseosa familiar, me pagaron 22",venta,efectivo,22,PRD-0014,"[{""producto_id"":""PRD-0014"",""cantidad"":4},{""producto_id"":""PRD-0008"",""cantidad"":1}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-045,voz,"despaché 3 jugos, fueron 14.40",venta,efectivo,14.4,PRD-0019,"[{""producto_id"":""PRD-0019"",""cantidad"":3}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-046,voz,"despaché 5 paquetes de fideos, un detergente y un kilo de azúcar, me pagaron 24",venta,efectivo,24,PRD-0006,"[{""producto_id"":""PRD-0006"",""cantidad"":5},{""producto_id"":""PRD-0011"",""cantidad"":1},{""producto_id"":""PRD-0005"",""cantidad"":1}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-047,voz,"vendí 3 bolsas de pan, 3 paquetes de fideos y un kilo de azúcar, me pagaron 20",venta,efectivo,20,PRD-0001,"[{""producto_id"":""PRD-0001"",""cantidad"":3},{""producto_id"":""PRD-0006"",""cantidad"":3},{""producto_id"":""PRD-0005"",""cantidad"":1}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-048,voz,"me compraron 2 kilos de huevos, 4 menestras de lenteja y 5 botellas de agua, me pagaron 45",venta,efectivo,45,PRD-0007,"[{""producto_id"":""PRD-0007"",""cantidad"":2},{""producto_id"":""PRD-0018"",""cantidad"":4},{""producto_id"":""PRD-0009"",""cantidad"":5}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-049,voz,"vendí 2 kilos de azúcar, 4 bolsas de pan y 4 latas de atún, fueron 40",venta,efectivo,40,PRD-0005,"[{""producto_id"":""PRD-0005"",""cantidad"":2},{""producto_id"":""PRD-0001"",""cantidad"":4},{""producto_id"":""PRD-0010"",""cantidad"":4}]",,dicho_por_usuario,0.9,false,,false,true
+EVF-050,texto,"le fié a don Luis dos quesos frescos, una gaseosa familiar y dos paquetes de papel higiénico, son 31.90",venta,credito,31.9,PRD-0017,"[{""producto_id"":""PRD-0017"",""cantidad"":2},{""producto_id"":""PRD-0008"",""cantidad"":1},{""producto_id"":""PRD-0012"",""cantidad"":2}]",Don Luis,dicho_por_usuario,0.9,false,,false,true
+EVF-051,voz,"fíale a Rosa un jugo, son 4.80",venta,credito,4.8,PRD-0019,"[{""producto_id"":""PRD-0019"",""cantidad"":1}]",Vecina Rosa,dicho_por_usuario,0.9,false,,false,true
+EVF-052,voz,"fíale a la señora Carmen cinco paquetes de galletas, tres mantequillas y cinco paquetes de fideos, son 51.90",venta,credito,51.9,PRD-0014,"[{""producto_id"":""PRD-0014"",""cantidad"":5},{""producto_id"":""PRD-0016"",""cantidad"":3},{""producto_id"":""PRD-0006"",""cantidad"":5}]",Sra. Carmen,dicho_por_usuario,0.9,false,,false,true
+EVF-053,voz,"le dejé fiado a Rosa cuatro paquetes de papel higiénico, tres jugos y tres mantequillas",venta,credito,55.6,PRD-0012,"[{""producto_id"":""PRD-0012"",""cantidad"":4},{""producto_id"":""PRD-0019"",""cantidad"":3},{""producto_id"":""PRD-0016"",""cantidad"":3}]",Vecina Rosa,catalogo,0.9,false,,false,true
+EVF-054,texto,"fíale a la señora Elena cinco menestras de lenteja, un jugo y tres gaseosas familiares",venta,credito,47.3,PRD-0018,"[{""producto_id"":""PRD-0018"",""cantidad"":5},{""producto_id"":""PRD-0019"",""cantidad"":1},{""producto_id"":""PRD-0008"",""cantidad"":3}]",Sra. Elena,catalogo,0.9,false,,false,true
+EVF-055,voz,"anota en el cuaderno de Rosa tres detergentes, tres cervezas y tres mantequillas",venta,credito,57.9,PRD-0011,"[{""producto_id"":""PRD-0011"",""cantidad"":3},{""producto_id"":""PRD-0031"",""cantidad"":3},{""producto_id"":""PRD-0016"",""cantidad"":3}]",Vecina Rosa,catalogo,0.9,false,,false,true
+EVF-056,voz,anota en el cuaderno de el maestro Jorge cinco tarros de leche,venta,credito,22.5,PRD-0002,"[{""producto_id"":""PRD-0002"",""cantidad"":5}]",Maestro Jorge,catalogo,0.9,false,,false,true
+EVF-057,voz,"le dejé fiado a don Luis cuatro detergentes, dos botellas de aceite y tres paquetes de galletas",venta,credito,51.5,PRD-0011,"[{""producto_id"":""PRD-0011"",""cantidad"":4},{""producto_id"":""PRD-0004"",""cantidad"":2},{""producto_id"":""PRD-0014"",""cantidad"":3}]",Don Luis,catalogo,0.9,false,,false,true
+EVF-058,texto,"anota en el cuaderno de doña Elena una lata de atún, dos quesos frescos y cuatro paquetes de fideos",venta,credito,30.7,PRD-0010,"[{""producto_id"":""PRD-0010"",""cantidad"":1},{""producto_id"":""PRD-0017"",""cantidad"":2},{""producto_id"":""PRD-0006"",""cantidad"":4}]",Sra. Elena,catalogo,0.9,false,,false,true
+EVF-059,texto,"fíale a la señora Elena cuatro detergentes y cinco paquetes de papel higiénico, son 50",venta,credito,50,PRD-0011,"[{""producto_id"":""PRD-0011"",""cantidad"":4},{""producto_id"":""PRD-0012"",""cantidad"":5}]",Sra. Elena,dicho_por_usuario,0.9,false,,false,true
+EVF-060,voz,le dejé fiado a la señora Elena cinco tarros de leche,venta,credito,22.5,PRD-0002,"[{""producto_id"":""PRD-0002"",""cantidad"":5}]",Sra. Elena,catalogo,0.9,false,,false,true
+EVF-061,voz,"anota en el cuaderno de Jorge cuatro menestras de lenteja, cuatro detergentes y tres quesos frescos",venta,credito,61,PRD-0018,"[{""producto_id"":""PRD-0018"",""cantidad"":4},{""producto_id"":""PRD-0011"",""cantidad"":4},{""producto_id"":""PRD-0017"",""cantidad"":3}]",Maestro Jorge,catalogo,0.9,false,,false,true
+EVF-062,voz,fíale a Carmen cuatro tarros de leche y tres paquetes de galletas,venta,credito,28.5,PRD-0002,"[{""producto_id"":""PRD-0002"",""cantidad"":4},{""producto_id"":""PRD-0014"",""cantidad"":3}]",Sra. Carmen,catalogo,0.9,false,,false,true
+EVF-063,voz,"anota en el cuaderno de doña Elena tres paquetes de papel higiénico, tres mantequillas y tres detergentes",venta,credito,54,PRD-0012,"[{""producto_id"":""PRD-0012"",""cantidad"":3},{""producto_id"":""PRD-0016"",""cantidad"":3},{""producto_id"":""PRD-0011"",""cantidad"":3}]",Sra. Elena,catalogo,0.9,false,,false,true
+EVF-064,voz,cobré 70 a la vecina Rosa,cobro_fiado,efectivo,70,,[],Vecina Rosa,dicho_por_usuario,0.93,false,,false,true
+EVF-065,voz,don Luis me pagó 60,cobro_fiado,efectivo,60,,[],Don Luis,dicho_por_usuario,0.93,false,,false,true
+EVF-066,voz,me canceló 20 Luis,cobro_fiado,efectivo,20,,[],Don Luis,dicho_por_usuario,0.93,false,,false,true
+EVF-067,voz,doña Carmen me pagó 90,cobro_fiado,efectivo,90,,[],Sra. Carmen,dicho_por_usuario,0.93,false,,false,true
+EVF-068,voz,doña Carmen me pagó 30,cobro_fiado,efectivo,30,,[],Sra. Carmen,dicho_por_usuario,0.93,false,,false,true
+EVF-069,voz,me canceló 40 Carmen,cobro_fiado,efectivo,40,,[],Sra. Carmen,dicho_por_usuario,0.93,false,,false,true
+EVF-070,voz,me canceló 30 Rosa,cobro_fiado,efectivo,30,,[],Vecina Rosa,dicho_por_usuario,0.93,false,,false,true
+EVF-071,voz,cobré 70 a Carmen,cobro_fiado,efectivo,70,,[],Sra. Carmen,dicho_por_usuario,0.93,false,,false,true
+EVF-072,voz,me canceló 30 don Luis,cobro_fiado,efectivo,30,,[],Don Luis,dicho_por_usuario,0.93,false,,false,true
+EVF-073,voz,me canceló 25 doña Carmen,cobro_fiado,efectivo,25,,[],Sra. Carmen,dicho_por_usuario,0.93,false,,false,true
+EVF-074,texto,"repuse mercadería, 200 soles al contado",compra,efectivo,200,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-075,texto,"compré 200 en abarrotes, pagué en efectivo",compra,efectivo,200,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-076,texto,"repuse mercadería, 350 soles al contado",compra,efectivo,350,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-077,voz,"compré 380 en abarrotes, pagué en efectivo",compra,efectivo,380,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-078,voz,compré mercadería por 200 soles,compra,efectivo,200,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-079,texto,traje 420 de abarrotes del mayorista,compra,efectivo,420,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-080,texto,"compré 600 en abarrotes, pagué en efectivo",compra,efectivo,600,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-081,voz,pedí 800 a El Sol para pagar el 25,compra,credito,800,,[],Abarrotes El Sol,dicho_por_usuario,0.9,false,,false,true
+EVF-082,voz,pedí 1500 a Lácteos del Sur para pagar el 28,compra,credito,1500,,[],Lácteos del Sur,dicho_por_usuario,0.9,false,,false,true
+EVF-083,voz,"compré a crédito 1800 en Lácteos del Sur, vence el 30",compra,credito,1800,,[],Lácteos del Sur,dicho_por_usuario,0.9,false,,false,true
+EVF-084,voz,"le hice un pedido de 2800 a El Sol, lo pago el 30",compra,credito,2800,,[],Abarrotes El Sol,dicho_por_usuario,0.9,false,,false,true
+EVF-085,voz,"compré a crédito 1800 en El Sol, vence el 20",compra,credito,1800,,[],Abarrotes El Sol,dicho_por_usuario,0.9,false,,false,true
+EVF-086,voz,pedí 1000 a El Sol para pagar el 28,compra,credito,1000,,[],Abarrotes El Sol,dicho_por_usuario,0.9,false,,false,true
+EVF-087,voz,"compré a crédito 800 en Santa Anita, vence el 30",compra,credito,800,,[],Mayorista Santa Anita,dicho_por_usuario,0.9,false,,false,true
+EVF-088,voz,"compré a crédito 1500 en Lácteos del Sur, vence el 28",compra,credito,1500,,[],Lácteos del Sur,dicho_por_usuario,0.9,false,,false,true
+EVF-089,voz,cancelé 1200 a El Sol en efectivo,pago_proveedor,efectivo,1200,,[],Abarrotes El Sol,dicho_por_usuario,0.92,false,,false,true
+EVF-090,voz,le pagué 300 a El Sol,pago_proveedor,efectivo,300,,[],Abarrotes El Sol,dicho_por_usuario,0.92,false,,false,true
+EVF-091,voz,abonó 800 a Andina por el pedido,pago_proveedor,efectivo,800,,[],Distribuidora Andina,dicho_por_usuario,0.92,false,,false,true
+EVF-092,voz,le pagué 500 a Andina,pago_proveedor,efectivo,500,,[],Distribuidora Andina,dicho_por_usuario,0.92,false,,false,true
+EVF-093,voz,a Lácteos del Sur le di 600 soles,pago_proveedor,efectivo,600,,[],Lácteos del Sur,dicho_por_usuario,0.92,false,,false,true
+EVF-094,voz,abonó 1000 a Andina por el pedido,pago_proveedor,efectivo,1000,,[],Distribuidora Andina,dicho_por_usuario,0.92,false,,false,true
+EVF-095,voz,le pagué 400 a El Sol,pago_proveedor,efectivo,400,,[],Abarrotes El Sol,dicho_por_usuario,0.92,false,,false,true
+EVF-096,voz,le pagué 500 a El Sol,pago_proveedor,efectivo,500,,[],Abarrotes El Sol,dicho_por_usuario,0.92,false,,false,true
+EVF-097,voz,"me prestaron 1500, devuelvo 60 cada día",prestamo_recibido,efectivo,1500,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-098,voz,"recibí un préstamo de 800 soles, pago 32 diarios",prestamo_recibido,efectivo,800,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-099,voz,"recibí un préstamo de 1000 soles, pago 40 diarios",prestamo_recibido,efectivo,1000,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-100,voz,"recibí un préstamo de 1500 soles, pago 60 diarios",prestamo_recibido,efectivo,1500,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-101,voz,un prestamista me dio 2000 en efectivo y le pago 80 al día,prestamo_recibido,efectivo,2000,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-102,voz,"pagué la cuota del préstamo, 30 soles",pago_prestamo,efectivo,30,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-103,voz,"pagué la cuota del préstamo, 40 soles",pago_prestamo,efectivo,40,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-104,voz,le di 20 al prestamista de hoy,pago_prestamo,efectivo,20,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-105,voz,pagué 40 de la cuota del préstamo en efectivo,pago_prestamo,efectivo,40,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-106,voz,le di 30 al prestamista de hoy,pago_prestamo,efectivo,30,,[],,dicho_por_usuario,0.9,false,,false,true
+EVF-107,voz,saqué 200 de la caja para la casa,retiro_personal,efectivo,200,,[],,dicho_por_usuario,0.93,false,,false,true
+EVF-108,voz,saqué 100 de la caja para el colegio,retiro_personal,efectivo,100,,[],,dicho_por_usuario,0.93,false,,false,true
+EVF-109,voz,me llevé 30 de la caja para las compras del hogar,retiro_personal,efectivo,30,,[],,dicho_por_usuario,0.93,false,,false,true
+EVF-110,texto,me llevé 80 de la caja para el pasaje de mis hijos,retiro_personal,efectivo,80,,[],,dicho_por_usuario,0.93,false,,false,true
+EVF-111,texto,saqué 120 de la caja para el pasaje de mis hijos,retiro_personal,efectivo,120,,[],,dicho_por_usuario,0.93,false,,false,true
+EVF-112,voz,me llevé 150 de la caja para el almuerzo familiar,retiro_personal,efectivo,150,,[],,dicho_por_usuario,0.93,false,,false,true
+EVF-113,voz,me llevé 60 de la caja para el colegio,retiro_personal,efectivo,60,,[],,dicho_por_usuario,0.93,false,,false,true
+EVF-114,voz,saqué 120 de la caja para el almuerzo familiar,retiro_personal,efectivo,120,,[],,dicho_por_usuario,0.93,false,,false,true
+EVF-115,texto,retiré 300 para la casa,retiro_personal,efectivo,300,,[],,dicho_por_usuario,0.93,false,,false,true
+EVF-116,voz,retiré 80 para el almuerzo familiar,retiro_personal,efectivo,80,,[],,dicho_por_usuario,0.93,false,,false,true
+EVF-117,voz,gasté 120 en flete de la mercadería,gasto_negocio,efectivo,120,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-118,voz,bolsas y embalajes: 45 en efectivo,gasto_negocio,efectivo,45,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-119,texto,"pagué el agua, 48 soles",gasto_negocio,efectivo,48,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-120,texto,pagué 48 por el agua,gasto_negocio,efectivo,48,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-121,texto,"pagué el alquiler del local, 350 soles",gasto_negocio,efectivo,350,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-122,voz,"pagué la luz del local, 180 soles",gasto_negocio,efectivo,180,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-123,texto,internet y celular del negocio: 99 en efectivo,gasto_negocio,efectivo,99,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-124,texto,el gas del local: 62 en efectivo,gasto_negocio,efectivo,62,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-125,texto,"pagué mi RUS de octubre, 50 soles",pago_impuesto,efectivo,50,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-126,texto,"cancelé la SUNAT, 20 soles de RUS",pago_impuesto,efectivo,20,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-127,texto,"pagué la cuota del Nuevo RUS, 50",pago_impuesto,efectivo,50,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-128,texto,"pagué mi RUS de noviembre, 50 soles",pago_impuesto,efectivo,50,,[],,dicho_por_usuario,0.92,false,,false,true
+EVF-129,voz,compré zapatillas para mi esposa,,,,,[],,,0.77,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-130,voz,pagué la mensualidad del gimnasio,,,,,[],,,0.86,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-131,voz,recargué mi celular personal con 20 soles,,,,,[],,,0.82,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-132,voz,pagué la clínica de mi hijo,,,,,[],,,0.74,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-133,texto,pagué la tarjeta de crédito de mi casa,,,,,[],,,0.75,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-134,voz,cuánto está el dólar hoy,,,,,[],,,0.72,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-135,texto,qué hora es,,,,,[],,,0.72,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-136,voz,compré un televisor para la sala,,,,,[],,,0.76,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-137,texto,pagué el alquiler de mi casa,,,,,[],,,0.8799999999999999,true,TuCaserito solo lleva las cuentas de la bodega. ¿Esa plata salió de la caja del negocio para anotarla como retiro personal?,false,false
+EVF-138,voz,bendi 2 serbesas,venta,efectivo,13,PRD-0031,"[{""producto_id"":""PRD-0031"",""cantidad"":2}]",,catalogo,0.53,true,Entendí venta por S/ 13. ¿Es correcto?,false,true
+EVF-139,voz,sake 80 pa la casa,retiro_personal,efectivo,80,,[],,dicho_por_usuario,0.67,true,Entendí retiro personal por S/ 80. ¿Es correcto?,false,true
+EVF-140,voz,le fie a la seño carmen una leche y 2 panes,venta,credito,9.5,PRD-0002,"[{""producto_id"":""PRD-0002"",""cantidad"":1},{""producto_id"":""PRD-0001"",""cantidad"":2}]",,catalogo,0.59,true,Entendí venta por S/ 9.50. ¿Es correcto?,false,true
+EVF-141,voz,bendí 4 chelas bien heladas,venta,efectivo,26,PRD-0031,"[{""producto_id"":""PRD-0031"",""cantidad"":4}]",,catalogo,0.52,true,Entendí venta por S/ 26. ¿Es correcto?,false,true
+EVF-142,voz,pague la luz creo que 180 o 190,gasto_negocio,efectivo,,,[],,,0.6799999999999999,true,¿Cuánto fue exactamente? No alcancé a entender el monto.,false,true
+EVF-143,voz,me pago don luis cuarenta y algo,cobro_fiado,efectivo,,,[],,,0.6799999999999999,true,¿Cuánto fue exactamente? No alcancé a entender el monto.,false,true
+EVF-144,voz,pedi a andina mil doscientos para el treinta,compra,credito,1200,,[],,dicho_por_usuario,0.55,true,Entendí compra por S/ 1200. ¿Es correcto?,false,true
+EVF-145,voz,vendi unas cosas al fiado a rosa,venta,credito,,,[],,,0.63,true,¿Cuánto fue exactamente? No alcancé a entender el monto.,false,true
+EVF-146,foto,"[Foto cuaderno] Sra. Carmen - 2 panes, 1 leche - S/ 120 (27/10)",venta,credito,120,,[],Sra. Carmen,dicho_por_usuario,0.81,false,,false,true
+EVF-147,foto,"[Foto cuaderno borrosa] Don Luis - arroz, aceite - S/ 95 (parece 35 u 85; ya dictado antes por voz)",venta,credito,95,,[],Don Luis,dicho_por_usuario,0.64,true,El monto manuscrito se ve borroso (¿S/ 95 o S/ 35?) y coincide con un fiado de Don Luis ya dictado por voz. ¿Confirmas si es nuevo?,true,true
+EVF-148,foto,[Foto cuaderno OCR 8 vs 3] Compra abarrotes mayorista S/ 380 (trazo parece 330),compra,efectivo,380,,[],,dicho_por_usuario,0.61,true,En la foto del cuaderno el número puede ser S/ 380 o S/ 330. ¿Cuál es el monto correcto?,false,true
+EVF-149,foto,[Foto cuaderno] Vecina Rosa - gaseosas - S/ 95 (05/11),venta,credito,95,,[],Vecina Rosa,dicho_por_usuario,0.84,false,,false,true
+EVF-150,foto,"[Foto cuaderno] Maestro Jorge - huevos, aceite, azúcar - S/ 52 (05/10)",venta,credito,52,,[],Maestro Jorge,dicho_por_usuario,0.86,false,,false,true
+EVF-151,foto,"[Foto cuaderno] Sra. Elena - gaseosas, galletas - S/ 30 (12/10)",venta,credito,30,,[],Sra. Elena,dicho_por_usuario,0.83,false,,false,true
+EVF-152,foto,[Foto cuaderno] Pago Luz del Sur S/ 180 (16/10) - número 180 con trazo dudoso,gasto_negocio,efectivo,180,,[],,dicho_por_usuario,0.7,true,El número del recibo parece S/ 180 pero el trazo es dudoso (¿S/ 100?). ¿Cuál es el monto?,false,true
+EVF-153,foto,[Foto cuaderno] Cobré a Sra. Carmen S/ 60 (tachado) y luego S/ 50,cobro_fiado,efectivo,50,,[],Sra. Carmen,dicho_por_usuario,0.66,true,Hay un monto tachado (S/ 60) y otro encima (S/ 50). ¿Cuánto te pagó la Sra. Carmen?,false,true

@@ -12,3 +12,6 @@ CAT-10,transporte_flete,egreso,true
 CAT-11,impuestos,egreso,true
 CAT-12,financiamiento,egreso,true
 CAT-13,retiro_personal,egreso,false
+CAT-14,cobro_fiados,ingreso,true
+CAT-15,prestamos_recibidos,ingreso,true
+CAT-16,otros_gastos,egreso,true

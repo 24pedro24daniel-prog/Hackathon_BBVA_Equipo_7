@@ -1,0 +1,3965 @@
+{
+  "generado_desde": "backend/app/db/models.py",
+  "tablas_dbml": [
+    "rubros",
+    "empresas",
+    "preferencias_alertas",
+    "categorias",
+    "productos",
+    "clientes",
+    "proveedores",
+    "borradores",
+    "transacciones",
+    "detalle_transaccion",
+    "cuaderno_fiado",
+    "deudas",
+    "billeteras_digitales",
+    "impuestos",
+    "movimientos_programados",
+    "reglas_meta",
+    "forecast_ajustes",
+    "alertas",
+    "conversaciones",
+    "consentimientos",
+    "saldo_diario",
+    "eventos",
+    "predicciones_saldo",
+    "predicciones_fiado",
+    "score_salud"
+  ],
+  "enums": {
+    "canal_notificacion": [
+      "whatsapp",
+      "app",
+      "email"
+    ],
+    "canal_registro": [
+      "voz",
+      "texto",
+      "foto",
+      "billetera_api",
+      "manual"
+    ],
+    "estado_alerta": [
+      "activa",
+      "atendida",
+      "descartada"
+    ],
+    "estado_borrador": [
+      "pendiente",
+      "confirmado",
+      "descartado"
+    ],
+    "estado_meta": [
+      "activa",
+      "lograda",
+      "pausada"
+    ],
+    "frecuencia": [
+      "diaria",
+      "semanal",
+      "quincenal",
+      "mensual"
+    ],
+    "metodo_pago": [
+      "efectivo",
+      "billetera_digital",
+      "transferencia",
+      "tarjeta",
+      "credito"
+    ],
+    "nivel_riesgo": [
+      "bajo",
+      "medio",
+      "alto"
+    ],
+    "origen_billetera": [
+      "api",
+      "captura"
+    ],
+    "origen_monto": [
+      "dicho_por_usuario",
+      "catalogo",
+      "estimado"
+    ],
+    "perfil_pago": [
+      "puntual",
+      "ocasional",
+      "moroso"
+    ],
+    "plantilla_meta": [
+      "registrar_30_dias",
+      "sueldo_fijo",
+      "colchon_caja",
+      "apartar_para_pedido",
+      "reservar_impuestos"
+    ],
+    "rol_mensaje": [
+      "usuario",
+      "asistente"
+    ],
+    "tipo_alerta": [
+      "faltante_caja",
+      "pedido_excesivo",
+      "retiro_excesivo",
+      "obligacion_proxima",
+      "gasto_inusual",
+      "caida_ventas",
+      "fiado_vencido",
+      "meta_lograda",
+      "resumen_semanal"
+    ],
+    "tipo_deuda": [
+      "proveedor",
+      "prestamo_informal",
+      "familiar",
+      "entidad_financiera"
+    ],
+    "tipo_evento": [
+      "cliente_no_paga",
+      "mes_bajo",
+      "alza_proveedor",
+      "gasto_extra",
+      "retiro_excesivo"
+    ],
+    "tipo_flujo": [
+      "ingreso",
+      "egreso"
+    ],
+    "tipo_movimiento": [
+      "venta",
+      "cobro_fiado",
+      "prestamo_recibido",
+      "otro_ingreso",
+      "compra",
+      "gasto_negocio",
+      "retiro_personal",
+      "pago_proveedor",
+      "pago_prestamo",
+      "pago_impuesto"
+    ],
+    "tipo_regla": [
+      "porcentaje_de_venta",
+      "monto_fijo"
+    ]
+  },
+  "tablas": {
+    "alertas": {
+      "columnas": [
+        {
+          "nombre": "alerta_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "tipo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "tipo_alerta",
+            "base": "tipo_alerta",
+            "enum": "tipo_alerta"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "prioridad",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "SMALLINT",
+            "base": "smallint"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_evento",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "monto",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "probabilidad",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(4, 3)",
+            "base": "numeric",
+            "precision": 4,
+            "escala": 3
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "nivel_riesgo",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "nivel_riesgo",
+            "base": "nivel_riesgo",
+            "enum": "nivel_riesgo"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "causas",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "accion_sugerida",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(50)",
+            "base": "varchar",
+            "largo": 50
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "entidad_tipo",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "entidad_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "canal",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "canal_notificacion",
+            "base": "canal_notificacion",
+            "enum": "canal_notificacion"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "estado",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "estado_alerta",
+            "base": "estado_alerta",
+            "enum": "estado_alerta"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "accion_tomada",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(50)",
+            "base": "varchar",
+            "largo": 50
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_accion",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "creada_en",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "enviada_en",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "modelo_version",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "alerta_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_alertas_prioridad_1_8",
+          "sql": "prioridad BETWEEN 1 AND 8"
+        },
+        {
+          "nombre": "ck_alertas_probabilidad_0_1",
+          "sql": "probabilidad IS NULL OR (probabilidad >= 0 AND probabilidad <= 1)"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "billeteras_digitales": {
+      "columnas": [
+        {
+          "nombre": "billetera_mov_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "proveedor_billetera",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "operacion_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(50)",
+            "base": "varchar",
+            "largo": 50
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "tipo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "tipo_flujo",
+            "base": "tipo_flujo",
+            "enum": "tipo_flujo"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "monto",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "contraparte_nombre",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_hora",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "origen",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "origen_billetera",
+            "base": "origen_billetera",
+            "enum": "origen_billetera"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "billetera_mov_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_billeteras_digitales_monto_positivo",
+          "sql": "monto > 0"
+        }
+      ],
+      "unicos": [
+        {
+          "nombre": "uq_billeteras_digitales_empresa_id_proveedor_billetera_operacion_id",
+          "columnas": [
+            "empresa_id",
+            "proveedor_billetera",
+            "operacion_id"
+          ]
+        }
+      ],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "borradores": {
+      "columnas": [
+        {
+          "nombre": "borrador_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "mensaje_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "canal",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "canal_registro",
+            "base": "canal_registro",
+            "enum": "canal_registro"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "media_url",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(255)",
+            "base": "varchar",
+            "largo": 255
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "texto_original",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "TEXT",
+            "base": "text"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "payload_propuesto",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "origen_monto",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "origen_monto",
+            "base": "origen_monto",
+            "enum": "origen_monto"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "confianza",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(4, 3)",
+            "base": "numeric",
+            "precision": 4,
+            "escala": 3
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "campos_faltantes",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "pregunta_aclaratoria",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "TEXT",
+            "base": "text"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "correcciones",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "estado",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "estado_borrador",
+            "base": "estado_borrador",
+            "enum": "estado_borrador"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "modelo_version",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "prompt_version",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fallback_usado",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "creado_en",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "resuelto_en",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "borrador_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_borradores_confianza_0_1",
+          "sql": "confianza IS NULL OR (confianza >= 0 AND confianza <= 1)"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        },
+        {
+          "columna": "mensaje_id",
+          "tabla": "conversaciones",
+          "destino": "mensaje_id"
+        }
+      ]
+    },
+    "categorias": {
+      "columnas": [
+        {
+          "nombre": "categoria_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "nombre",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(50)",
+            "base": "varchar",
+            "largo": 50
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "tipo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "tipo_flujo",
+            "base": "tipo_flujo",
+            "enum": "tipo_flujo"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "es_del_negocio",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        }
+      ],
+      "pk": [
+        "categoria_id"
+      ],
+      "checks": [],
+      "unicos": [
+        {
+          "nombre": "uq_categorias_nombre",
+          "columnas": [
+            "nombre"
+          ]
+        }
+      ],
+      "indices_unicos": [],
+      "fks": []
+    },
+    "clientes": {
+      "columnas": [
+        {
+          "nombre": "cliente_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "nombre_ficticio",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "alias",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "telefono_ficticio",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "perfil_pago",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "perfil_pago",
+            "base": "perfil_pago",
+            "enum": "perfil_pago"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "creado_en",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "cliente_id"
+      ],
+      "checks": [],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "consentimientos": {
+      "columnas": [
+        {
+          "nombre": "consentimiento_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "alcance",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "activo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "fecha_otorgado",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "vigencia_hasta",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_revocado",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "consentimiento_id"
+      ],
+      "checks": [],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "conversaciones": {
+      "columnas": [
+        {
+          "nombre": "mensaje_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "conversacion_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "rol",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "rol_mensaje",
+            "base": "rol_mensaje",
+            "enum": "rol_mensaje"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "canal",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "canal_notificacion",
+            "base": "canal_notificacion",
+            "enum": "canal_notificacion"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "texto",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "TEXT",
+            "base": "text"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "media_url",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(255)",
+            "base": "varchar",
+            "largo": 255
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "intencion",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(50)",
+            "base": "varchar",
+            "largo": 50
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "herramientas_llamadas",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "cifras_verificadas",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fallback_usado",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "derivado_a_humano",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "prompt_version",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "modelo_version",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_hora",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "mensaje_id"
+      ],
+      "checks": [],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "cuaderno_fiado": {
+      "columnas": [
+        {
+          "nombre": "fiado_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "cliente_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "borrador_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "detalle",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(255)",
+            "base": "varchar",
+            "largo": 255
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "monto",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_fiado",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_compromiso",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_pago_total",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "canal",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "canal_registro",
+            "base": "canal_registro",
+            "enum": "canal_registro"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "pago_tardio",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "fiado_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_cuaderno_fiado_monto_positivo",
+          "sql": "monto > 0"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "borrador_id",
+          "tabla": "borradores",
+          "destino": "borrador_id"
+        },
+        {
+          "columna": "cliente_id",
+          "tabla": "clientes",
+          "destino": "cliente_id"
+        },
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "detalle_transaccion": {
+      "columnas": [
+        {
+          "nombre": "detalle_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "transaccion_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "producto_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "descripcion",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "cantidad",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(10, 3)",
+            "base": "numeric",
+            "precision": 10,
+            "escala": 3
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "precio_unitario",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "costo_unitario",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "subtotal",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "detalle_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_detalle_transaccion_cantidad_positiva",
+          "sql": "cantidad > 0"
+        },
+        {
+          "nombre": "ck_detalle_transaccion_costo_no_negativo",
+          "sql": "costo_unitario IS NULL OR costo_unitario >= 0"
+        },
+        {
+          "nombre": "ck_detalle_transaccion_precio_no_negativo",
+          "sql": "precio_unitario >= 0"
+        },
+        {
+          "nombre": "ck_detalle_transaccion_subtotal_no_negativo",
+          "sql": "subtotal >= 0"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "producto_id",
+          "tabla": "productos",
+          "destino": "producto_id"
+        },
+        {
+          "columna": "transaccion_id",
+          "tabla": "transacciones",
+          "destino": "transaccion_id"
+        }
+      ]
+    },
+    "deudas": {
+      "columnas": [
+        {
+          "nombre": "deuda_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "tipo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "tipo_deuda",
+            "base": "tipo_deuda",
+            "enum": "tipo_deuda"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "proveedor_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "acreedor_nombre",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "borrador_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "monto_recibido",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "monto_total_a_pagar",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "frecuencia_cuota",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "frecuencia",
+            "base": "frecuencia",
+            "enum": "frecuencia"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "monto_cuota",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_inicio",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_vencimiento",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_pago_total",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "canal",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "canal_registro",
+            "base": "canal_registro",
+            "enum": "canal_registro"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "notas",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(255)",
+            "base": "varchar",
+            "largo": 255
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "deuda_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_deudas_cuota_positiva",
+          "sql": "monto_cuota IS NULL OR monto_cuota > 0"
+        },
+        {
+          "nombre": "ck_deudas_monto_recibido_positivo",
+          "sql": "monto_recibido > 0"
+        },
+        {
+          "nombre": "ck_deudas_monto_total_positivo",
+          "sql": "monto_total_a_pagar > 0"
+        },
+        {
+          "nombre": "ck_deudas_proveedor_segun_tipo",
+          "sql": "(tipo = 'proveedor') = (proveedor_id IS NOT NULL)"
+        },
+        {
+          "nombre": "ck_deudas_total_mayor_o_igual_recibido",
+          "sql": "monto_total_a_pagar >= monto_recibido"
+        },
+        {
+          "nombre": "ck_deudas_vencimiento_tras_inicio",
+          "sql": "fecha_vencimiento >= fecha_inicio"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "borrador_id",
+          "tabla": "borradores",
+          "destino": "borrador_id"
+        },
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        },
+        {
+          "columna": "proveedor_id",
+          "tabla": "proveedores",
+          "destino": "proveedor_id"
+        }
+      ]
+    },
+    "empresas": {
+      "columnas": [
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "rubro_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "nombre_ficticio",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "telefono_whatsapp",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "zona",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(50)",
+            "base": "varchar",
+            "largo": 50
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "n_trabajadores",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "SMALLINT",
+            "base": "smallint"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "tiene_ruc",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "ruc",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(11)",
+            "base": "varchar",
+            "largo": 11
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "regimen_tributario",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "saldo_inicial",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_saldo_inicial",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "minimo_operativo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_alta",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "empresa_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_empresas_minimo_operativo_no_negativo",
+          "sql": "minimo_operativo >= 0"
+        },
+        {
+          "nombre": "ck_empresas_n_trabajadores_positivo",
+          "sql": "n_trabajadores >= 1"
+        },
+        {
+          "nombre": "ck_empresas_ruc_formato",
+          "sql": "ruc IS NULL OR ruc ~ '^10[0-9]{9}$'"
+        },
+        {
+          "nombre": "ck_empresas_saldo_inicial_no_negativo",
+          "sql": "saldo_inicial >= 0"
+        }
+      ],
+      "unicos": [
+        {
+          "nombre": "uq_empresas_ruc",
+          "columnas": [
+            "ruc"
+          ]
+        },
+        {
+          "nombre": "uq_empresas_telefono_whatsapp",
+          "columnas": [
+            "telefono_whatsapp"
+          ]
+        }
+      ],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "rubro_id",
+          "tabla": "rubros",
+          "destino": "rubro_id"
+        }
+      ]
+    },
+    "eventos": {
+      "columnas": [
+        {
+          "nombre": "evento_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "tipo_evento",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "tipo_evento",
+            "base": "tipo_evento",
+            "enum": "tipo_evento"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_inicio",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_fin",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "descripcion",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(255)",
+            "base": "varchar",
+            "largo": 255
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "evento_id"
+      ],
+      "checks": [],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "forecast_ajustes": {
+      "columnas": [
+        {
+          "nombre": "ajuste_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "programado_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "concepto",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "monto",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "motivo",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(255)",
+            "base": "varchar",
+            "largo": 255
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "activo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "creado_en",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "ajuste_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_forecast_ajustes_monto_no_negativo",
+          "sql": "monto >= 0"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        },
+        {
+          "columna": "programado_id",
+          "tabla": "movimientos_programados",
+          "destino": "programado_id"
+        }
+      ]
+    },
+    "idempotency_keys": {
+      "columnas": [
+        {
+          "nombre": "clave",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "endpoint",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(120)",
+            "base": "varchar",
+            "largo": 120
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "payload_hash",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(64)",
+            "base": "varchar",
+            "largo": 64
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "status_code",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "INTEGER",
+            "base": "integer"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "respuesta",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "creado_en",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "clave",
+        "endpoint"
+      ],
+      "checks": [],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": []
+    },
+    "impuestos": {
+      "columnas": [
+        {
+          "nombre": "impuesto_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "regimen",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "periodo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "CHAR(7)",
+            "base": "char",
+            "largo": 7
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "monto",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_vencimiento",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_pago",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "canal",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "canal_registro",
+            "base": "canal_registro",
+            "enum": "canal_registro"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "impuesto_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_impuestos_monto_no_negativo",
+          "sql": "monto >= 0"
+        },
+        {
+          "nombre": "ck_impuestos_periodo_aaaa_mm",
+          "sql": "periodo ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'"
+        }
+      ],
+      "unicos": [
+        {
+          "nombre": "uq_impuestos_empresa_id_regimen_periodo",
+          "columnas": [
+            "empresa_id",
+            "regimen",
+            "periodo"
+          ]
+        }
+      ],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "llm_llamadas": {
+      "columnas": [
+        {
+          "nombre": "llamada_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "origen",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "referencia_tipo",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "referencia_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "prompt_version",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "proveedor",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "modelo_solicitado",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "modelo_respondido",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "generation_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "request",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "respuesta",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "prompt_tokens",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "INTEGER",
+            "base": "integer"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "completion_tokens",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "INTEGER",
+            "base": "integer"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "total_tokens",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "INTEGER",
+            "base": "integer"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "costo_usd",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 8)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 8
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "latencia_ms",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "INTEGER",
+            "base": "integer"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "estado",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "http_status",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "SMALLINT",
+            "base": "smallint"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "error",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "TEXT",
+            "base": "text"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "resultado_uso",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "creado_en",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "llamada_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_llm_llamadas_completion_tokens_no_negativo",
+          "sql": "completion_tokens IS NULL OR completion_tokens >= 0"
+        },
+        {
+          "nombre": "ck_llm_llamadas_estado_valido",
+          "sql": "estado IN ('ok', 'timeout', 'http_error', 'red', 'respuesta_invalida', 'sin_configurar')"
+        },
+        {
+          "nombre": "ck_llm_llamadas_origen_valido",
+          "sql": "origen IN ('extractor', 'asistente', 'vision')"
+        },
+        {
+          "nombre": "ck_llm_llamadas_prompt_tokens_no_negativo",
+          "sql": "prompt_tokens IS NULL OR prompt_tokens >= 0"
+        },
+        {
+          "nombre": "ck_llm_llamadas_referencia_tipo_valida",
+          "sql": "referencia_tipo IS NULL OR referencia_tipo IN ('borrador', 'mensaje')"
+        },
+        {
+          "nombre": "ck_llm_llamadas_resultado_uso_valido",
+          "sql": "resultado_uso IS NULL OR resultado_uso IN ('aceptada', 'rechazada_validacion', 'rechazada_verificador')"
+        },
+        {
+          "nombre": "ck_llm_llamadas_total_tokens_no_negativo",
+          "sql": "total_tokens IS NULL OR total_tokens >= 0"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "movimientos_programados": {
+      "columnas": [
+        {
+          "nombre": "programado_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "categoria_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "tipo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "tipo_flujo",
+            "base": "tipo_flujo",
+            "enum": "tipo_flujo"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "descripcion",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "monto",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "frecuencia",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "frecuencia",
+            "base": "frecuencia",
+            "enum": "frecuencia"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "dia_semana",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "SMALLINT",
+            "base": "smallint"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "dia_mes",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "SMALLINT",
+            "base": "smallint"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "es_sueldo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "fecha_inicio",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_fin",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "activo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        }
+      ],
+      "pk": [
+        "programado_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_movimientos_programados_dia_mes_1_31",
+          "sql": "dia_mes IS NULL OR dia_mes BETWEEN 1 AND 31"
+        },
+        {
+          "nombre": "ck_movimientos_programados_dia_semana_1_7",
+          "sql": "dia_semana IS NULL OR dia_semana BETWEEN 1 AND 7"
+        },
+        {
+          "nombre": "ck_movimientos_programados_fin_tras_inicio",
+          "sql": "fecha_fin IS NULL OR fecha_fin >= fecha_inicio"
+        },
+        {
+          "nombre": "ck_movimientos_programados_monto_positivo",
+          "sql": "monto > 0"
+        },
+        {
+          "nombre": "ck_movimientos_programados_sueldo_es_egreso",
+          "sql": "NOT es_sueldo OR tipo = 'egreso'"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [
+        {
+          "nombre": "uq_movimientos_programados_sueldo_activo",
+          "columnas": [
+            "empresa_id"
+          ],
+          "parcial": true
+        }
+      ],
+      "fks": [
+        {
+          "columna": "categoria_id",
+          "tabla": "categorias",
+          "destino": "categoria_id"
+        },
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "predicciones_fiado": {
+      "columnas": [
+        {
+          "nombre": "prediccion_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fiado_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_corte",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "prob_atraso",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(4, 3)",
+            "base": "numeric",
+            "precision": 4,
+            "escala": 3
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "prob_pago_14d",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(4, 3)",
+            "base": "numeric",
+            "precision": 4,
+            "escala": 3
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "nivel_riesgo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "nivel_riesgo",
+            "base": "nivel_riesgo",
+            "enum": "nivel_riesgo"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "modelo_version",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "creado_en",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "prediccion_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_predicciones_fiado_prob_atraso_0_1",
+          "sql": "prob_atraso IS NULL OR (prob_atraso >= 0 AND prob_atraso <= 1)"
+        },
+        {
+          "nombre": "ck_predicciones_fiado_prob_pago_14d_0_1",
+          "sql": "prob_pago_14d IS NULL OR (prob_pago_14d >= 0 AND prob_pago_14d <= 1)"
+        }
+      ],
+      "unicos": [
+        {
+          "nombre": "uq_predicciones_fiado_fiado_id_fecha_corte_modelo_version",
+          "columnas": [
+            "fiado_id",
+            "fecha_corte",
+            "modelo_version"
+          ]
+        }
+      ],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "fiado_id",
+          "tabla": "cuaderno_fiado",
+          "destino": "fiado_id"
+        }
+      ]
+    },
+    "predicciones_saldo": {
+      "columnas": [
+        {
+          "nombre": "prediccion_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_corte",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_objetivo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "p10",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "p50",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "p90",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "modelo_version",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "creado_en",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "prediccion_id"
+      ],
+      "checks": [],
+      "unicos": [
+        {
+          "nombre": "uq_predicciones_saldo_empresa_id_fecha_corte_fecha_objetivo_modelo_version",
+          "columnas": [
+            "empresa_id",
+            "fecha_corte",
+            "fecha_objetivo",
+            "modelo_version"
+          ]
+        }
+      ],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "preferencias_alertas": {
+      "columnas": [
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "canales",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "max_por_dia",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "SMALLINT",
+            "base": "smallint"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "silencio_desde",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIME WITHOUT TIME ZONE",
+            "base": "time"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "silencio_hasta",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIME WITHOUT TIME ZONE",
+            "base": "time"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "resumen_semanal",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        }
+      ],
+      "pk": [
+        "empresa_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_preferencias_alertas_max_por_dia_no_negativo",
+          "sql": "max_por_dia >= 0"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "productos": {
+      "columnas": [
+        {
+          "nombre": "producto_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "categoria_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "nombre",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "alias",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "precio_venta",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "costo_unitario",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "activo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        }
+      ],
+      "pk": [
+        "producto_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_productos_costo_no_negativo",
+          "sql": "costo_unitario IS NULL OR costo_unitario >= 0"
+        },
+        {
+          "nombre": "ck_productos_precio_venta_positivo",
+          "sql": "precio_venta > 0"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "categoria_id",
+          "tabla": "categorias",
+          "destino": "categoria_id"
+        },
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "proveedores": {
+      "columnas": [
+        {
+          "nombre": "proveedor_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "nombre_ficticio",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(100)",
+            "base": "varchar",
+            "largo": 100
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "telefono_ficticio",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "plazo_pago_dias",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "SMALLINT",
+            "base": "smallint"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "proveedor_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_proveedores_plazo_no_negativo",
+          "sql": "plazo_pago_dias >= 0"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "reglas_meta": {
+      "columnas": [
+        {
+          "nombre": "meta_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "plantilla",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "plantilla_meta",
+            "base": "plantilla_meta",
+            "enum": "plantilla_meta"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "programado_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "tipo_regla",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "tipo_regla",
+            "base": "tipo_regla",
+            "enum": "tipo_regla"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "valor",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 4)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 4
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "destino",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "objetivo",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "acumulado",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "recordatorio_frecuencia",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "frecuencia",
+            "base": "frecuencia",
+            "enum": "frecuencia"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "recordatorio_dia",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "SMALLINT",
+            "base": "smallint"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "estado",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "estado_meta",
+            "base": "estado_meta",
+            "enum": "estado_meta"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "fecha_inicio",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_logro",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "meta_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_reglas_meta_acumulado_no_negativo",
+          "sql": "acumulado >= 0"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        },
+        {
+          "columna": "programado_id",
+          "tabla": "movimientos_programados",
+          "destino": "programado_id"
+        }
+      ]
+    },
+    "rubros": {
+      "columnas": [
+        {
+          "nombre": "rubro_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "nombre",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(50)",
+            "base": "varchar",
+            "largo": 50
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "rubro_id"
+      ],
+      "checks": [],
+      "unicos": [
+        {
+          "nombre": "uq_rubros_nombre",
+          "columnas": [
+            "nombre"
+          ]
+        }
+      ],
+      "indices_unicos": [],
+      "fks": []
+    },
+    "saldo_diario": {
+      "columnas": [
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "DATE",
+            "base": "date"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "saldo_cierre",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "deficit_14d",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "empresa_id",
+        "fecha"
+      ],
+      "checks": [],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "score_salud": {
+      "columnas": [
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "mes",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "CHAR(7)",
+            "base": "char",
+            "largo": 7
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "score",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "SMALLINT",
+            "base": "smallint"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "subindicadores",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "JSON",
+            "base": "json"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "version_formula",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(30)",
+            "base": "varchar",
+            "largo": 30
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "empresa_id",
+        "mes"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_score_salud_mes_aaaa_mm",
+          "sql": "mes ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'"
+        },
+        {
+          "nombre": "ck_score_salud_score_0_100",
+          "sql": "score BETWEEN 0 AND 100"
+        }
+      ],
+      "unicos": [],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        }
+      ]
+    },
+    "transacciones": {
+      "columnas": [
+        {
+          "nombre": "transaccion_id",
+          "nullable": false,
+          "pk": true,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "empresa_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "borrador_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fecha_hora",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "tipo",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "tipo_movimiento",
+            "base": "tipo_movimiento",
+            "enum": "tipo_movimiento"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "categoria_id",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "descripcion",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(255)",
+            "base": "varchar",
+            "largo": 255
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "monto",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(12, 2)",
+            "base": "numeric",
+            "precision": 12,
+            "escala": 2
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "moneda",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "CHAR(3)",
+            "base": "char",
+            "largo": 3
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "metodo_pago",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "metodo_pago",
+            "base": "metodo_pago",
+            "enum": "metodo_pago"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "afecta_caja",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "canal",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "canal_registro",
+            "base": "canal_registro",
+            "enum": "canal_registro"
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "confianza_extraccion",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "NUMERIC(4, 3)",
+            "base": "numeric",
+            "precision": 4,
+            "escala": 3
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "fue_corregida",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "fiado_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "deuda_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "impuesto_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "programado_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "billetera_mov_id",
+          "nullable": true,
+          "pk": false,
+          "tipo": {
+            "sql": "VARCHAR(20)",
+            "base": "varchar",
+            "largo": 20
+          },
+          "tiene_default": false
+        },
+        {
+          "nombre": "anulada",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "BOOLEAN",
+            "base": "boolean"
+          },
+          "tiene_default": true
+        },
+        {
+          "nombre": "creado_en",
+          "nullable": false,
+          "pk": false,
+          "tipo": {
+            "sql": "TIMESTAMP WITH TIME ZONE",
+            "base": "timestamp"
+          },
+          "tiene_default": false
+        }
+      ],
+      "pk": [
+        "transaccion_id"
+      ],
+      "checks": [
+        {
+          "nombre": "ck_transacciones_afecta_caja_segun_metodo",
+          "sql": "afecta_caja = (metodo_pago <> 'credito')"
+        },
+        {
+          "nombre": "ck_transacciones_cobro_fiado_con_fiado",
+          "sql": "tipo <> 'cobro_fiado' OR fiado_id IS NOT NULL"
+        },
+        {
+          "nombre": "ck_transacciones_compra_credito_con_deuda",
+          "sql": "NOT (tipo = 'compra' AND metodo_pago = 'credito') OR deuda_id IS NOT NULL"
+        },
+        {
+          "nombre": "ck_transacciones_confianza_extraccion_0_1",
+          "sql": "confianza_extraccion IS NULL OR (confianza_extraccion >= 0 AND confianza_extraccion <= 1)"
+        },
+        {
+          "nombre": "ck_transacciones_moneda_pen",
+          "sql": "moneda = 'PEN'"
+        },
+        {
+          "nombre": "ck_transacciones_monto_positivo",
+          "sql": "monto > 0"
+        },
+        {
+          "nombre": "ck_transacciones_pago_impuesto_con_impuesto",
+          "sql": "tipo <> 'pago_impuesto' OR impuesto_id IS NOT NULL"
+        },
+        {
+          "nombre": "ck_transacciones_pago_o_prestamo_con_deuda",
+          "sql": "tipo NOT IN ('pago_proveedor', 'pago_prestamo', 'prestamo_recibido') OR deuda_id IS NOT NULL"
+        },
+        {
+          "nombre": "ck_transacciones_un_solo_vinculo",
+          "sql": "num_nonnulls(fiado_id, deuda_id, impuesto_id, programado_id) <= 1"
+        },
+        {
+          "nombre": "ck_transacciones_venta_fiada_con_fiado",
+          "sql": "NOT (tipo = 'venta' AND metodo_pago = 'credito') OR fiado_id IS NOT NULL"
+        }
+      ],
+      "unicos": [
+        {
+          "nombre": "uq_transacciones_billetera_mov_id",
+          "columnas": [
+            "billetera_mov_id"
+          ]
+        },
+        {
+          "nombre": "uq_transacciones_impuesto_id",
+          "columnas": [
+            "impuesto_id"
+          ]
+        }
+      ],
+      "indices_unicos": [],
+      "fks": [
+        {
+          "columna": "billetera_mov_id",
+          "tabla": "billeteras_digitales",
+          "destino": "billetera_mov_id"
+        },
+        {
+          "columna": "borrador_id",
+          "tabla": "borradores",
+          "destino": "borrador_id"
+        },
+        {
+          "columna": "categoria_id",
+          "tabla": "categorias",
+          "destino": "categoria_id"
+        },
+        {
+          "columna": "deuda_id",
+          "tabla": "deudas",
+          "destino": "deuda_id"
+        },
+        {
+          "columna": "empresa_id",
+          "tabla": "empresas",
+          "destino": "empresa_id"
+        },
+        {
+          "columna": "fiado_id",
+          "tabla": "cuaderno_fiado",
+          "destino": "fiado_id"
+        },
+        {
+          "columna": "impuesto_id",
+          "tabla": "impuestos",
+          "destino": "impuesto_id"
+        },
+        {
+          "columna": "programado_id",
+          "tabla": "movimientos_programados",
+          "destino": "programado_id"
+        }
+      ]
+    }
+  },
+  "orden_carga": [
+    "categorias",
+    "idempotency_keys",
+    "rubros",
+    "empresas",
+    "alertas",
+    "billeteras_digitales",
+    "clientes",
+    "consentimientos",
+    "conversaciones",
+    "eventos",
+    "impuestos",
+    "llm_llamadas",
+    "movimientos_programados",
+    "predicciones_saldo",
+    "preferencias_alertas",
+    "productos",
+    "proveedores",
+    "saldo_diario",
+    "score_salud",
+    "borradores",
+    "forecast_ajustes",
+    "reglas_meta",
+    "cuaderno_fiado",
+    "deudas",
+    "predicciones_fiado",
+    "transacciones",
+    "detalle_transaccion"
+  ]
+}

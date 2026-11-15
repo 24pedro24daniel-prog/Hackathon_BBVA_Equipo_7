@@ -1,49 +1,70 @@
-# Reporte de Auditoría Automática de Calidad del Dataset Sintético (MVP Bodegueros RUC 10 — 100 % Efectivo)
+# Reporte de auditoría de calidad de datos
 
-> Generado automáticamente por [`data/audit_quality.mjs`](./audit_quality.mjs) y [`data/pipeline_python/validate_pandera.py`](./pipeline_python/validate_pandera.py) con semilla fija `seed = 42`.
-> **Estado global:** **100 % APROBADO (PASS)** (10/10 controles superados sobre **15,945 registros** en las 25 tablas del esquema y **150 casos** de evaluación de ingesta F1).
+> Generado por [`data/audit_quality.mjs`](./audit_quality.mjs) el **2026-11-15T13:17:39.701Z** sobre `data/csv`, contra el esquema real de `backend/app/db/models.py` (exportado en `data/schema_esquema.json`).
+> Estado: **APROBADO** (30 controles superados) sobre **63,736 filas** de las 25 tablas, **40 FK**, **46 CHECK** y **153 frases** de evaluación de ingesta.
+> La capacidad de detección se demuestra con `node data/audit_mutations.mjs` (copias descartables con errores inyectados).
 
-## 1. Matriz de Controles Ejecutados
+## 1. Controles
 
-| # | Categoría | Regla de negocio / contrato auditada | Estado | Evidencia cuantitativa |
+| # | Categoría | Regla | Estado | Evidencia |
 |---:|---|---|:---:|---|
-| 1 | Esquema Multi-Tabla (DBML) | 25 archivos CSV generados (24 tablas operativas pobladas + billeteras_digitales vacía con encabezados para roadmap) | **PASS** | Pobladas: 24/24 | billeteras_digitales: 0 filas |
-| 2 | Público Objetivo (RUC 10) | 100% de empresas son bodegas (rubro_id='RUB-01') con RUC 10 de 11 dígitos (^10\d{9}$) activo (tiene_ruc=true) en 'nuevo_rus' | **PASS** | 30/30 bodegas RUC 10 (11 dígitos, ej. EMP-0001: 10456789012) en Nuevo RUS |
-| 3 | Operación 100% Efectivo | 0 transacciones con métodos digitales (100% metodo_pago IN ('efectivo', 'credito') y 0 filas en billeteras_digitales) | **PASS** | Transacciones digitales: 0 | Efectivo/Crédito: 8102/8102 |
-| 4 | Canales Manuales y Doble Confirmación (F1) | 100% canales manuales ('voz', 'texto', 'foto'), baja confianza (<0.75) con pregunta_aclaratoria y posibles duplicados etiquetados | **PASS** | Canales no manuales: 0 | Borradores <0.75: 3 | Eval <0.75: 30 | Eval duplicados: 10 |
-| 5 | Criterio Bancario Sueldo ("Mínimo para vivir") | EMP-0001 registra sueldo fijo mensual bajo criterio bancario de mínimo para vivir (S/ 1,350.00) separado de retiros extra | **PASS** | Sueldo programado EMP-0001: S/ 1350.00 (sueldo fijo del dueño (criterio bancario mínimo para vivir S/ 1350/mes)) |
-| 6 | Campaña Navideña y Nuevo RUS Mal Informado | Presencia de sobrecompra navideña en eventos.csv y casos donde ventas > S/ 5,000 pagan S/ 20 (Cat. 1) en vez de S/ 50 (Cat. 2) | **PASS** | RUS mal informado (S/ 20 con ventas > S/ 5,000): 11 empresas (incl. EMP-0001) | Cat. 2 S/ 50 correcto: 14 | Eventos campaña: 4 |
-| 7 | Dominio y Restricciones CHECK (Pandera) | monto > 0, moneda == 'PEN', afecta_caja == (metodo_pago != 'credito') y <= 1 FK satélite en 100% de transacciones | **PASS** | 8102/8102 transacciones válidas (0 violaciones CHECK) |
-| 8 | Integridad Referencial (PK/FK) | 100% de llaves foráneas en transacciones existen en sus tablas padre | **PASS** | Huérfanos detectados: 0 |
-| 9 | Anti-Leakage (ML) | Cero transacciones o pagos de fiados con fecha posterior a fecha_corte (2026-11-14) | **PASS** | Transacciones futuras: 0 | Pagos futuros en cuaderno_fiado: 0 |
-| 10 | Storytelling Pedro (EMP-0001) | Saldo en efectivo al 2026-11-14 (S/ 2,340.00), Ingresos Nov (S/ 8,540.00), Egresos Nov (S/ 7,310.00) y Fiados (S/ 310.00) cuadran al céntimo | **PASS** | Saldo: S/ 2340.00 | Ingresos: S/ 8540.00 | Egresos: S/ 7310.00 | Fiados: S/ 310.00 |
+| 1 | A. Estructura | Los 25 CSV del modelo existen | **PASS** | 25/25 archivos |
+| 2 | A. Estructura | Las columnas de cada CSV coinciden con las de la tabla (ninguna extra, ninguna obligatoria faltante) | **PASS** | columnas coinciden con schema_esquema.json |
+| 3 | B. Columnas | NOT NULL: ninguna columna obligatoria vacía | **PASS** | 63736 filas revisadas |
+| 4 | B. Columnas | Largo máximo de varchar(n)/char(n) (p. ej. IDs de 20 caracteres) | **PASS** | todos los textos caben en su columna |
+| 5 | B. Columnas | Tipos: boolean, date, timestamptz, time, numeric(p,s), smallint/integer, JSON válidos | **PASS** | todos los valores tienen el formato de su columna |
+| 6 | B. Columnas | Enums: cada valor pertenece a su tipo enumerado | **PASS** | todos los valores están en su enum |
+| 7 | C. Llaves | PK únicas (simples y compuestas) en las 25 tablas | **PASS** | 63736 filas |
+| 8 | C. Llaves | Todas las FK (40 relaciones del esquema) apuntan a un registro existente | **PASS** | 40 FK sin huérfanos |
+| 9 | C. Llaves | UNIQUE e índices únicos (ruc, teléfono, nombre de rubro/categoría, un sueldo activo por empresa, impuesto y billetera 1-1…) | **PASS** | sin repetidos |
+| 10 | D. CHECK | Los 46 CHECK de models.py se cumplen (afecta_caja, un solo vínculo, cobro/pago con su vínculo, moneda PEN, 0-1, RUC, periodos AAAA-MM…) | **PASS** | 46 CHECK evaluados sobre todas las filas |
+| 11 | E. Negocio | Nada posterior a la hora de corte (10:00 del 2026-11-14, Lima): transacciones, fiados, pagos, predicciones, conversaciones, borradores | **PASS** | cero registros posteriores al corte; la venta "2 cervezas" y los movimientos de la demo no están cargados |
+| 12 | E. Negocio | Cero fuga de datos: creado_en nunca es anterior a la fecha del hecho que registra salvo registro tardío explícito, y los pagos no preceden a su origen | **PASS** | orden temporal coherente |
+| 13 | E. Negocio | saldo_diario = saldo inicial + Σ movimientos que afectan caja (todas las empresas, todos los días) | **PASS** | 4267 filas recalculadas |
+| 14 | E. Negocio | Ninguna empresa tiene saldo de caja negativo | **PASS** | mínimo de cada empresa >= 0 |
+| 15 | E. Negocio | deficit_14d recalculado (saldo < mínimo operativo en los 14 días siguientes); null si la ventana pasa del corte | **PASS** | etiqueta consistente |
+| 16 | E. Negocio | Hay episodios reales de déficit en varias bodegas para medir recall (>= 5 empresas con deficit_14d = true) | **PASS** | 15 empresas con episodios |
+| 17 | E. Negocio | detalle_transaccion: cantidades enteras, subtotal = cantidad x precio y Σ subtotales = monto de la transacción | **PASS** | 41998 líneas |
+| 18 | E. Negocio | Categorías: cobros de fiado, préstamos, retiros, impuestos y cuotas en su categoría; ingresos en categorías de ingreso y egresos en categorías de egreso | **PASS** | categorías coherentes con el tipo |
+| 19 | E. Negocio | Catálogo de categorías snake_case con cobro_fiados, prestamos_recibidos y otros_gastos; rubros bodega/restaurante/taller/distribuidora | **PASS** | 16 categorías y 4 rubros |
+| 20 | E. Negocio | Borradores: payload legible con clave del backend, confirmados con su transacción y monto corregido coherente, confianza < 0.75 con pregunta aclaratoria | **PASS** | 3 borradores |
+| 21 | E. Negocio | Alertas: causas {descripcion, monto}, entidad existente (plural) o `mes`, prioridad según el tipo, causas de pedido/retiro como las arma el backend | **PASS** | 18 alertas |
+| 22 | E. Negocio | score_salud: 3 subindicadores con los pesos del backend (0.35 / 0.40 / 0.25) y score = suma ponderada | **PASS** | 170 scores |
+| 23 | E. Negocio | Predicciones: nivel de riesgo con los umbrales del backend (>= 0.6 alto, >= 0.3 medio) y p10 <= p50 <= p90 | **PASS** | 31 de fiado y 60 de saldo |
+| 24 | E. Negocio | Ninguna versión del forecast apunta a 'forecast-lgbm-quantile-0.3.1' (la del artefacto es lgbm_cuantiles-1.0) | **PASS** | versiones: lgbm_cuantiles-1.0, naive-estacional-0.1.0, reglas-alertas-0.2.0, riesgo-atraso-baseline-0.1.0 |
+| 25 | E. Negocio | Empresas: tiene_ruc ⇔ ruc presente, dígito verificador SUNAT (módulo 11) válido y régimen/impuestos coherentes | **PASS** | 24/30 con RUC válido |
+| 26 | E. Negocio | Heterogeneidad: volúmenes, rubros, trabajadores (1-5), billetera digital y empresas sin RUC distintos entre sí | **PASS** | 5 valores de n_trabajadores; 29 volúmenes distintos; 1292 movimientos de billetera |
+| 27 | E. Negocio | Billeteras: cada pago por billetera_digital tiene su movimiento en billeteras_digitales (1-1) | **PASS** | 1292 movimientos enlazados |
+| 28 | E. Negocio | Fiados, deudas e impuestos: fecha de pago total ⇔ pagos registrados que cubren el monto; nunca se cobra o paga de más | **PASS** | 152 fiados, 140 deudas, 136 impuestos |
+| 29 | F. Evaluación de ingesta | Frases distintas y sin "(muestra N)", UTF-8 correcto, monto coherente con el catálogo de EMP-0001 y doble confirmación según la confianza | **PASS** | 153 frases distintas |
+| 30 | G. Demo (informativo) | EMP-0001: saldo de caja al 2026-11-14 = S/ 2 340 (cifra de context.md §9) | **PASS** | saldo 2340 |
 
-## 2. Resumen de Volúmenes por Tabla (`data/csv/*.csv`)
+## 2. Filas por tabla
 
-| Tabla | Registros | Observación de Calibración MVP |
-|---|---:|---|
-| `rubros.csv` | 4 | Validada sin huérfanos ni fuga de datos |
-| `empresas.csv` | 30 | 30 bodegas RUC 10 (`rubro_id = RUB-01`, `tiene_ruc = true`, `nuevo_rus`) |
-| `preferencias_alertas.csv` | 30 | Validada sin huérfanos ni fuga de datos |
-| `categorias.csv` | 13 | Validada sin huérfanos ni fuga de datos |
-| `productos.csv` | 133 | Validada sin huérfanos ni fuga de datos |
-| `clientes.csv` | 89 | Validada sin huérfanos ni fuga de datos |
-| `proveedores.csv` | 60 | Validada sin huérfanos ni fuga de datos |
-| `conversaciones.csv` | 4 | Validada sin huérfanos ni fuga de datos |
-| `borradores.csv` | 4 | Incluye casos con `confianza < 0.75` (`pregunta_aclaratoria`) y posibles duplicados |
-| `movimientos_programados.csv` | 59 | Validada sin huérfanos ni fuga de datos |
-| `cuaderno_fiado.csv` | 181 | Validada sin huérfanos ni fuga de datos |
-| `deudas.csv` | 36 | Validada sin huérfanos ni fuga de datos |
-| `billeteras_digitales.csv` | 0 | 0 registros (solo encabezados; operación MVP 100 % en efectivo, tabla reservada para roadmap) |
-| `impuestos.csv` | 116 | Tramos Nuevo RUS SUNAT (S/ 20 y S/ 50) + casos de pago mal informado en campaña |
-| `transacciones.csv` | 8,102 | 100 % `efectivo` o `credito` y canales manuales (`voz`, `texto`, `foto`) |
-| `detalle_transaccion.csv` | 3,375 | Validada sin huérfanos ni fuga de datos |
-| `reglas_meta.csv` | 29 | Validada sin huérfanos ni fuga de datos |
-| `forecast_ajustes.csv` | 1 | Validada sin huérfanos ni fuga de datos |
-| `alertas.csv` | 12 | Validada sin huérfanos ni fuga de datos |
-| `consentimientos.csv` | 1 | Validada sin huérfanos ni fuga de datos |
-| `saldo_diario.csv` | 3,455 | Validada sin huérfanos ni fuga de datos |
-| `eventos.csv` | 13 | Validada sin huérfanos ni fuga de datos |
-| `predicciones_saldo.csv` | 60 | Validada sin huérfanos ni fuga de datos |
-| `predicciones_fiado.csv` | 22 | Validada sin huérfanos ni fuga de datos |
-| `score_salud.csv` | 116 | Validada sin huérfanos ni fuga de datos |
+| Tabla | Filas |
+|---|---:|
+| `rubros` | 4 |
+| `empresas` | 30 |
+| `preferencias_alertas` | 30 |
+| `categorias` | 16 |
+| `productos` | 376 |
+| `clientes` | 117 |
+| `proveedores` | 82 |
+| `borradores` | 3 |
+| `transacciones` | 14,651 |
+| `detalle_transaccion` | 41,998 |
+| `cuaderno_fiado` | 152 |
+| `deudas` | 140 |
+| `billeteras_digitales` | 1,292 |
+| `impuestos` | 136 |
+| `movimientos_programados` | 81 |
+| `reglas_meta` | 41 |
+| `forecast_ajustes` | 4 |
+| `alertas` | 18 |
+| `conversaciones` | 4 |
+| `consentimientos` | 10 |
+| `saldo_diario` | 4,267 |
+| `eventos` | 23 |
+| `predicciones_saldo` | 60 |
+| `predicciones_fiado` | 31 |
+| `score_salud` | 170 |

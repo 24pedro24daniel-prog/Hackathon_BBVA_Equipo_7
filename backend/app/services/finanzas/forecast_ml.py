@@ -26,9 +26,12 @@ Dónde el modelo y el backend NO coinciden (train/serve skew; ver README §ML):
    día del mes 5 se evalúa como 4 y el 15 como 14 (`DOM_NEUTRO_EGRESO`; mismo flag de quincena, sin el pago).
 3. Rango de entrenamiento: `mes` solo vio junio–septiembre y las escalas son otras (ingreso_base ≈ S/ 180/día). El modelo
    extrapola por árboles (se queda en el último tramo): documentado, no corregido.
-4. Nivel: el modelo aprendió la escala y la proporción ingreso/egreso de sus bodegas sintéticas (p. ej. egreso ≈ 55 % del
-   ingreso de ayer). En una empresa real puede quedar sistemáticamente arriba o abajo (en la demo subestima el egreso ordinario
-   ~35 %, lo que infla el saldo ~S/ 190 por día). Se probó reescalar el nivel con un factor por empresa (Σ real ÷ Σ predicho en
+4. Nivel: el modelo aprendió la escala y la forma del egreso de sus bodegas sintéticas (egreso diario ≈ 55 % del ingreso,
+   con un pago grande al mes el día 5). Si en los últimos 30 días del flujo ordinario de la empresa no hay egresos grandes,
+   el modelo "espera" ese pago y predice un pago fantasma todos los días (~S/ 1 200/día; error a 1 día ≈ S/ 900). Por eso
+   el flujo ordinario de Pedro en `data/csv` incluye su compra mensual al contado (día 5): con esa data calibrada el MAE del
+   saldo a 1 día en Pedro es 232 vs 251 del baseline (`tests/eval_forecast.py`, README §ML). En otras empresas el nivel
+   puede quedar sistemáticamente arriba o abajo. Se probó reescalar el nivel con un factor por empresa (Σ real ÷ Σ predicho en
    los últimos días): inestable (varía 0.5–1.6 entre cortes por las compras grandes) y empeora el MAE del saldo; se dejó el
    modelo crudo y el sesgo se mide en `tests/eval_forecast.py` y se documenta.
 5. Banda: los cuantiles del modelo reflejan el ruido de SUS datos sintéticos y son más angostos que el error real sobre una

@@ -1,14 +1,24 @@
 evento_id,empresa_id,tipo_evento,fecha_inicio,fecha_fin,descripcion
-EVT-0001,EMP-0001,retiro_excesivo,2026-11-05,2026-11-13,"Retiro de S/ 700 extra para la casa por encima del sueldo mínimo para vivir (S/ 1,350/mes)"
-EVT-0002,EMP-0001,alza_proveedor,2026-11-13,2026-11-30,"Sobrecompra de stock pre-Campaña Navideña a Distribuidora Andina (PED-0012 por S/ 2,400) y Nuevo RUS mal informado en S/ 20 en lugar de S/ 50"
+EVT-0001,EMP-0001,retiro_excesivo,2026-11-02,2026-11-13,"Del 1 al 13/11 sacó S/ 1005.00 para la casa: S/ 700 más que lo usual a esa altura del mes (S/ 305.00), además de su sueldo fijo de S/ 1 350 a fin de mes"
+EVT-0002,EMP-0001,alza_proveedor,2026-11-12,,"Sobrecompra pre-Campaña Navideña a crédito: PED-0012 a Distribuidora Andina (S/ 2 400, el doble de su pedido de octubre) y S/ 2340.00 a Abarrotes El Sol; además paga el Nuevo RUS de S/ 20 aunque le tocaría S/ 50"
 EVT-0003,EMP-0001,cliente_no_paga,2026-11-05,,"Sra. Carmen (FIA-0045, S/ 120) y Don Luis (FIA-0046, S/ 95) se atrasaron en pagar"
-EVT-0010,EMP-0003,retiro_excesivo,2026-10-25,2026-11-14,Retiros personales extraordinarios por encima del mínimo para vivir que descapitalizan la caja
-EVT-0011,EMP-0006,alza_proveedor,2026-10-25,2026-11-14,Sobrecompra de mercadería para Campaña Navideña y Nuevo RUS mal informado en S/ 20 en lugar de S/ 50
-EVT-0012,EMP-0009,mes_bajo,2026-10-25,2026-11-14,Caída temporal de ventas previa a campaña navideña
-EVT-0013,EMP-0012,retiro_excesivo,2026-10-25,2026-11-14,Retiros personales extraordinarios por encima del mínimo para vivir que descapitalizan la caja
-EVT-0014,EMP-0015,mes_bajo,2026-10-25,2026-11-14,Caída temporal de ventas previa a campaña navideña
-EVT-0015,EMP-0018,alza_proveedor,2026-10-25,2026-11-14,Sobrecompra de mercadería para Campaña Navideña y Nuevo RUS mal informado en S/ 20 en lugar de S/ 50
-EVT-0016,EMP-0021,retiro_excesivo,2026-10-25,2026-11-14,Retiros personales extraordinarios por encima del mínimo para vivir que descapitalizan la caja
-EVT-0017,EMP-0024,alza_proveedor,2026-10-25,2026-11-14,Sobrecompra de mercadería para Campaña Navideña y Nuevo RUS mal informado en S/ 20 en lugar de S/ 50
-EVT-0018,EMP-0027,mes_bajo,2026-10-25,2026-11-14,Caída temporal de ventas previa a campaña navideña
-EVT-0019,EMP-0030,retiro_excesivo,2026-10-25,2026-11-14,Retiros personales extraordinarios por encima del mínimo para vivir que descapitalizan la caja
+EVT-0010,EMP-0003,retiro_excesivo,2026-10-28,2026-11-12,Retiros personales extraordinarios por encima del sueldo fijo que descapitalizan la caja
+EVT-0011,EMP-0004,mes_bajo,2026-10-25,,Caída temporal de ventas previa a la campaña navideña (en curso)
+EVT-0012,EMP-0005,gasto_extra,2026-10-30,2026-10-30,Gasto extraordinario de reparación del local y equipos
+EVT-0013,EMP-0006,alza_proveedor,2026-11-10,,Pedido a crédito de mercadería pre-Campaña Navideña mayor a lo que se vende hasta su vencimiento
+EVT-0014,EMP-0007,cliente_no_paga,2026-10-24,,Un cliente con fiados grandes dejó de pagar
+EVT-0015,EMP-0009,retiro_excesivo,2026-10-28,2026-11-12,Retiros personales extraordinarios por encima del sueldo fijo que descapitalizan la caja
+EVT-0016,EMP-0010,mes_bajo,2026-10-25,,Caída temporal de ventas previa a la campaña navideña (en curso)
+EVT-0017,EMP-0012,alza_proveedor,2026-11-10,,Pedido a crédito de mercadería pre-Campaña Navideña mayor a lo que se vende hasta su vencimiento
+EVT-0018,EMP-0015,retiro_excesivo,2026-10-28,2026-11-12,Retiros personales extraordinarios por encima del sueldo fijo que descapitalizan la caja
+EVT-0019,EMP-0016,mes_bajo,2026-10-25,,Caída temporal de ventas previa a la campaña navideña (en curso)
+EVT-0020,EMP-0017,gasto_extra,2026-10-30,2026-10-30,Gasto extraordinario de reparación del local y equipos
+EVT-0021,EMP-0018,alza_proveedor,2026-11-10,,Pedido a crédito de mercadería pre-Campaña Navideña mayor a lo que se vende hasta su vencimiento
+EVT-0022,EMP-0019,cliente_no_paga,2026-10-24,,Un cliente con fiados grandes dejó de pagar
+EVT-0023,EMP-0021,retiro_excesivo,2026-10-28,2026-11-12,Retiros personales extraordinarios por encima del sueldo fijo que descapitalizan la caja
+EVT-0024,EMP-0022,mes_bajo,2026-10-25,,Caída temporal de ventas previa a la campaña navideña (en curso)
+EVT-0025,EMP-0024,alza_proveedor,2026-11-10,,Pedido a crédito de mercadería pre-Campaña Navideña mayor a lo que se vende hasta su vencimiento
+EVT-0026,EMP-0027,retiro_excesivo,2026-10-28,2026-11-12,Retiros personales extraordinarios por encima del sueldo fijo que descapitalizan la caja
+EVT-0027,EMP-0028,mes_bajo,2026-10-25,,Caída temporal de ventas previa a la campaña navideña (en curso)
+EVT-0028,EMP-0029,gasto_extra,2026-10-30,2026-10-30,Gasto extraordinario de reparación del local y equipos
+EVT-0029,EMP-0030,alza_proveedor,2026-11-10,,Pedido a crédito de mercadería pre-Campaña Navideña mayor a lo que se vende hasta su vencimiento

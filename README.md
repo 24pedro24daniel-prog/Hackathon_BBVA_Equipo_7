@@ -57,7 +57,7 @@ Las referencias y el sustento del problema están documentados en [context.md](.
   - Transcripción de notas de voz con **`faster-whisper`**.
   - Lectura de fotos del cuaderno de fiados mediante modelo de visión (**VLM** vía OpenRouter, con emparejamiento de clientes por alias, descarte de tachaduras y *fallback* determinístico por *fixtures* cuando no hay conexión o clave).
   - Extracción estructurada y asistente conversacional con *tool calling* sobre **OpenRouter** y *fallback* por reglas determinísticas (`app/services/ingesta/reglas.py`), más trazabilidad completa en la tabla `llm_llamadas` y subida opcional de medios con URLs prefirmadas en **Cloudflare R2**.
-- **Pipeline de datos sintéticos y auditoría ([`data/`](./data/)):** generador determinístico (`seed=42`, [`generate_synthetic_data.mjs`](./data/generate_synthetic_data.mjs)) que produce los **25 CSV** del modelo (**62 272 registros**): Pedro (`EMP-0001`) con la historia de la demo, un usuario nuevo (`EMP-0002`) y 28 negocios con volumen, rubro (21 bodegas, 4 restaurantes, 3 talleres, 2 distribuidoras), fiado, billetera digital, trabajadores, RUC y estacionalidad distintos. El DDL ([`schema.sql`](./data/schema.sql)) se **genera desde** `backend/app/db/models.py` ([`generar_schema.py`](./data/pipeline_python/generar_schema.py)); los cargadores ([`load_postgres.py`](./data/load_postgres.py) / [`.mjs`](./data/load_postgres.mjs)) crean el esquema, cargan los CSV y **rechazan por defecto una BD de producción**. Auditoría de **30 controles contra el esquema real** ([`audit_quality.mjs`](./data/audit_quality.mjs), [`AUDITORIA_CALIDAD_DATOS.md`](./data/AUDITORIA_CALIDAD_DATOS.md)), prueba de que detecta errores ([`audit_mutations.mjs`](./data/audit_mutations.mjs)), chequeo complementario con **Pandera** ([`validate_pandera.py`](./data/pipeline_python/validate_pandera.py)) y **153 frases distintas** de evaluación de ingesta ([`eval/frases_ingesta_eval.csv`](./data/eval/frases_ingesta_eval.csv)).
+- **Pipeline de datos sintéticos y auditoría ([`data/`](./data/)):** generador determinístico (`seed=42`, [`generate_synthetic_data.mjs`](./data/generate_synthetic_data.mjs)) que produce los **25 CSV** del modelo (**63 736 registros**): Pedro (`EMP-0001`) con la historia de la demo, un usuario nuevo (`EMP-0002`) y 28 negocios con volumen, rubro (21 bodegas, 4 restaurantes, 3 talleres, 2 distribuidoras), fiado, billetera digital, trabajadores, RUC y estacionalidad distintos. El DDL ([`schema.sql`](./data/schema.sql)) se **genera desde** `backend/app/db/models.py` ([`generar_schema.py`](./data/pipeline_python/generar_schema.py)); los cargadores ([`load_postgres.py`](./data/load_postgres.py) / [`.mjs`](./data/load_postgres.mjs)) crean el esquema, cargan los CSV y **rechazan por defecto una BD de producción**. Auditoría de **30 controles contra el esquema real** ([`audit_quality.mjs`](./data/audit_quality.mjs), [`AUDITORIA_CALIDAD_DATOS.md`](./data/AUDITORIA_CALIDAD_DATOS.md)), prueba de que detecta errores ([`audit_mutations.mjs`](./data/audit_mutations.mjs)), chequeo complementario con **Pandera** ([`validate_pandera.py`](./data/pipeline_python/validate_pandera.py)) y **153 frases distintas** de evaluación de ingesta ([`eval/frases_ingesta_eval.csv`](./data/eval/frases_ingesta_eval.csv)).
 - **Modelos de Machine Learning ([`modelo/`](./modelo/)):**
   - **Forecast diario (`LightGBM Quantile Regression`):** Notebook [`modelo_ingreso_egreso_lightgbm.ipynb`](./modelo/modelo_ingreso_egreso_lightgbm.ipynb) y artefactos `.joblib` en [`modelo/artifacts/forecast/`](./modelo/artifacts/forecast/) para predecir cuantiles `P10`, `P50` y `P90` de ingresos y egresos diarios (`MAE` de `S/ 31.75` en ingreso y `S/ 11.43` en egreso, superando al baseline naive en **+34.5%** y **+68.1%** con cobertura `P10–P90` de ~78%).
   - **Score pedagógico / riesgo (`Logistic Regression`):** Notebook [`credit_scoring_bodegas_logreg.ipynb`](./modelo/credit_scoring_bodegas_logreg.ipynb) y artefactos serializados en [`modelo/artifacts/credit_scoring/`](./modelo/artifacts/credit_scoring/) (`AUC test = 0.771`).
@@ -68,7 +68,7 @@ Las referencias y el sustento del problema están documentados en [context.md](.
 | :--- | :--- |
 | [`frontend/`](./frontend/) | App web React 19 + Vite (6 pantallas del MVP, modo mock y cliente API con `X-API-Key` e `Idempotency-Key`). |
 | [`backend/`](./backend/) | API FastAPI, modelos SQLAlchemy (27 tablas: 25 del modelo + 2 técnicas), `seed_demo.py`, motores financieros, ingesta IA, Docker Compose y suite de `pytest` (`test_a_*`, `test_b_*`, `eval_forecast`, `eval_extractor`). |
-| [`data/`](./data/) | Generador sintético (`generate_synthetic_data.mjs`), 25 CSV (`data/csv/`, 62 272 filas), DDL PostgreSQL generado desde `models.py` (`schema.sql`), cargadores con salvaguarda de producción, auditoría contra el esquema real (30 controles, `audit_mutations.mjs` demuestra que detecta errores), validación Pandera y 153 frases de evaluación de ingesta. |
+| [`data/`](./data/) | Generador sintético (`generate_synthetic_data.mjs`), 25 CSV (`data/csv/`, 63 736 filas), DDL PostgreSQL generado desde `models.py` (`schema.sql`), cargadores con salvaguarda de producción, auditoría contra el esquema real (30 controles, `audit_mutations.mjs` demuestra que detecta errores), validación Pandera y 153 frases de evaluación de ingesta. |
 | [`modelo/`](./modelo/) | Notebooks de entrenamiento (`LightGBM` por cuantiles y `LogisticRegression`) y artefactos `.joblib` exportados en [`modelo/artifacts/`](./modelo/artifacts/). |
 | [`PRODUCT.md`](./PRODUCT.md) | Definición de usuarios, propósito, posicionamiento y principios de diseño del producto. |
 | [`context.md`](./context.md) | Problemática, sustento con fuentes, objetivos, funcionalidades y guion de demo de Pedro (`EMP-0001`). |
@@ -79,14 +79,14 @@ Las referencias y el sustento del problema están documentados en [context.md](.
 ## Instrucciones de ejecución (Local)
 
 ### 1. Frontend (React + Vite)
-Por defecto corre con los mocks interactivos de la historia de Pedro sin requerir base de datos:
+Copia `frontend/.env.example` a `frontend/.env` (con `VITE_USE_MOCK=true` corre con los mocks de la historia de Pedro sin base de datos):
 ```bash
 cd frontend
 npm install
 npm run dev
 # Disponible en http://localhost:5173
 ```
-*(Para conectarlo al backend real, configura `VITE_USE_MOCK=false`, `VITE_PROXY_TARGET=http://localhost:8000` y `VITE_API_KEY` en `frontend/.env`).*
+*(Por defecto (`VITE_USE_MOCK=false`) llama al backend en `VITE_PROXY_TARGET=http://localhost:8000`; con `VITE_USE_MOCK=true` usa los mocks sin backend. En los dos casos se entra con el login de las demos —demo 1 = Bodega Don Pedro, demo 2 = Bodega SurAndina, demo 3 = Bodega Nueva Esperanza—; el front no lleva ninguna API key).*
 
 ### 2. Backend + Base de Datos (Docker Compose — recomendado)
 ```bash
