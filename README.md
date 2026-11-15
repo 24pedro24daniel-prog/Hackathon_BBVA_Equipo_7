@@ -93,6 +93,17 @@ El backend llega a S3, Bedrock y demás servicios por **VPC Endpoints** (Private
 | [`diccionario_datos.md`](./diccionario_datos.md) / [`modelo_datos.dbml`](./modelo_datos.dbml) | Diccionario de las 25 entidades del modelo relacional (+ 2 tablas técnicas) y esquema DBML. |
 | [`docs/arquitectura.drawio`](./docs/arquitectura.drawio) | Diagrama de arquitectura del sistema. |
 | [`docs/arquitectura-servicios-aws.png`](./docs/arquitectura-servicios-aws.png) | Arquitectura de servicios en AWS (despliegue). |
+| [`media/`](./media/) | Material de presentación: logo, presentación del pitch y motion graphics de la problemática (ver abajo). |
+
+### Material de presentación (`media/`)
+
+| Ruta | Contenido |
+| :--- | :--- |
+| [`media/ppt/TuCaserito Pitch BBVA_final.pptx`](<./media/ppt/TuCaserito Pitch BBVA_final.pptx>) | Presentación (PPT) del pitch final. |
+| [`media/storytelling-tucaserito.mp4`](./media/storytelling-tucaserito.mp4) | Motion graphics de la problemática (versión de 45 s). |
+| [`media/storytelling-tucaserito-30s.mp4`](./media/storytelling-tucaserito-30s.mp4) | Motion graphics de la problemática (versión de 30 s). |
+| [`media/motion/`](./media/motion/) | Código fuente del motion graphics (Remotion); instrucciones de render en su [README](./media/motion/README.md). |
+| [`media/logo.jpeg`](./media/logo.jpeg) | Logo de TuCaserito. |
 
 ## Instrucciones de ejecución (Local)
 
