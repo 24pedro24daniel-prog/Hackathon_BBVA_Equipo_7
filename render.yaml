@@ -1,0 +1,40 @@
+# CajaClara — Blueprint de Render (backend). Render lo lee al crear el servicio desde "New > Blueprint".
+# Los parámetros no secretos salen de backend/parametros.env (va dentro de la imagen); aquí solo se sobreescribe
+# lo que cambia en el despliegue. Las variables con `sync: false` se llenan en el panel y Render no las pisa.
+
+services:
+  - type: web
+    name: cajaclara-backend
+    runtime: docker
+    plan: free
+    # Misma región que la BD de producción (oregon-postgres.render.com)
+    region: oregon
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /api/v1/health
+    # Solo redespliega cuando cambia el backend (no con cambios del front o de docs)
+    buildFilter:
+      paths:
+        - backend/**
+    envVars:
+      - key: APP_ENV
+        value: produccion
+      - key: PORT
+        value: "8000"
+      # Local sigue con "small" (parametros.env); en Render "base" para entrar en los 512 MB del plan free
+      - key: WHISPER_MODEL
+        value: base
+      # URL del front desplegado (varias separadas por coma). Mientras no exista: http://localhost:5173
+      - key: CORS_ORIGINS
+        sync: false
+      # Credenciales: mismos valores que backend/.env
+      - key: DATABASE_URL_PRODUCCION
+        sync: false
+      - key: API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
