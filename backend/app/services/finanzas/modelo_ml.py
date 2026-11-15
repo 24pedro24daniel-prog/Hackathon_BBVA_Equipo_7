@@ -12,8 +12,9 @@ modelo_ingreso_egreso_lightgbm.ipynb). El equipo de ML ya resolvió `rubro` (aho
 `_CONSTRUIBLE` (lags/medias/stds/calendario); `rubro`, `n_trabajadores` y `antiguedad_meses` seguirán
 apareciendo en `features_no_construibles` hasta que alguien actualice esa regex/MOTIVOS_FEATURE para
 reflejar que sí son construibles vía join/columna directa con la BD real.
-- `usa_fiado`, `usa_billetera_digital`: siguen sin definición acordada para datos reales (propuesta en el
-  `metadata.json` del notebook: ">=1 registro en los últimos 90 días", a confirmar con backend).
+- `usa_fiado`, `usa_billetera_digital`: regla YA ACORDADA con el equipo (>=1 registro en cuaderno_fiado /
+  billeteras_digitales en los últimos 90 días). Se calcula en la vista `v_empresas_flags` documentada en
+  `modelo_datos.dbml`; falta conectar esa vista aquí (hoy `_CONSTRUIBLE` las sigue marcando como no construibles).
 Los 23 features de lags, medias, desviaciones de ingreso/egreso diario y calendario sí son construibles.
 """
 

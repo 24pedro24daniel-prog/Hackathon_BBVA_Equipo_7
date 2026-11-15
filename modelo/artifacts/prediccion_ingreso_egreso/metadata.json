@@ -48,9 +48,9 @@
     "restaurante",
     "taller"
   ],
-  "definiciones_propuestas": {
-    "usa_fiado": "True si la empresa tiene >=1 registro en cuaderno_fiado en los ultimos 90 dias (a confirmar con backend)",
-    "usa_billetera_digital": "True si la empresa tiene >=1 registro en billeteras_digitales en los ultimos 90 dias (a confirmar con backend)"
+  "definiciones_acordadas": {
+    "usa_fiado": "True si la empresa tiene >=1 registro en cuaderno_fiado en los ultimos 90 dias. Calculado en la vista v_empresas_flags (ver modelo_datos.dbml). Acordado con el equipo.",
+    "usa_billetera_digital": "True si la empresa tiene >=1 registro en billeteras_digitales en los ultimos 90 dias. Calculado en la vista v_empresas_flags (ver modelo_datos.dbml). Acordado con el equipo."
   },
   "notas": "Cada archivo <target>_p<quantil>.joblib es un LGBMRegressor. Para predecir, construir X con las columnas de features_en_orden en ese orden exacto, con 'rubro' como pandas Categorical usando las categorias listadas aqui. n_trabajadores reemplaza a zona porque zona es texto libre en la BD real sin regla de mapeo."
 }

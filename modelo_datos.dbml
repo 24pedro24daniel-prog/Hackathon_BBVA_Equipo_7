@@ -168,7 +168,11 @@ Table empresas {
   fecha_saldo_inicial date [not null]
   minimo_operativo decimal(12,2) [not null]
   fecha_alta timestamptz [not null]
-  Note: 'El sueldo fijo NO vive aquí: es un movimiento_programado con es_sueldo = true.'
+  Note: '''
+  El sueldo fijo NO vive aquí: es un movimiento_programado con es_sueldo = true.
+  usa_fiado y usa_billetera_digital (features del modelo de ML de forecast) NO se guardan aquí:
+  se calculan en la vista v_empresas_flags.
+  '''
 }
 
 Table preferencias_alertas {
@@ -636,3 +640,26 @@ Table llm_llamadas {
     (origen, creado_en)
   }
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// VISTAS (campos calculados; no se guardan en tablas, ver convención en el header del archivo)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DBML no soporta CREATE VIEW: se documenta aquí como referencia junto a v_fiados, v_deudas,
+// v_impuestos (ya mencionadas en las notas de sus tablas).
+//
+// v_empresas_flags: usa_fiado / usa_billetera_digital para el modelo de ML de forecast
+// (modelo/artifacts/prediccion_ingreso_egreso/). Regla acordada con el equipo de ML: true si
+// hay >=1 registro en los últimos 90 días.
+//
+// CREATE VIEW v_empresas_flags AS
+// SELECT
+//   e.empresa_id,
+//   EXISTS (
+//     SELECT 1 FROM cuaderno_fiado f
+//     WHERE f.empresa_id = e.empresa_id AND f.fecha_fiado >= CURRENT_DATE - INTERVAL '90 days'
+//   ) AS usa_fiado,
+//   EXISTS (
+//     SELECT 1 FROM billeteras_digitales b
+//     WHERE b.empresa_id = e.empresa_id AND b.fecha_hora >= CURRENT_DATE - INTERVAL '90 days'
+//   ) AS usa_billetera_digital
+// FROM empresas e;
