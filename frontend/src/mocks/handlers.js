@@ -140,11 +140,11 @@ async function handle(method, path, { query, body }) {
         sugerencias: estado === 'te_alcanza' ? [] : [
           { accion: 'reducir_pedido', monto_sugerido: 1800.0, saldo_resultante: simularSaldo({ monto: 1800, escenario }) },
           { accion: 'pagar_en_partes', partes: 2, saldo_resultante: simularSaldo({ monto, partes: 2, escenario }) },
-          { accion: 'combinar', detalle: 'pedir 1 800 + pagar en 2 partes', saldo_resultante: simularSaldo({ monto: 1800, partes: 2, escenario }) },
+          { accion: 'combinar', detalle: 'pedir 1,800 + pagar en 2 partes', saldo_resultante: simularSaldo({ monto: 1800, partes: 2, escenario }) },
         ],
         fundamento: estado === 'te_alcanza'
-          ? 'En 2 semanas sueles vender unos S/ 2 600 y ese día te quedaría colchón.'
-          : 'En 2 semanas sueles vender unos S/ 2 000 y ese día no tendrás colchón.',
+          ? 'En 2 semanas sueles vender unos S/ 2,600 y ese día te quedaría colchón.'
+          : 'En 2 semanas sueles vender unos S/ 2,000 y ese día no tendrás colchón.',
         limites: 'Proyección basada en tus ventas de los últimos 3 meses; no considera eventos que no hayas registrado.',
         confianza: 'media',
         meta: D.meta('forecast-lgbm-quantile', '0.3.1'),
@@ -335,8 +335,8 @@ function asistente(mensaje, conversacion_id, fallback, escenario = 'pedro') {
       respuesta: nuevo
         ? `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Con unos días más de datos te digo cómo vienen tus próximas semanas.`
         : sano
-          ? `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Te deben S/ ${teDeben} en fiados y el 30/11 pagas S/ 2 400 a Andina. Ese día te quedarían unos S/ ${saldo3011}: sí te alcanza.`
-          : `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Te deben S/ ${teDeben} en fiados y el 30/11 pagas S/ 2 400 a Andina. Si no cambias nada, ese día te faltarían S/ 650.`,
+          ? `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Te deben S/ ${teDeben} en fiados y el 30/11 pagas S/ 2,400 a Andina. Ese día te quedarían unos S/ ${saldo3011}: sí te alcanza.`
+          : `Hoy tienes S/ ${saldoNegocio} en la caja del negocio. Te deben S/ ${teDeben} en fiados y el 30/11 pagas S/ 2,400 a Andina. Si no cambias nada, ese día te faltarían S/ 650.`,
       tabla,
       herramientas_llamadas: [{ nombre: 'obtener_resumen', args: { periodo: '2026-11' } }, { nombre: 'obtener_forecast', args: { horizonte_dias: 30 } }],
       cifras_usadas: [{ valor: saldoNegocio, fuente: 'resumen.saldo_caja_negocio' }, ...(nuevo ? [] : [{ valor: sano ? saldo3011 : 650, fuente: sano ? 'forecast.serie.p50' : 'forecast.dia_critico.saldo_p50' }])],
@@ -347,7 +347,7 @@ function asistente(mensaje, conversacion_id, fallback, escenario = 'pedro') {
     return {
       ...base,
       intencion: 'explicar_alerta',
-      respuesta: `Sí te alcanza: el 30/11 pagas S/ 2 400 a Distribuidora Andina y ese día te quedarían unos S/ ${saldo3011}, por encima de tu mínimo de S/ 800. Vendes parejo todos los días y tus fiados son pocos (S/ ${teDeben}).`,
+      respuesta: `Sí te alcanza: el 30/11 pagas S/ 2,400 a Distribuidora Andina y ese día te quedarían unos S/ ${saldo3011}, por encima de tu mínimo de S/ 800. Vendes parejo todos los días y tus fiados son pocos (S/ ${teDeben}).`,
       herramientas_llamadas: [{ nombre: 'obtener_forecast', args: { horizonte_dias: 30 } }],
       cifras_usadas: [{ valor: 2400, fuente: 'pedidos.PED-0012.monto' }, { valor: saldo3011, fuente: 'forecast.serie.p50' }],
     }
@@ -358,7 +358,7 @@ function asistente(mensaje, conversacion_id, fallback, escenario = 'pedro') {
       ...base,
       intencion: 'explicar_alerta',
       ofrecer_humano: true,
-      respuesta: `El 30/11 vence tu pago de S/ 2 400 a Distribuidora Andina. Este mes vendiste unos S/ 560 menos que el mes pasado, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ ${teDeben} en fiados sin cobrar. Si pides S/ 1 800 y pagas en 2 partes, ese día tendrías S/ 850.`,
+      respuesta: `El 30/11 vence tu pago de S/ 2,400 a Distribuidora Andina. Este mes vendiste unos S/ 560 menos que el mes pasado, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ ${teDeben} en fiados sin cobrar. Si pides S/ 1,800 y pagas en 2 partes, ese día tendrías S/ 850.`,
       herramientas_llamadas: [{ nombre: 'obtener_alertas', args: { estado: 'activa' } }, { nombre: 'simular', args: { acciones: ['reducir_pedido:1800', 'pagar_en_partes:2'] } }],
       cifras_usadas: [{ valor: 2400, fuente: 'pedidos.PED-0012.monto' }, { valor: 850, fuente: 'simular.con_acciones.saldo_minimo' }],
     }

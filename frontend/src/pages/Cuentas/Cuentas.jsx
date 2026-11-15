@@ -154,7 +154,7 @@ export default function Cuentas() {
 
   return (
     <div className="cuentas">
-      <PageHeader title="Cuentas" sub="Lo que te deben y lo que debes" />
+      <PageHeader title="Cobros y pagos" sub="Lo que te deben y lo que debes" />
 
       <div className="cuentas-summary-wrap">
         <Card className="cuentas-summary" aria-label="Resumen">
@@ -385,7 +385,7 @@ function DebesBlock({ state, headingRef }) {
         )}
         {items.length === 0 && (
           <Empty cta="Anotar un pedido">
-            No le debes a ningún proveedor. Si haces un pedido a crédito, cuéntamelo en el chat, por ejemplo: “pedí 2 400 a
+            No le debes a ningún proveedor. Si haces un pedido a crédito, cuéntamelo en el chat, por ejemplo: “pedí 2,400 a
             Andina, pago el 30”. Te aviso antes de que venza.
           </Empty>
         )}

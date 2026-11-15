@@ -102,7 +102,7 @@ export function filasMovimiento(mov) {
   return rows
 }
 
-/** Resumen para la pregunta aclaratoria: "pedido a crédito de **S/ 2 400 a Distribuidora Andina**" */
+/** Resumen para la pregunta aclaratoria: "pedido a crédito de **S/ 2,400 a Distribuidora Andina**" */
 export function resumenEntendido(mov) {
   if (mov.tipo === 'compra') {
     const cred = mov.metodo_pago === 'credito' ? ' a crédito' : ''
@@ -137,7 +137,7 @@ export function textoConfirmado(mov, correcciones = {}, res) {
     lines.push('Listo, anotado.')
   }
   if (res?.saldo_caja_negocio !== undefined && res?.saldo_caja_negocio !== null) {
-    lines.push(`Caja del negocio hoy: ${soles(res.saldo_caja_negocio)}`)
+    lines.push(`Saldo del negocio hoy: ${soles(res.saldo_caja_negocio)}`)
   }
   const alerta = res?.alertas_disparadas?.[0]
   if (alerta) lines.push(`Ojo: ${alerta.titulo || alerta.titulo_corto}.`)
@@ -147,7 +147,7 @@ export function textoConfirmado(mov, correcciones = {}, res) {
 /** Pone en negrita el monto dentro de un texto: "te faltarían S/ 650" → "te faltarían **S/ 650**" */
 export function boldMonto(text = '', monto) {
   if (monto === null || monto === undefined) return text
-  const grouped = String(Math.round(Math.abs(monto))).replace(/\B(?=(\d{3})+(?!\d))/g, '[\\s\\u202F\\u00A0]?')
+  const grouped = String(Math.round(Math.abs(monto))).replace(/\B(?=(\d{3})+(?!\d))/g, '[,\\s\\u202F\\u00A0]?')
   const re = new RegExp(`S/[\\s\\u00A0]?${grouped}(?:\\.\\d+)?`)
   return text.replace(re, (m) => `**${m.replace(/^S\/\s/, 'S/\u00A0')}**`)
 }

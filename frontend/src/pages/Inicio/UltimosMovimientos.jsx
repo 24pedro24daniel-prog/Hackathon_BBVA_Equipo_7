@@ -52,7 +52,7 @@ export default function UltimosMovimientos({ escenario }) {
                       lead={<Icon name={ingreso ? 'arrowDown' : 'arrowUp'} size={18} />}
                       title={tituloMovimiento(m)}
                       sub={`${weekdayDdmm(m.fecha_hora)} · ${hhmm(m.fecha_hora)}${m.afecta_caja === false ? ' · no mueve tu caja' : ''}`}
-                      amount={<Money value={ingreso ? m.monto : -m.monto} sign tone={ingreso ? 'pos' : 'neutral'} />}
+                      amount={<Money value={ingreso ? m.monto : -m.monto} tone={ingreso ? 'pos' : 'neg'} />}
                       chevron={false}
                     />
                   )

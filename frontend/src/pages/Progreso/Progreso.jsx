@@ -261,13 +261,12 @@ function Etapa({ etapas, actual }) {
 
 function Factor({ s, esMasBajo }) {
   const { texto, tono } = calificacionParte(s.valor)
-  const explica = s.que_mide || s.detalle
+  const explica = s.detalle
   const peso = pesoEnPalabras(s.peso)
   const sub = (
     <>
       {esMasBajo && <span className="progreso-factor__flag">Donde más puedes avanzar</span>}
       {explica && <span className="progreso-factor__detail">{explica}</span>}
-      {s.que_mide && s.detalle && <span className="progreso-factor__detail">{s.detalle}</span>}
       <ProgressBar value={clamp(s.valor)} label={s.nombre} className="progreso-factor__bar" />
       {peso && <span className="progreso-factor__peso">{peso}</span>}
     </>

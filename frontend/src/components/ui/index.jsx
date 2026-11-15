@@ -87,7 +87,7 @@ export function Money({ value, size = 'md', sign = false, tone = 'neutral', inve
   const n = Number(value)
   const valid = value !== null && value !== undefined && !Number.isNaN(n)
   const abs = valid ? Math.round(Math.abs(n)) : null
-  const grouped = valid ? String(abs).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '—'
+  const grouped = valid ? String(abs).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—'
   const prefix = !valid ? '' : n < 0 ? '−' : sign && n > 0 ? '+' : ''
   const t = tone === 'auto' ? (n < 0 ? 'neg' : sign && n > 0 ? 'pos' : 'neutral') : tone
   return (
