@@ -317,7 +317,8 @@ tables.conversaciones.push(
     fallback_usado: false,
     derivado_a_humano: false,
     prompt_version: 'extractor-v3',
-    modelo_version: 'whisper-small + llm-extractor-0.2.0',
+    // conversaciones.modelo_version es VARCHAR(30)
+    modelo_version: 'whisper-small+extractor-0.2.0',
     fecha_hora: '2026-11-14T10:42:00-05:00',
   },
   {
@@ -645,6 +646,11 @@ let detSeq = 1;
 const nextMovId = () => padId('MOV', movSeq++, 6);
 const nextDetId = () => padId('DET', detSeq++, 6);
 
+// La secuencia puede repetir un ID ya usado (el reinicio movSeq = 200 o un ID fijo del contrato como MOV-000123).
+// Las filas repetidas se guardan aquí y renumerarColisionesMov() les da IDs nuevos al final, sin correr la secuencia.
+const txPorId = new Map();
+const colisionesMov = [];
+
 function addTx({
   id = null,
   empresa_id,
@@ -670,7 +676,16 @@ function addTx({
   const txId = id || nextMovId();
   const afecta_caja = metodo_pago !== 'credito';
   const conf = fmtProb(confianza);
-  tables.transacciones.push({
+  const entrada = { tx: null, detalles: [] };
+  const previa = txPorId.get(txId);
+  if (previa) {
+    // Un ID fijo (pasado en `id`) gana sobre el que dio la secuencia
+    colisionesMov.push(id ? previa : entrada);
+    if (id) txPorId.set(txId, entrada);
+  } else {
+    txPorId.set(txId, entrada);
+  }
+  entrada.tx = {
     transaccion_id: txId,
     empresa_id,
     borrador_id,
@@ -692,10 +707,11 @@ function addTx({
     billetera_mov_id,
     anulada: false,
     creado_en: creado_en || fecha_hora,
-  });
+  };
+  tables.transacciones.push(entrada.tx);
 
   if (producto) {
-    tables.detalle_transaccion.push({
+    const detalle = {
       detalle_id: nextDetId(),
       transaccion_id: txId,
       producto_id: producto.id,
@@ -704,9 +720,20 @@ function addTx({
       precio_unitario: fmtMoney(producto.pv),
       costo_unitario: producto.cu !== null ? fmtMoney(producto.cu) : null,
       subtotal: fmtMoney(monto),
-    });
+    };
+    entrada.detalles.push(detalle);
+    tables.detalle_transaccion.push(detalle);
   }
   return txId;
+}
+
+function renumerarColisionesMov() {
+  let max = Math.max(...tables.transacciones.map((t) => Number(t.transaccion_id.slice(4))));
+  for (const { tx, detalles } of colisionesMov) {
+    const nuevo = padId('MOV', ++max, 6);
+    tx.transaccion_id = nuevo;
+    for (const d of detalles) d.transaccion_id = nuevo;
+  }
 }
 
 // 2.1 Transacciones que NO mueven caja (ventas fiadas y pedidos a crédito) de Pedro
@@ -2267,6 +2294,7 @@ function writeCsv(filePath, rows, explicitHeaders = null) {
   fs.writeFileSync(filePath, lines.join('\n') + '\n', 'utf8');
 }
 
+renumerarColisionesMov();
 for (const [tableName, rows] of Object.entries(tables)) {
   writeCsv(path.join(CSV_DIR, `${tableName}.csv`), rows, TABLE_HEADERS[tableName]);
 }

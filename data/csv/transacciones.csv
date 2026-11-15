@@ -121,7 +121,7 @@ MOV-000119,EMP-0001,,2026-08-28T15:00:00-05:00,gasto_negocio,CAT-09,Alquiler del
 MOV-000120,EMP-0001,,2026-09-16T15:00:00-05:00,gasto_negocio,CAT-08,Luz y agua del local septiembre,180.00,PEN,efectivo,true,voz,0.920,false,,,,PRG-0001,,false,2026-09-16T15:00:00-05:00
 MOV-000121,EMP-0001,,2026-09-20T15:00:00-05:00,gasto_negocio,CAT-10,Flete y transporte mercadería,280.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-09-20T15:00:00-05:00
 MOV-000122,EMP-0001,,2026-09-28T15:00:00-05:00,gasto_negocio,CAT-09,Alquiler del local septiembre,350.00,PEN,efectivo,true,voz,0.920,false,,,,PRG-0002,,false,2026-09-28T15:00:00-05:00
-MOV-000123,EMP-0001,,2026-08-20T20:00:00-05:00,retiro_personal,CAT-13,Retiro semanal para gastos mínimos de la casa (sueldo + extras),830.00,PEN,efectivo,true,voz,0.920,false,,,,PRG-0003,,false,2026-08-20T20:00:00-05:00
+MOV-008060,EMP-0001,,2026-08-20T20:00:00-05:00,retiro_personal,CAT-13,Retiro semanal para gastos mínimos de la casa (sueldo + extras),830.00,PEN,efectivo,true,voz,0.920,false,,,,PRG-0003,,false,2026-08-20T20:00:00-05:00
 MOV-000124,EMP-0001,,2026-08-27T20:00:00-05:00,retiro_personal,CAT-13,Retiro semanal para gastos mínimos de la casa (sueldo + extras),830.00,PEN,efectivo,true,voz,0.920,false,,,,PRG-0003,,false,2026-08-27T20:00:00-05:00
 MOV-000125,EMP-0001,,2026-09-03T20:00:00-05:00,retiro_personal,CAT-13,Retiro semanal para gastos mínimos de la casa (sueldo + extras),830.00,PEN,efectivo,true,voz,0.920,false,,,,PRG-0003,,false,2026-09-03T20:00:00-05:00
 MOV-000126,EMP-0001,,2026-09-10T20:00:00-05:00,retiro_personal,CAT-13,Retiro semanal para gastos mínimos de la casa (sueldo + extras),830.00,PEN,efectivo,true,voz,0.920,false,,,,PRG-0003,,false,2026-09-10T20:00:00-05:00
@@ -241,48 +241,48 @@ MOV-000238,EMP-0001,,2026-11-13T20:15:00-05:00,retiro_personal,CAT-13,Adelanto e
 MOV-000239,EMP-0001,,2026-11-04T16:00:00-05:00,gasto_negocio,CAT-10,Flete y bolsas para campaña navideña en bodega,210.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-04T16:00:00-05:00
 MOV-000240,EMP-0001,,2026-11-11T15:30:00-05:00,gasto_negocio,CAT-08,Recarga de gas y limpieza del local,200.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-11T15:30:00-05:00
 MOV-000241,EMP-0001,,2026-11-12T11:20:00-05:00,pago_impuesto,CAT-11,"Pago Nuevo RUS 2026-10 (informó y pagó S/ 20 de Cat. 1 en lugar de S/ 50 de Cat. 2 pese a superar S/ 5,000)",20.00,PEN,efectivo,true,texto,0.920,false,,,IMP-0009,,,false,2026-11-12T11:20:00-05:00
-MOV-000200,EMP-0002,,2026-11-12T18:30:00-05:00,venta,CAT-02,Ventas día 1 en efectivo,610.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-12T18:30:00-05:00
-MOV-000201,EMP-0002,,2026-11-12T09:30:00-05:00,compra,CAT-07,Compra mercadería del día en efectivo,480.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-12T09:30:00-05:00
-MOV-000202,EMP-0002,,2026-11-13T18:30:00-05:00,venta,CAT-02,Ventas día 2 en efectivo,640.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-13T18:30:00-05:00
-MOV-000203,EMP-0002,,2026-11-13T09:30:00-05:00,compra,CAT-07,Compra mercadería del día en efectivo,500.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-13T09:30:00-05:00
-MOV-000204,EMP-0002,,2026-11-14T18:30:00-05:00,venta,CAT-02,Ventas día 3 en efectivo,620.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-14T18:30:00-05:00
-MOV-000205,EMP-0002,,2026-11-14T09:30:00-05:00,compra,CAT-07,Compra mercadería del día en efectivo,470.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-14T09:30:00-05:00
-MOV-000206,EMP-0002,,2026-11-13T20:00:00-05:00,retiro_personal,CAT-13,Retiro en efectivo para gastos mínimos de la casa,150.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-13T20:00:00-05:00
-MOV-000207,EMP-0003,,2026-09-14T11:00:00-05:00,pago_impuesto,CAT-11,Pago Nuevo RUS 2026-08 (Cat. 1 S/ 20),20.00,PEN,efectivo,true,texto,0.920,false,,,IMP-0050,,,false,2026-09-14T11:00:00-05:00
-MOV-000208,EMP-0003,,2026-10-14T11:00:00-05:00,pago_impuesto,CAT-11,Pago Nuevo RUS 2026-09 (Cat. 1 S/ 20),20.00,PEN,efectivo,true,texto,0.920,false,,,IMP-0051,,,false,2026-10-14T11:00:00-05:00
-MOV-000209,EMP-0003,,2026-11-12T11:00:00-05:00,pago_impuesto,CAT-11,Pago Nuevo RUS 2026-10 (Cat. 1 S/ 20),20.00,PEN,efectivo,true,texto,0.920,false,,,IMP-0052,,,false,2026-11-12T11:00:00-05:00
-MOV-000210,EMP-0003,,2026-07-28T12:00:00-05:00,venta,CAT-02,Venta fiada a Sra. Juana,56.00,PEN,credito,false,foto,0.920,false,FIA-0100,,,,,false,2026-07-28T12:00:00-05:00
-MOV-000211,EMP-0003,,2026-08-06T17:00:00-05:00,cobro_fiado,CAT-02,Cobro fiado Sra. Juana en efectivo,56.00,PEN,efectivo,true,voz,0.920,false,FIA-0100,,,,,false,2026-08-06T17:00:00-05:00
-MOV-000212,EMP-0003,,2026-08-15T12:00:00-05:00,venta,CAT-02,Venta fiada a Don Carlos,125.00,PEN,credito,false,voz,0.920,false,FIA-0101,,,,,false,2026-08-15T12:00:00-05:00
-MOV-000213,EMP-0003,,2026-09-03T17:00:00-05:00,cobro_fiado,CAT-02,Cobro fiado Don Carlos en efectivo,125.00,PEN,efectivo,true,voz,0.920,false,FIA-0101,,,,,false,2026-09-03T17:00:00-05:00
-MOV-000214,EMP-0003,,2026-09-02T12:00:00-05:00,venta,CAT-02,Venta fiada a Vecino Miguel,53.00,PEN,credito,false,foto,0.920,false,FIA-0102,,,,,false,2026-09-02T12:00:00-05:00
-MOV-000215,EMP-0003,,2026-09-25T17:00:00-05:00,cobro_fiado,CAT-02,Cobro fiado Vecino Miguel en efectivo,53.00,PEN,efectivo,true,voz,0.920,false,FIA-0102,,,,,false,2026-09-25T17:00:00-05:00
-MOV-000216,EMP-0003,,2026-09-20T12:00:00-05:00,venta,CAT-02,Venta fiada a Sra. Juana,111.00,PEN,credito,false,voz,0.920,false,FIA-0103,,,,,false,2026-09-20T12:00:00-05:00
-MOV-000217,EMP-0003,,2026-09-30T17:00:00-05:00,cobro_fiado,CAT-02,Cobro fiado Sra. Juana en efectivo,111.00,PEN,efectivo,true,voz,0.920,false,FIA-0103,,,,,false,2026-09-30T17:00:00-05:00
-MOV-000218,EMP-0003,,2026-10-08T12:00:00-05:00,venta,CAT-02,Venta fiada a Don Carlos,47.00,PEN,credito,false,foto,0.920,false,FIA-0104,,,,,false,2026-10-08T12:00:00-05:00
-MOV-000219,EMP-0003,,2026-10-17T17:00:00-05:00,cobro_fiado,CAT-02,Cobro fiado Don Carlos en efectivo,47.00,PEN,efectivo,true,voz,0.920,false,FIA-0104,,,,,false,2026-10-17T17:00:00-05:00
-MOV-000220,EMP-0003,,2026-10-26T12:00:00-05:00,venta,CAT-02,Venta fiada a Vecino Miguel,104.00,PEN,credito,false,voz,0.920,false,FIA-0105,,,,,false,2026-10-26T12:00:00-05:00
-MOV-000221,EMP-0003,,2026-11-10T09:00:00-05:00,compra,CAT-07,Pedido a crédito proveedor para campaña navideña,502.00,PEN,credito,false,voz,0.920,false,,PED-0100,,,,false,2026-11-10T09:00:00-05:00
-MOV-000222,EMP-0003,,2026-11-01T10:00:00-05:00,prestamo_recibido,CAT-06,Préstamo recibido en efectivo,1000.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-01T10:00:00-05:00
-MOV-000223,EMP-0003,,2026-11-02T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-02T19:30:00-05:00
-MOV-000224,EMP-0003,,2026-11-03T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-03T19:30:00-05:00
-MOV-000225,EMP-0003,,2026-11-04T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-04T19:30:00-05:00
-MOV-000226,EMP-0003,,2026-11-05T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-05T19:30:00-05:00
-MOV-000227,EMP-0003,,2026-11-06T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-06T19:30:00-05:00
-MOV-000228,EMP-0003,,2026-11-07T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-07T19:30:00-05:00
-MOV-000229,EMP-0003,,2026-11-08T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-08T19:30:00-05:00
-MOV-000230,EMP-0003,,2026-11-09T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-09T19:30:00-05:00
-MOV-000231,EMP-0003,,2026-11-10T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-10T19:30:00-05:00
-MOV-000232,EMP-0003,,2026-11-11T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-11T19:30:00-05:00
-MOV-000233,EMP-0003,,2026-11-12T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-12T19:30:00-05:00
-MOV-000234,EMP-0003,,2026-11-13T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-13T19:30:00-05:00
-MOV-000235,EMP-0003,,2026-11-14T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-14T19:30:00-05:00
-MOV-000236,EMP-0003,,2026-07-18T18:45:00-05:00,venta,CAT-01,Ventas del día en efectivo,192.00,PEN,efectivo,true,foto,0.920,false,,,,,,false,2026-07-18T18:45:00-05:00
-MOV-000237,EMP-0003,,2026-07-18T09:30:00-05:00,compra,CAT-07,Compra de mercadería en efectivo,119.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-07-18T09:30:00-05:00
-MOV-000238,EMP-0003,,2026-07-18T20:00:00-05:00,retiro_personal,CAT-13,Retiro semanal para gastos mínimos de vida (sueldo fijo),238.00,PEN,efectivo,true,voz,0.920,false,,,,PRG-0010,,false,2026-07-18T20:00:00-05:00
-MOV-000239,EMP-0003,,2026-07-19T18:45:00-05:00,venta,CAT-02,Ventas del día en efectivo,201.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-07-19T18:45:00-05:00
-MOV-000240,EMP-0003,,2026-07-19T09:30:00-05:00,compra,CAT-07,Compra de mercadería en efectivo,125.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-07-19T09:30:00-05:00
-MOV-000241,EMP-0003,,2026-07-20T18:45:00-05:00,venta,CAT-03,Ventas del día en efectivo,131.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-07-20T18:45:00-05:00
+MOV-008061,EMP-0002,,2026-11-12T18:30:00-05:00,venta,CAT-02,Ventas día 1 en efectivo,610.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-12T18:30:00-05:00
+MOV-008062,EMP-0002,,2026-11-12T09:30:00-05:00,compra,CAT-07,Compra mercadería del día en efectivo,480.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-12T09:30:00-05:00
+MOV-008063,EMP-0002,,2026-11-13T18:30:00-05:00,venta,CAT-02,Ventas día 2 en efectivo,640.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-13T18:30:00-05:00
+MOV-008064,EMP-0002,,2026-11-13T09:30:00-05:00,compra,CAT-07,Compra mercadería del día en efectivo,500.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-13T09:30:00-05:00
+MOV-008065,EMP-0002,,2026-11-14T18:30:00-05:00,venta,CAT-02,Ventas día 3 en efectivo,620.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-14T18:30:00-05:00
+MOV-008066,EMP-0002,,2026-11-14T09:30:00-05:00,compra,CAT-07,Compra mercadería del día en efectivo,470.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-14T09:30:00-05:00
+MOV-008067,EMP-0002,,2026-11-13T20:00:00-05:00,retiro_personal,CAT-13,Retiro en efectivo para gastos mínimos de la casa,150.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-11-13T20:00:00-05:00
+MOV-008068,EMP-0003,,2026-09-14T11:00:00-05:00,pago_impuesto,CAT-11,Pago Nuevo RUS 2026-08 (Cat. 1 S/ 20),20.00,PEN,efectivo,true,texto,0.920,false,,,IMP-0050,,,false,2026-09-14T11:00:00-05:00
+MOV-008069,EMP-0003,,2026-10-14T11:00:00-05:00,pago_impuesto,CAT-11,Pago Nuevo RUS 2026-09 (Cat. 1 S/ 20),20.00,PEN,efectivo,true,texto,0.920,false,,,IMP-0051,,,false,2026-10-14T11:00:00-05:00
+MOV-008070,EMP-0003,,2026-11-12T11:00:00-05:00,pago_impuesto,CAT-11,Pago Nuevo RUS 2026-10 (Cat. 1 S/ 20),20.00,PEN,efectivo,true,texto,0.920,false,,,IMP-0052,,,false,2026-11-12T11:00:00-05:00
+MOV-008071,EMP-0003,,2026-07-28T12:00:00-05:00,venta,CAT-02,Venta fiada a Sra. Juana,56.00,PEN,credito,false,foto,0.920,false,FIA-0100,,,,,false,2026-07-28T12:00:00-05:00
+MOV-008072,EMP-0003,,2026-08-06T17:00:00-05:00,cobro_fiado,CAT-02,Cobro fiado Sra. Juana en efectivo,56.00,PEN,efectivo,true,voz,0.920,false,FIA-0100,,,,,false,2026-08-06T17:00:00-05:00
+MOV-008073,EMP-0003,,2026-08-15T12:00:00-05:00,venta,CAT-02,Venta fiada a Don Carlos,125.00,PEN,credito,false,voz,0.920,false,FIA-0101,,,,,false,2026-08-15T12:00:00-05:00
+MOV-008074,EMP-0003,,2026-09-03T17:00:00-05:00,cobro_fiado,CAT-02,Cobro fiado Don Carlos en efectivo,125.00,PEN,efectivo,true,voz,0.920,false,FIA-0101,,,,,false,2026-09-03T17:00:00-05:00
+MOV-008075,EMP-0003,,2026-09-02T12:00:00-05:00,venta,CAT-02,Venta fiada a Vecino Miguel,53.00,PEN,credito,false,foto,0.920,false,FIA-0102,,,,,false,2026-09-02T12:00:00-05:00
+MOV-008076,EMP-0003,,2026-09-25T17:00:00-05:00,cobro_fiado,CAT-02,Cobro fiado Vecino Miguel en efectivo,53.00,PEN,efectivo,true,voz,0.920,false,FIA-0102,,,,,false,2026-09-25T17:00:00-05:00
+MOV-008077,EMP-0003,,2026-09-20T12:00:00-05:00,venta,CAT-02,Venta fiada a Sra. Juana,111.00,PEN,credito,false,voz,0.920,false,FIA-0103,,,,,false,2026-09-20T12:00:00-05:00
+MOV-008078,EMP-0003,,2026-09-30T17:00:00-05:00,cobro_fiado,CAT-02,Cobro fiado Sra. Juana en efectivo,111.00,PEN,efectivo,true,voz,0.920,false,FIA-0103,,,,,false,2026-09-30T17:00:00-05:00
+MOV-008079,EMP-0003,,2026-10-08T12:00:00-05:00,venta,CAT-02,Venta fiada a Don Carlos,47.00,PEN,credito,false,foto,0.920,false,FIA-0104,,,,,false,2026-10-08T12:00:00-05:00
+MOV-008080,EMP-0003,,2026-10-17T17:00:00-05:00,cobro_fiado,CAT-02,Cobro fiado Don Carlos en efectivo,47.00,PEN,efectivo,true,voz,0.920,false,FIA-0104,,,,,false,2026-10-17T17:00:00-05:00
+MOV-008081,EMP-0003,,2026-10-26T12:00:00-05:00,venta,CAT-02,Venta fiada a Vecino Miguel,104.00,PEN,credito,false,voz,0.920,false,FIA-0105,,,,,false,2026-10-26T12:00:00-05:00
+MOV-008082,EMP-0003,,2026-11-10T09:00:00-05:00,compra,CAT-07,Pedido a crédito proveedor para campaña navideña,502.00,PEN,credito,false,voz,0.920,false,,PED-0100,,,,false,2026-11-10T09:00:00-05:00
+MOV-008083,EMP-0003,,2026-11-01T10:00:00-05:00,prestamo_recibido,CAT-06,Préstamo recibido en efectivo,1000.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-01T10:00:00-05:00
+MOV-008084,EMP-0003,,2026-11-02T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-02T19:30:00-05:00
+MOV-008085,EMP-0003,,2026-11-03T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-03T19:30:00-05:00
+MOV-008086,EMP-0003,,2026-11-04T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-04T19:30:00-05:00
+MOV-008087,EMP-0003,,2026-11-05T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-05T19:30:00-05:00
+MOV-008088,EMP-0003,,2026-11-06T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-06T19:30:00-05:00
+MOV-008089,EMP-0003,,2026-11-07T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-07T19:30:00-05:00
+MOV-008090,EMP-0003,,2026-11-08T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-08T19:30:00-05:00
+MOV-008091,EMP-0003,,2026-11-09T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-09T19:30:00-05:00
+MOV-008092,EMP-0003,,2026-11-10T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-10T19:30:00-05:00
+MOV-008093,EMP-0003,,2026-11-11T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-11T19:30:00-05:00
+MOV-008094,EMP-0003,,2026-11-12T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-12T19:30:00-05:00
+MOV-008095,EMP-0003,,2026-11-13T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-13T19:30:00-05:00
+MOV-008096,EMP-0003,,2026-11-14T19:30:00-05:00,pago_prestamo,CAT-12,Pago cuota diaria préstamo en efectivo,40.00,PEN,efectivo,true,voz,0.920,false,,DEU-0101,,,,false,2026-11-14T19:30:00-05:00
+MOV-008097,EMP-0003,,2026-07-18T18:45:00-05:00,venta,CAT-01,Ventas del día en efectivo,192.00,PEN,efectivo,true,foto,0.920,false,,,,,,false,2026-07-18T18:45:00-05:00
+MOV-008098,EMP-0003,,2026-07-18T09:30:00-05:00,compra,CAT-07,Compra de mercadería en efectivo,119.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-07-18T09:30:00-05:00
+MOV-008099,EMP-0003,,2026-07-18T20:00:00-05:00,retiro_personal,CAT-13,Retiro semanal para gastos mínimos de vida (sueldo fijo),238.00,PEN,efectivo,true,voz,0.920,false,,,,PRG-0010,,false,2026-07-18T20:00:00-05:00
+MOV-008100,EMP-0003,,2026-07-19T18:45:00-05:00,venta,CAT-02,Ventas del día en efectivo,201.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-07-19T18:45:00-05:00
+MOV-008101,EMP-0003,,2026-07-19T09:30:00-05:00,compra,CAT-07,Compra de mercadería en efectivo,125.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-07-19T09:30:00-05:00
+MOV-008102,EMP-0003,,2026-07-20T18:45:00-05:00,venta,CAT-03,Ventas del día en efectivo,131.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-07-20T18:45:00-05:00
 MOV-000242,EMP-0003,,2026-07-20T09:30:00-05:00,compra,CAT-07,Compra de mercadería en efectivo,81.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-07-20T09:30:00-05:00
 MOV-000243,EMP-0003,,2026-07-21T18:45:00-05:00,venta,CAT-04,Ventas del día en efectivo,159.00,PEN,efectivo,true,texto,0.920,false,,,,,,false,2026-07-21T18:45:00-05:00
 MOV-000244,EMP-0003,,2026-07-21T09:30:00-05:00,compra,CAT-07,Compra de mercadería en efectivo,99.00,PEN,efectivo,true,voz,0.920,false,,,,,,false,2026-07-21T09:30:00-05:00
