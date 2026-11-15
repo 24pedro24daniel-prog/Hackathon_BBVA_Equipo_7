@@ -7,7 +7,7 @@
     "cv_ventas",
     "pct_pagos_a_tiempo",
     "dias_mora_promedio",
-    "pct_ventas_registradas",
+    "dias_desde_ultimo_registro",
     "pct_fiado_sobre_ventas",
     "pct_fiado_cobrado_a_tiempo",
     "n_alertas_quiebre_stock",
@@ -26,7 +26,7 @@
     "cv_ventas",
     "pct_pagos_a_tiempo",
     "dias_mora_promedio",
-    "pct_ventas_registradas",
+    "dias_desde_ultimo_registro",
     "pct_fiado_sobre_ventas",
     "pct_fiado_cobrado_a_tiempo",
     "n_alertas_quiebre_stock"
@@ -50,12 +50,17 @@
     "mixto",
     "panaderia"
   ],
-  "auc_test": 0.771,
+  "auc_test": 0.7648,
   "formula_score": "score = round(modelo.predict_proba(scaler.transform(X))[:, 1] * 100)",
   "rangos_categoria": {
     "Rojo (Poor)": "0-39",
     "Amarillo (Regular)": "40-69",
     "Verde (Good)": "70-100"
+  },
+  "reglas_acordadas": {
+    "dias_desde_ultimo_registro": "Reemplaza a pct_ventas_registradas (no medible con data real). Se calcula como hoy - MAX(transacciones.fecha_hora) por empresa.",
+    "pct_fiado_cobrado_a_tiempo": "Se usa SOLO como tasa agregada por empresa (promedio de fechas en cuaderno_fiado), nunca el campo individual cuaderno_fiado.pago_tardio, que queda reservado para evaluacion.",
+    "n_alertas_quiebre_stock": "Proxy construido a partir de alertas.tipo_alerta = caida_ventas (no existe un tipo quiebre_stock en el enum; se podria agregar como mejora opcional, no es obligatorio)."
   },
   "notas": "Para scorear una bodega nueva: construir X con pd.get_dummies igual que aqui (mismas columnas_en_orden, rellenando con 0 las categorias ausentes), aplicar scaler.transform, luego modelo.predict_proba."
 }
