@@ -294,7 +294,7 @@ def test_asistente_aceptada_enlaza_el_mensaje(client_db, db, llm_falso):
     f = _una(db)
     asistente = db.query(m.Conversacion).filter_by(conversacion_id=d["conversacion_id"], rol="asistente").one()
     assert (f.origen, f.referencia_tipo, f.referencia_id) == ("asistente", "mensaje", asistente.mensaje_id)
-    assert f.resultado_uso == "aceptada" and f.prompt_version == "asistente-v2"
+    assert f.resultado_uso == "aceptada" and f.prompt_version == "asistente-v3"
 
 
 def test_asistente_rechazada_por_el_verificador_guarda_la_respuesta_cruda(client_db, db, llm_falso):
@@ -366,14 +366,14 @@ def test_listado_por_fechas_contenido_y_validaciones(client_db, db):
 
 def test_listado_aislado_por_empresa(client_db, db):
     otra = m.Empresa(**{c.name: getattr(db.get(m.Empresa, EMP), c.name) for c in m.Empresa.__table__.columns})
-    otra.empresa_id, otra.telefono_whatsapp, otra.nombre_ficticio = "EMP-0002", "+51999000002", "Otra bodega"
+    otra.empresa_id, otra.telefono_whatsapp, otra.nombre_ficticio = "EMP-0099", "+51999000099", "Otra bodega"
     db.add(otra)
     db.flush()
     _insertar(db, 2)
-    _insertar(db, 3, empresa="EMP-0002")
+    _insertar(db, 3, empresa="EMP-0099")
     assert len(client_db.get(f"{P}/empresas/{EMP}/llm/llamadas").json()["items"]) == 2
-    assert len(client_db.get(f"{P}/empresas/EMP-0002/llm/llamadas").json()["items"]) == 3
-    assert client_db.get(f"{P}/empresas/EMP-0002/llm/resumen").json()["totales"]["llamadas"] == 3
+    assert len(client_db.get(f"{P}/empresas/EMP-0099/llm/llamadas").json()["items"]) == 3
+    assert client_db.get(f"{P}/empresas/EMP-0099/llm/resumen").json()["totales"]["llamadas"] == 3
 
 
 def test_resumen_agregados_por_dia_y_origen(client_db, db):

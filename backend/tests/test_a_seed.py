@@ -68,14 +68,15 @@ def test_saldo_de_caja_al_14_11_es_2340(db):
 
 @pytest.mark.db
 def test_no_hay_movimientos_desde_el_14_11(db):
-    n = _escalar(db, "SELECT count(*) FROM transacciones WHERE fecha_hora >= '2026-11-14 00:00:00-05:00'")
+    n = _escalar(db, "SELECT count(*) FROM transacciones WHERE empresa_id = 'EMP-0001' "
+                     "AND fecha_hora >= '2026-11-14 00:00:00-05:00'")
     assert n == 0
 
 
 @pytest.mark.db
 def test_90_dias_de_ventas_todos_los_dias(db):
     dias = db.execute(text("""SELECT DISTINCT (fecha_hora AT TIME ZONE 'America/Lima')::date FROM transacciones
-                              WHERE tipo = 'venta' AND afecta_caja""")).scalars().all()  # fmt: skip
+                              WHERE tipo = 'venta' AND afecta_caja AND empresa_id = 'EMP-0001'""")).scalars().all()  # fmt: skip
     esperado = {date(2026, 8, 15) + timedelta(days=i) for i in range(91)}
     assert set(dias) == esperado
 
@@ -158,7 +159,7 @@ def test_sueldo_programado_y_retiros(db):
 
 @pytest.mark.db
 def test_rus_al_dia_y_proximo_vencimiento(db):
-    imp = {i.periodo: i for i in db.query(m.Impuesto).filter_by(regimen="nuevo_rus")}
+    imp = {i.periodo: i for i in db.query(m.Impuesto).filter_by(regimen="nuevo_rus", empresa_id="EMP-0001")}
     assert set(imp) == {"2026-08", "2026-09", "2026-10", "2026-11"}
     assert all(imp[p].fecha_pago is not None for p in ("2026-08", "2026-09", "2026-10"))
     assert imp["2026-11"].fecha_pago is None and imp["2026-11"].fecha_vencimiento == date(2026, 12, 15)
@@ -172,7 +173,7 @@ def test_proyeccion_de_referencia_da_faltante_650_el_30_11(db):
         SELECT (fecha_hora AT TIME ZONE 'America/Lima')::date AS dia,
                SUM(CASE WHEN tipo IN ('venta','cobro_fiado','prestamo_recibido','otro_ingreso') THEN monto ELSE -monto END)
         FROM transacciones
-        WHERE afecta_caja AND NOT anulada AND fiado_id IS NULL AND deuda_id IS NULL AND impuesto_id IS NULL
+        WHERE empresa_id = 'EMP-0001' AND afecta_caja AND NOT anulada AND fiado_id IS NULL AND deuda_id IS NULL AND impuesto_id IS NULL
           AND programado_id IS NULL
           AND (fecha_hora AT TIME ZONE 'America/Lima')::date BETWEEN '2026-10-17' AND '2026-11-13'
         GROUP BY 1""")).all()  # fmt: skip
@@ -191,8 +192,36 @@ def test_proyeccion_de_referencia_da_faltante_650_el_30_11(db):
 
 @pytest.mark.db
 def test_etiquetas_y_resultados(db):
-    assert db.query(m.SaldoDiario).count() == 91
-    assert db.query(m.ScoreSalud).count() == 3
+    assert db.query(m.SaldoDiario).filter_by(empresa_id="EMP-0001").count() == 91
+    assert db.query(m.ScoreSalud).count() == 3  # solo EMP-0001 tiene historial
     assert db.query(m.Evento).count() == 2
     assert db.get(m.PreferenciasAlertas, "EMP-0001").max_por_dia == 2
     assert db.query(m.Alerta).count() == 0  # las escribe el motor de B
+
+
+# ── EMP-0002: Pedro · día 3 ──
+
+
+@pytest.mark.db
+def test_pedro_dia_3_tiene_solo_tres_dias(db):
+    emp = db.get(m.Empresa, "EMP-0002")
+    assert emp.nombre_ficticio == "Pedro · día 3" and db.get(m.Rubro, emp.rubro_id).nombre == "bodega"
+    assert emp.telefono_whatsapp != db.get(m.Empresa, "EMP-0001").telefono_whatsapp
+    dias = db.execute(text("""SELECT DISTINCT (fecha_hora AT TIME ZONE 'America/Lima')::date FROM transacciones
+                              WHERE empresa_id = 'EMP-0002'""")).scalars().all()  # fmt: skip
+    assert sorted(dias) == [date(2026, 11, 12), date(2026, 11, 13), date(2026, 11, 14)]
+    assert db.query(m.Transaccion).filter_by(empresa_id="EMP-0002").count() == 13
+    assert db.query(m.Producto).filter_by(empresa_id="EMP-0002").count() == 20
+    assert db.query(m.CuadernoFiado).filter_by(empresa_id="EMP-0002").count() == 0
+
+
+@pytest.mark.db
+def test_pedro_dia_3_resumen_y_forecast(client_db):
+    base = "/api/v1/empresas/EMP-0002"
+    r = client_db.get(f"{base}/resumen?periodo=2026-11").json()
+    assert r["dias_con_datos"] == 3 and r["dias_con_datos"] < r["dias_requeridos_forecast"]
+    ind = r["indicadores"]
+    assert (ind["saldo_caja_negocio"]["valor"], ind["ingresos_mes"]["valor"], ind["egresos_mes"]["valor"]) == (
+        1120.0, 1870.0, 1600.0)
+    f = client_db.get(f"{base}/forecast").json()
+    assert f["disponible"] is False and f["dias_con_datos"] == 3 and f["saldo_actual"] == 1120.0

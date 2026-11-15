@@ -25,7 +25,7 @@ from app.services.finanzas import proyeccion as fc
 
 DIAS_OBLIGACION = 3
 DIAS_PEDIDO_RECIENTE = 7
-CAUSA_RETIROS = "Sacaste más para la casa"
+CAUSA_RETIROS = "Sacaste más de la caja de lo usual"
 CAUSA_PEDIDO = "Pediste más de lo que vendes"
 CAUSA_FIADOS = "Fiados sin cobrar"
 
@@ -146,7 +146,7 @@ def retiro_excesivo(ctx: Contexto) -> list[Candidata]:
         return []
     return [Candidata(TipoAlerta.retiro_excesivo, ctx.corte, exceso, nivel_por_proporcion(exceso, ret.mes), "mes",
                       ctx.corte.strftime("%Y-%m"), "ver_retiros",
-                      causas=[{"descripcion": "Retiros para la casa este mes", "monto": float(ret.mes)},
+                      causas=[{"descripcion": "Lo que sacaste de la caja este mes", "monto": float(ret.mes)},
                               {"descripcion": etiqueta, "monto": float(referencia)}])]  # fmt: skip
 
 

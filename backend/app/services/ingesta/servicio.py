@@ -93,11 +93,17 @@ def chequeo_para(db, empresa_id: str, mov: dict, opciones: list[dict] | None = N
         return None
 
 
-def interpretar(db, req: InterpretarRequest) -> dict:
+def transcribir(req: InterpretarRequest) -> tuple[str, str | None, bool, bool]:
+    """(texto, transcripción, ¿usó Whisper?, ¿fallback de voz?). Para quien necesita el texto antes de interpretar."""
+    return _transcribir(req)
+
+
+def interpretar(db, req: InterpretarRequest, transcrito: tuple[str, str | None, bool, bool] | None = None) -> dict:
+    """`transcrito`: resultado previo de `transcribir(req)` (el chat ya escuchó el audio; no se transcribe dos veces)."""
     empresa_o_404(db, req.empresa_id)
     if req.canal == Canal.foto:
         raise Validacion("Para la foto del cuaderno usa /ingesta/cuaderno.", [{"campo": "canal", "problema": "foto"}])
-    texto, transcripcion, uso_whisper, fallback_voz = _transcribir(req)
+    texto, transcripcion, uso_whisper, fallback_voz = transcrito or _transcribir(req)
     ext = extractor.extraer(texto, empresa_id=req.empresa_id, db=db)
     mov = MovimientoBorrador.model_validate(ext.movimiento).model_dump(mode="json")
 
@@ -143,7 +149,9 @@ def _es_no(valor) -> bool:
     return valor is False or (isinstance(valor, str) and valor.strip().lower() in ("no", "false", "0"))
 
 
-def aplicar_correcciones(payload: dict, correcciones: dict) -> MovimientoPropuesto:
+def aplicar_correcciones(payload: dict, correcciones: dict,
+                         modelo: type[MovimientoPropuesto] = MovimientoPropuesto) -> MovimientoPropuesto:  # fmt: skip
+    """Borrador + correcciones → movimiento validado (`modelo=MovimientoBorrador` admite que aún falte el monto)."""
     desconocidos = sorted(set(correcciones) - _CAMPOS_CORREGIBLES)
     if desconocidos:
         raise Validacion(f"No puedo corregir el campo '{desconocidos[0]}'.",
@@ -162,7 +170,7 @@ def aplicar_correcciones(payload: dict, correcciones: dict) -> MovimientoPropues
         else:
             final["items"] = []
     try:
-        return MovimientoPropuesto.model_validate(final)
+        return modelo.model_validate(final)
     except ValidationError as exc:
         detalles = [{"campo": ".".join(str(p) for p in e["loc"]) or "payload", "problema": e["msg"]} for e in exc.errors()]
         if any(d["campo"] == "monto" for d in detalles):
@@ -256,6 +264,10 @@ def confirmar(db, req: ConfirmarRequest, idempotency_key: str | None = None) -> 
         raise Conflicto("Ese registro ya fue descartado.")
 
     correcciones = {k: v for k, v in (req.correcciones or {}).items() if not str(k).startswith("_")}
+    if req.confirmado:
+        # Correcciones que ya se hicieron conversando (chat / WhatsApp) quedan guardadas en el borrador.
+        guardadas = {k: v for k, v in (borrador.correcciones or {}).items() if not str(k).startswith("_")}
+        correcciones = {**guardadas, **correcciones}
     if (not req.confirmado and not correcciones) or _es_no(correcciones.get("salio_de_caja", True)):
         borrador.estado, borrador.resuelto_en = EstadoBorrador.descartado, ahora()
         borrador.correcciones = correcciones or None
@@ -339,7 +351,7 @@ _METODO_TXT = {"efectivo": "efectivo", "billetera_digital": "billetera", "transf
                "tarjeta": "tarjeta", "credito": "a crédito"}  # fmt: skip
 _TIPO_TXT = {"venta": "venta", "cobro_fiado": "cobro de fiado", "prestamo_recibido": "préstamo recibido",
              "otro_ingreso": "otro ingreso", "compra": "compra", "gasto_negocio": "gasto del negocio",
-             "retiro_personal": "para la casa", "pago_proveedor": "pago a proveedor", "pago_prestamo": "pago de préstamo",
+             "retiro_personal": "retiro de la caja", "pago_proveedor": "pago a proveedor", "pago_prestamo": "pago de préstamo",
              "pago_impuesto": "impuesto"}  # fmt: skip
 
 

@@ -42,6 +42,9 @@ class Crudo:
     fuera_de_alcance: bool = False
     dias_atras: int = 0
     confianza: float = 0.0
+    # Cifras de dinero dichas (sin fechas, cantidades ni precios unitarios), en orden de preferencia. El extractor
+    # con LLM las usa para validar o corregir el monto que propone el modelo.
+    montos_dichos: list[Decimal] = field(default_factory=list)
 
 
 # ── patrones ────────────────────────────────────────────────────────────────────────────────────
@@ -285,13 +288,13 @@ def interpretar(texto: str, cat: Catalogo, hoy: date) -> Crudo:
     proveedor = cat.buscar_proveedor(t)
     tipo, confianza, fuera = _clasificar(t, bool(coincidencias), cliente, proveedor)
     crudo = Crudo(tipo=tipo, confianza=confianza, fuera_de_alcance=fuera, fecha=fecha)
-    if tipo is None:
-        return crudo
-
-    usa_productos = tipo in (T.venta, T.compra)
+    usa_productos = tipo in (T.venta, T.compra) or tipo is None
     cantidades, precios, cuota, frecuencia, total, montos = _roles_de_numeros(
         t, numeros(t), coincidencias if usa_productos else [], fecha
     )
+    crudo.montos_dichos = [n.valor for n in montos]
+    if tipo is None:
+        return crudo
     if usa_productos:
         for i, c in enumerate(coincidencias):
             crudo.items.append(ItemCrudo(c.producto, cantidades.get(i, Decimal(1)), c.producto.nombre, precios.get(i)))

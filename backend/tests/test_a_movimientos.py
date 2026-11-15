@@ -24,7 +24,8 @@ def test_listado_mas_reciente_primero_con_saldo_post(client_db):
     assert items[0]["saldo_post"] == 2340.0
     assert items[0]["fecha_hora"].endswith("-05:00")
     assert set(items[0]) >= {"movimiento_id", "fecha_hora", "tipo", "categoria", "monto", "moneda", "metodo_pago",
-                             "contraparte", "canal", "confianza_extraccion", "afecta_caja", "saldo_post"}
+                             "contraparte", "canal", "confianza_extraccion", "afecta_caja", "saldo_post",
+                             "descripcion", "items"}
 
 
 def test_saldo_post_consistente_entre_filas(client_db):
@@ -107,3 +108,24 @@ def test_registro_manual_invalido(client_db):
     assert client_db.post(f"{EMP}/movimientos", json={"tipo": "venta", "monto": 0}).status_code == 400
     r = client_db.post(f"{EMP}/movimientos", json={"tipo": "venta", "monto": 10, "metodo_pago": "credito"})
     assert r.status_code == 400 and r.json()["error"]["detalles"][0]["campo"] == "contraparte"
+
+
+def test_listado_trae_descripcion_y_detalle(client_db):
+    items = client_db.get(f"{EMP}/movimientos?desde=2026-11-13&hasta=2026-11-13&tipo=compra&limit=50").json()["items"]
+    pedido = next(i for i in items if i["metodo_pago"] == "credito")
+    assert pedido["descripcion"] == "Pedido a Distribuidora Andina"
+    lineas = {ln["producto"]: ln for ln in pedido["items"]}
+    assert set(lineas) == {"Cerveza 620 ml", "Gaseosa 500 ml"}
+    assert lineas["Cerveza 620 ml"] == {"producto": "Cerveza 620 ml", "cantidad": 350.0, "precio_unitario": 4.8,
+                                        "subtotal": 1680.0}  # fmt: skip
+    assert sum(ln["subtotal"] for ln in pedido["items"]) == pedido["monto"] == 2400.0
+    sin_detalle = next(i for i in items if i["descripcion"] == "Compra en el mercado mayorista")
+    assert sin_detalle["items"] == []
+
+
+def test_movimientos_de_pedro_dia_3(client_db):
+    d = client_db.get(f"{P}/empresas/EMP-0002/movimientos?limit=50").json()
+    assert len(d["items"]) == 13 and d["next_cursor"] is None
+    assert d["items"][0]["saldo_post"] == 1120.0
+    cerveza = next(i for i in d["items"] if i["items"])
+    assert cerveza["items"] == [{"producto": "Cerveza 620 ml", "cantidad": 2.0, "precio_unitario": 6.5, "subtotal": 13.0}]

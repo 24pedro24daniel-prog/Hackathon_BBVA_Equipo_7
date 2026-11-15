@@ -289,6 +289,13 @@ def cronograma_pagos(dc: DeudaCalc, corte: date, hasta: date) -> list[tuple[date
 # ── impuestos ───────────────────────────────────────────────────────────────────────────────────
 
 
+PREFIJO_ANULADO = "anulado_"  # impuestos no tienen columna `anulada`: se marca el régimen (nada se borra)
+
+
+def impuesto_anulado(imp: m.Impuesto) -> bool:
+    return imp.regimen.startswith(PREFIJO_ANULADO)
+
+
 @dataclass
 class ImpuestoCalc:
     impuesto: m.Impuesto
@@ -302,9 +309,14 @@ class ImpuestoCalc:
         return f"{regimen} de {NOMBRE_MES[mes]}"
 
 
+def _impuestos(db: Session, empresa_id: str, con_anulados: bool = False) -> list[m.Impuesto]:
+    filas = db.scalars(select(m.Impuesto).where(m.Impuesto.empresa_id == empresa_id)
+                       .order_by(m.Impuesto.fecha_vencimiento, m.Impuesto.impuesto_id)).all()  # fmt: skip
+    return list(filas) if con_anulados else [i for i in filas if not impuesto_anulado(i)]
+
+
 def cuentas_impuesto(db: Session, empresa_id: str, corte: date) -> list[ImpuestoCalc]:
-    impuestos = db.scalars(select(m.Impuesto).where(m.Impuesto.empresa_id == empresa_id)
-                           .order_by(m.Impuesto.fecha_vencimiento, m.Impuesto.impuesto_id)).all()  # fmt: skip
+    impuestos = _impuestos(db, empresa_id)
     con_pago = set(db.scalars(select(Tx.impuesto_id).where(*vigentes(empresa_id, corte), Tx.tipo == T.pago_impuesto,
                                                            Tx.impuesto_id.is_not(None))).all())  # fmt: skip
     salida = []
@@ -555,13 +567,15 @@ def estado_impuestos(db: Session, empresa_id: str, fecha_corte: date | None = No
     impagos = [c for c in calc if not c.pagado]
     if impagos:
         proximo = min(impagos, key=lambda c: c.impuesto.fecha_vencimiento)
-        return EstadoImpuestos(estado="vencido" if vencidos else "al_dia",
+        return EstadoImpuestos(estado="vencido" if vencidos else "al_dia", impuesto_id=proximo.impuesto.impuesto_id,
                                proximo_vencimiento=proximo.impuesto.fecha_vencimiento,
                                monto_estimado=proximo.impuesto.monto, nombre=proximo.nombre)  # fmt: skip
     if not calc:
         return EstadoImpuestos(estado="al_dia", proximo_vencimiento=None, monto_estimado=None)
     ultimo = max(calc, key=lambda c: c.impuesto.periodo)
-    siguiente = sumar_meses(date.fromisoformat(f"{ultimo.impuesto.periodo}-01"), 1).strftime("%Y-%m")
+    # El siguiente mes estimado va después del último periodo registrado, aunque se haya anulado (no reaparece).
+    ultimo_periodo = max(i.periodo for i in _impuestos(db, empresa_id, con_anulados=True))
+    siguiente = sumar_meses(date.fromisoformat(f"{ultimo_periodo}-01"), 1).strftime("%Y-%m")
     return EstadoImpuestos(estado="al_dia", proximo_vencimiento=_vencimiento_periodo(siguiente),
                            monto_estimado=ultimo.impuesto.monto, nombre=f"RUS de {NOMBRE_MES[int(siguiente[5:])]}")  # fmt: skip
 

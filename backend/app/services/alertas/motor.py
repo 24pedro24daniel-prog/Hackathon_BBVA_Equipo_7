@@ -51,7 +51,7 @@ EGRESOS = {t.value for t in TipoMovimiento} - {t.value for t in (TipoMovimiento.
                                                                    TipoMovimiento.otro_ingreso)}  # fmt: skip
 DIAS_SEMANA = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
 MICRO = {
-    A.faltante_caja: "Cuando el dinero de la casa y del negocio se mezclan, es difícil saber cuánto puedes pedir.",
+    A.faltante_caja: "Si sacas de la caja sin un monto fijo, es difícil saber cuánto puedes pedir.",
     A.pedido_excesivo: "Pedir más de lo que vendes antes de pagar deja la plata atrapada en mercadería.",
     A.retiro_excesivo: "Un sueldo fijo para ti ayuda a que la caja del negocio no se quede corta.",
     A.obligacion_proxima: "Separar hoy la plata de un pago que se viene evita sorpresas ese día.",
@@ -61,6 +61,9 @@ ACCIONES = {
     "ver_retiros": "Ver mis retiros",
     "ver_cuentas": "Ver mis pagos",
 }
+# Textos de causas guardados por versiones anteriores (las causas se guardan en la fila): se muestran con el texto nuevo.
+CAUSAS_ANTERIORES = {"Sacaste más para la casa": r.CAUSA_RETIROS,
+                     "Retiros para la casa este mes": "Lo que sacaste de la caja este mes"}  # fmt: skip
 ESTADO_POR_ACCION = {"ejecutada": ("atendida", EstadoAlerta.atendida), "descartada": ("descartada", EstadoAlerta.descartada),
                      "posponer": ("pospuesta", EstadoAlerta.activa)}  # fmt: skip
 
@@ -185,14 +188,15 @@ def render(db: Session, fila: m.Alerta, prefs: m.PreferenciasAlertas | None = No
     corte = corte or reloj.hoy()
     prefs = prefs or preferencias(db, fila.empresa_id)
     tipo = TipoAlerta(fila.tipo)
-    causas = [Causa(descripcion=c["descripcion"], monto=Decimal(str(c["monto"]))) for c in (fila.causas or [])]
+    causas = [Causa(descripcion=CAUSAS_ANTERIORES.get(c["descripcion"], c["descripcion"]), monto=Decimal(str(c["monto"])))
+              for c in (fila.causas or [])]  # fmt: skip
     payload = {"pedido_id": fila.entidad_id} if fila.entidad_tipo == "deuda" else {}
     if fila.entidad_tipo == "impuesto":
         payload = {"impuesto_id": fila.entidad_id}
     textos = _textos(db, fila, corte)
     resumen = None
     if tipo == A.faltante_caja and causas:
-        cortas = {r.CAUSA_RETIROS: "más plata para la casa", r.CAUSA_PEDIDO: "pedido grande", r.CAUSA_FIADOS: "fiados sin cobrar"}
+        cortas = {r.CAUSA_RETIROS: "sacaste más de la caja de lo usual", r.CAUSA_PEDIDO: "pedido grande", r.CAUSA_FIADOS: "fiados sin cobrar"}
         partes = [cortas.get(c.descripcion, c.descripcion.lower()) for c in causas]
         resumen = (", ".join(partes[:-1]) + " y " + partes[-1] if len(partes) > 1 else partes[0]) + "."
     return Alerta(
@@ -260,6 +264,30 @@ def evaluar_alertas(db: Session, empresa_id: str, disparador: str | None = None,
         nuevas.append(fila)
     db.commit()
     return [render(db, f, prefs, corte) for f in nuevas]
+
+
+def refrescar_tras_anulacion(db: Session, empresa_id: str, entidad_id: str) -> None:
+    """Tras anular una cuenta: se descartan sus alertas activas y los faltantes activos se recalculan con la proyección
+    nueva (si el faltante ya no existe, se cierra; si cambió, se actualizan monto y causas). No hace commit."""
+    activas = db.scalars(select(m.Alerta).where(m.Alerta.empresa_id == empresa_id,
+                                                m.Alerta.estado == EstadoAlerta.activa)).all()  # fmt: skip
+    if not activas:
+        return
+    ahora = reloj.ahora()
+    faltantes = {}
+    for c in r.faltante_caja(r.Contexto(db, empresa_id, reloj.hoy())):
+        faltantes[clave(c.tipo, c.entidad_id, c.fecha_evento)] = c
+    for fila in activas:
+        k = clave(fila.tipo, fila.entidad_id, fila.fecha_evento)
+        if fila.entidad_id == entidad_id or (fila.tipo == A.faltante_caja and k not in faltantes):
+            fila.estado = EstadoAlerta.descartada
+            fila.accion_tomada = "cuenta_anulada"
+            fila.fecha_accion = ahora
+        elif fila.tipo == A.faltante_caja:
+            c = faltantes[k]
+            fila.monto, fila.causas, fila.nivel_riesgo = c.monto, c.causas, c.nivel
+            fila.probabilidad = Decimal(str(c.probabilidad)) if c.probabilidad is not None else None
+    db.flush()
 
 
 def alertas(db: Session, empresa_id: str, estado: str = "activa") -> AlertasResponse:

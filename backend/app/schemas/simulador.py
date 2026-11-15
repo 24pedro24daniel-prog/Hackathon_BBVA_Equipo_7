@@ -18,7 +18,7 @@ class Accion(BaseModel):
 
 
 class SimulacionRequest(BaseModel):
-    acciones: list[Accion] = Field(min_length=1)
+    acciones: list[Accion] = []  # vacío → con_acciones = sin_acciones, mejora 0
 
 
 class ResultadoSaldo(BaseModel):

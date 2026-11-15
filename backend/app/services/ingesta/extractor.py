@@ -31,10 +31,9 @@ PROMPT_VERSION = "extractor-v3"
 VERSION_REGLAS = "reglas-1.0.0"
 T = TipoMovimiento
 
-MENSAJE_NO_INTERPRETABLE = 'No entendí bien. ¿Me lo dices de otra forma? Por ejemplo: "vendí 2 cervezas".'
-MENSAJE_ALCANCE = ("TuCaserito solo lleva la plata del negocio, no los gastos de la casa. Si esa plata salió de la caja "
-                   "de la tienda, dime cuánto fue (por ejemplo: «saqué 150 de la caja para el colegio») y lo anoto "
-                   "como retiro para la casa.")  # fmt: skip
+MENSAJE_NO_INTERPRETABLE = "Mmm, no lo pesqué 😅 ¿Fue una venta, una compra o un pago? Cuéntame qué fue y de cuánto."
+MENSAJE_ALCANCE = ("Aquí solo llevo la plata del negocio. Si esa plata la sacaste de la caja de la tienda, dime "
+                   "cuánto fue y lo anoto como lo que sacaste de la caja.")  # fmt: skip
 
 
 @dataclass
@@ -65,7 +64,7 @@ TOOL_MOVIMIENTO = {
             "properties": {
                 "es_movimiento": {"type": "boolean", "description": "false si es un saludo, una pregunta o no se entiende"},
                 "es_gasto_del_hogar": {"type": "boolean",
-                                       "description": "true si es un gasto de la casa (colegio, médico, etc.)"},
+                                       "description": "true si es un gasto personal o familiar (colegio, médico, etc.)"},
                 "tipo": {"type": ["string", "null"], "enum": [t.value for t in TipoMovimiento] + [None]},
                 "items": {
                     "type": "array",
@@ -98,7 +97,7 @@ _SISTEMA = """Eres el extractor de TuCaserito, un asistente para el dueño de un
 en UN movimiento llamando a la función registrar_movimiento. Hoy es {hoy} (zona America/Lima).
 
 Tipos: venta, cobro_fiado (un cliente paga lo que debía), prestamo_recibido, otro_ingreso, compra (mercadería), \
-gasto_negocio (luz, agua, alquiler, mototaxi, gas, bolsas), retiro_personal (plata que el dueño saca para su casa), \
+gasto_negocio (luz, agua, alquiler, mototaxi, gas, bolsas), retiro_personal (plata que el dueño saca de la caja para él o su familia), \
 pago_proveedor, pago_prestamo, pago_impuesto (RUS, SUNAT).
 Reglas:
 - "le fié", "fiado", "a cuenta" → tipo venta, metodo_pago credito y contraparte = el cliente.
@@ -106,11 +105,13 @@ Reglas:
 fecha_vencimiento = ese día.
 - "me pagó <cliente>" → cobro_fiado. "le pagué a <proveedor>" → pago_proveedor.
 - "me prestaron X, pago Y diarios" → prestamo_recibido con monto_cuota Y y frecuencia_cuota diaria.
-- Gastos de la casa (colegio, médico, ropa de los hijos) no son del negocio: es_gasto_del_hogar = true, \
+- Gastos personales o de la familia (colegio, médico, ropa de los hijos) no son del negocio: es_gasto_del_hogar = true, \
 tipo retiro_personal.
 - NO inventes ni calcules montos: pon monto solo si el usuario dijo una cifra de dinero; si no la dijo, null \
-(el sistema usa los precios de su lista). No sumes ni multipliques.
-- items: productos del catálogo que se mencionan, con su producto_id y la cantidad dicha (1 si no la dice).
+(el sistema usa los precios de su lista). No sumes ni multipliques. "2 400", "2,400" y "2.400" son 2400. El día de \
+una fecha ("para el 30") NO es un monto.
+- items: solo productos del catálogo que el usuario nombró, con su producto_id y la cantidad dicha (1 si no la \
+dice). En un pedido a un proveedor por un monto total, items vacío.
 - Si no dice cómo pagaron, metodo_pago null. Fechas en formato YYYY-MM-DD.
 - Si es un saludo, una pregunta o no es un movimiento: es_movimiento = false.
 Catálogo del negocio (JSON): {catalogo}"""
@@ -205,13 +206,30 @@ def _crudo_desde_llm(salida: SalidaLLM, texto: str, cat: Catalogo, base: Crudo) 
             prod = cat.producto_por_id(it.producto_id) or (cat.buscar_producto(it.producto) if it.producto else None)
             cantidad = it.cantidad if (it.cantidad == 1 or redondear(it.cantidad) in dichos) else Decimal(1)
             crudo.items.append(ItemCrudo(prod, cantidad, prod.nombre if prod else it.producto or None))
-    crudo.monto = verificado(salida.monto)
+        # Si el texto nombra productos del catálogo, mandan las reglas: el LLM a veces elige otro producto
+        # ("vendí 3 gaseosas" → "Agua 625 ml").
+        en_texto = {it.producto.producto_id for it in base.items if it.producto}
+        if en_texto and {it.producto.producto_id for it in crudo.items if it.producto} != en_texto:
+            crudo.items = list(base.items)
+    if crudo.items and base.montos_dichos and tipo == T.compra:
+        # Pedido con un monto total dicho: los productos que el modelo "vio" no deben valorizarlo.
+        nombrados = {it.producto.producto_id for it in base.items if it.producto}
+        crudo.items = [it for it in crudo.items if it.producto and it.producto.producto_id in nombrados]
+    precios_dichos = {it.producto.producto_id: it.precio_dicho for it in base.items if it.producto and it.precio_dicho}
+    for it in crudo.items:
+        if it.producto and it.precio_dicho is None:
+            it.precio_dicho = precios_dichos.get(it.producto.producto_id)
+    crudo.monto = monto_deterministico(salida.monto, base)
     crudo.monto_cuota = verificado(salida.monto_cuota)
     crudo.monto_total_a_pagar = verificado(salida.monto_total_a_pagar)
     crudo.frecuencia_cuota = salida.frecuencia_cuota if crudo.monto_cuota else None
     crudo.metodo_pago = salida.metodo_pago or base.metodo_pago
     if tipo == T.venta and base.metodo_pago == MetodoPago.credito:
         crudo.metodo_pago = MetodoPago.credito
+    elif tipo == T.venta and crudo.metodo_pago == MetodoPago.credito and not salida.contraparte:
+        # Visto con gpt-4o-mini: "vendí dos cervezas" → credito. Un fiado tiene que decirlo (fié, a cuenta, a nombre
+        # de alguien); si no, es una venta normal.
+        crudo.metodo_pago = base.metodo_pago
 
     if tipo in (T.venta, T.cobro_fiado):
         crudo.cliente = cat.buscar_cliente(salida.contraparte) or base.cliente
@@ -230,6 +248,21 @@ def _crudo_desde_llm(salida: SalidaLLM, texto: str, cat: Catalogo, base: Crudo) 
     if tipo == T.gasto_negocio:
         crudo.categoria = base.categoria if base.tipo == T.gasto_negocio else None
     return crudo
+
+
+def monto_deterministico(propuesto: Decimal | None, base: Crudo) -> Decimal | None:
+    """El monto final nunca depende del humor del modelo.
+
+    - Si el usuario dijo cifras de dinero (las reglas las separan de fechas, cantidades y precios unitarios), el
+      monto es una de ellas: la del modelo si coincide con alguna, si no la primera que dijo.
+    - Si no dijo ninguna cifra de dinero, no hay monto (lo pone el catálogo o se pregunta).
+    """
+    candidatos = [redondear(v) for v in base.montos_dichos]
+    if not candidatos:
+        return None
+    if propuesto is not None and redondear(propuesto) in candidatos:
+        return redondear(propuesto)
+    return candidatos[0]
 
 
 # ── normalización común ─────────────────────────────────────────────────────────────────────────
@@ -320,9 +353,9 @@ def completar(crudo: Crudo, texto: str, cat: Catalogo, *, fallback: bool) -> Ext
         if monto is None:
             raise NoInterpretable(MENSAJE_ALCANCE, [{"campo": "alcance", "problema": "gasto_del_hogar"}])
         faltantes = ["salio_de_caja"]
-        opciones = [{"valor": "si", "texto": "Sí, salió de la caja"}, {"valor": "no", "texto": "No, fue plata de la casa"}]
-        pregunta = ("TuCaserito solo lleva la plata del negocio. ¿Esa plata salió de la caja de la tienda? Si es así, "
-                    "lo anoto como retiro para la casa.")  # fmt: skip
+        opciones = [{"valor": "si", "texto": "Sí, salió de la caja"}, {"valor": "no", "texto": "No, no salió de la caja"}]
+        pregunta = ("Aquí solo llevo la plata del negocio. ¿Esa plata salió de la caja de la tienda? Si es así, "
+                    "lo anoto como lo que sacaste de la caja.")  # fmt: skip
         confianza = min(confianza, 0.55)
     elif faltantes:
         confianza = min(confianza, 0.7) - 0.1 * (len(faltantes) - 1)
@@ -332,7 +365,7 @@ def completar(crudo: Crudo, texto: str, cat: Catalogo, *, fallback: bool) -> Ext
             pregunta = texto_p.get(tipo, "¿Me confirmas ese dato?") if isinstance(texto_p, dict) else texto_p
     confianza = round(max(0.05, min(confianza, 0.99)), 3)
     if pregunta is None and confianza < settings.UMBRAL_CONFIANZA:
-        pregunta = "No estoy seguro de haber entendido bien. ¿Lo anoto así?"
+        pregunta = "¿Lo anoto así o le cambio algo?"
 
     fecha_hora: datetime = ahora().replace(microsecond=0) - timedelta(days=crudo.dias_atras)
     descripcion = (texto or "").strip()
@@ -356,7 +389,7 @@ def completar(crudo: Crudo, texto: str, cat: Catalogo, *, fallback: bool) -> Ext
 
 def extraer(texto: str, *, empresa_id: str, db=None, catalogo: Catalogo | None = None,
             usar_llm: bool = True) -> Extraccion:  # fmt: skip
-    """Interpreta una frase. Lanza NoInterpretable si no hay movimiento (o si es un gasto de la casa sin monto)."""
+    """Interpreta una frase. Lanza NoInterpretable si no hay movimiento (o si es un gasto personal sin monto)."""
     from app.services.ingesta import catalogo as cat_mod
 
     if not (texto and texto.strip()):

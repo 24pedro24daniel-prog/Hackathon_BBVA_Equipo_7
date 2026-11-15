@@ -191,6 +191,9 @@ Convierte texto, audio o foto en un **borrador** de movimiento.
 }
 ```
 - `origen_monto`: `dicho_por_usuario | catalogo | estimado`
+- El monto es determinístico: si el usuario dijo cifras de dinero ("2400", "2 400", "2,400", "dos mil cuatrocientos"),
+  el monto es una de ellas (nunca el día de una fecha ni un precio del catálogo); si no dijo ninguna, sale del catálogo
+  o queda en `campos_faltantes`. El LLM nunca pone un monto que no esté en el texto.
 - Si `confianza < 0.75` o hay `campos_faltantes`, `pregunta_aclaratoria` trae el texto a enviar (ej.: *"¿Fue en efectivo o por billetera?"*).
 - Ejemplos de interpretación esperada:
 
@@ -230,6 +233,8 @@ Tablas y campos: [modelo_datos.dbml](modelo_datos.dbml) · [diccionario_datos.md
 }
 ```
 - Si `confirmado = false` sin correcciones, el borrador se descarta (`204`).
+- Con `confirmado = true`, las correcciones hechas conversando (§1.7 o WhatsApp) ya guardadas en el borrador se aplican
+  también; las del request tienen prioridad.
 - Tras guardar, se recalcula el forecast y se evalúan alertas (§6). Las alertas nuevas vuelven en `alertas_disparadas`.
 
 ### 1.4 `POST /ingesta/cuaderno` (foto del cuaderno de fiados)
@@ -292,6 +297,45 @@ Movimientos que llegan estructurados. No requieren confirmación.
 ```
 **Response 201** → `{ "movimiento_id": "MOV-000124", "duplicado": false }`
 
+### 1.7 `POST /empresas/{empresa_id}/chat/mensajes` (chat de la app)
+Un solo endpoint para el chat: el backend decide si el mensaje es un registro, una corrección o respuesta al borrador
+pendiente, una confirmación, una cancelación o algo para el asistente. Primero reglas; si dudan, **una** llamada corta
+al LLM para clasificar (si el LLM no responde, siguen las reglas). La misma lógica usa `/webhooks/whatsapp`.
+
+**Request**
+```json
+{ "texto": "fue por billetera", "canal": "texto", "media_url": null, "borrador_id": "BOR-7781", "conversacion_id": null }
+```
+- `canal`: `texto | voz` (con `voz`, `media_url` como en §1.2; `texto` opcional como respaldo de la demo).
+- `borrador_id`: el borrador que el chat está esperando (confirmar/aclarar/corregir). Si no existe, es de otra empresa
+  o ya se resolvió, se ignora y el mensaje se trata como nuevo.
+
+**Response 200**
+```json
+{
+  "tipo": "borrador_actualizado",
+  "mensaje": "Listo, lo cambié: 2 Cerveza 620 ml, S/ 13.00, billetera. ¿Ahora sí lo guardo?",
+  "transcripcion": null,
+  "interpretacion": { "borrador_id": "BOR-7781", "movimiento_propuesto": { "...": "..." }, "origen_monto": "catalogo",
+                      "confianza": 0.95, "campos_faltantes": [], "pregunta_aclaratoria": null, "meta": { } },
+  "confirmacion": null,
+  "asistente": null,
+  "conversacion_id": null,
+  "meta": { "modelo": "reglas-chat", "fallback_usado": false }
+}
+```
+| `tipo` | Cuándo | Trae |
+|---|---|---|
+| `registro` | Mensaje nuevo que es un movimiento | `interpretacion` (misma forma que §1.2, con `opciones_aclaracion` / `chequeo_pedido` si aplican) |
+| `borrador_actualizado` | Con borrador: corrección ("fue por billetera", "eran 3", "no, 15 soles") o respuesta a la pregunta ("el 30 de noviembre", "noviembre", "30"), o "sí" cuando aún falta un dato | `interpretacion` actualizada (incluye `chequeo_pedido` en un pedido a crédito) |
+| `guardado` | "sí", "dale", "está bien"…; o respuesta a la pregunta que completa el borrador (salvo pedido a crédito, que primero muestra el chequeo) | `confirmacion` (misma forma que §1.3) |
+| `descartado` | "no, bórralo", "cancela", "no" | — |
+| `asistente` | Pregunta, saludo, gracias o mensaje que no es un movimiento (nunca error) | `asistente` (misma forma que §7); `null` solo si `mensaje` lo dice todo (p. ej. gasto personal sin monto) |
+- `mensaje`: texto corto y natural para mostrar; en `asistente` es la respuesta completa. `meta.modelo`:
+  `llm-chat` si clasificó el LLM, `reglas-chat` si bastaron las reglas (`fallback_usado = true` si el LLM falló); en
+  `registro`/`asistente` es el `meta` de §1.2/§7.
+- Errores con el formato estándar: `400` sin texto, `404` empresa, `422`/`503` como §1.2 para audio.
+
 ---
 
 ## 2. Movimientos (consulta y registro manual)
@@ -314,12 +358,15 @@ Query: `desde`, `hasta`, `tipo`, `categoria`, `canal`, `limit`, `cursor`.
       "canal": "voz",
       "confianza_extraccion": 0.93,
       "afecta_caja": true,
-      "saldo_post": 2353.00
+      "saldo_post": 2353.00,
+      "descripcion": "2 Cerveza 620 ml",
+      "items": [ { "producto": "Cerveza 620 ml", "cantidad": 2, "precio_unitario": 6.50, "subtotal": 13.00 } ]
     }
   ],
   "next_cursor": null
 }
 ```
+- `descripcion`: texto del movimiento (puede ser `null`). `items`: líneas de `detalle_transaccion` (vacío si no tiene detalle).
 
 ### 2.2 `POST /empresas/{empresa_id}/movimientos`
 Registro manual desde la app (`canal = manual`). Mismo esquema que `movimiento_propuesto`. Responde `201` como §1.3.
@@ -465,11 +512,26 @@ Préstamos de proveedor (cuentas por pagar). Lee la tabla `deudas` con `tipo = p
   "items": [
     { "pedido_id": "PED-0012", "proveedor": "Distribuidora Andina", "monto": 2400.00, "monto_pendiente": 2400.00, "fecha_pedido": "2026-11-13", "fecha_vencimiento": "2026-11-30", "estado": "pendiente", "dias_para_vencer": 16 }
   ],
-  "impuestos": { "estado": "al_dia", "proximo_vencimiento": "2026-12-15", "monto_estimado": 20.00, "nombre": "RUS de noviembre" }
+  "impuestos": { "estado": "al_dia", "impuesto_id": "IMP-0004", "proximo_vencimiento": "2026-12-15", "monto_estimado": 20.00, "nombre": "RUS de noviembre" }
 }
 ```
+- `impuestos.impuesto_id`: el impuesto impago más próximo; `null` si no hay ninguno registrado y lo mostrado es la
+  estimación del siguiente mes.
 - `estado` del pedido: `por_vencer` solo si vence en ≤ 3 días (con 16 días es `pendiente`); el filtro `estado` se
   comporta como en §4.3. `impuestos.estado`: `vencido` si hay un periodo impago con el vencimiento pasado.
+
+### 4.4.1 `POST /empresas/{empresa_id}/cuentas/anular`
+Anula un fiado, pedido o impuesto registrado por error. **Nada se borra**: fiado/pedido → se marcan `anulada = true`
+sus transacciones de origen (venta fiada, compra a crédito o préstamo recibido); impuesto → se marca su régimen
+(`anulado_…`). Desde ese momento no aparece en `/fiados`, `/pedidos`, `/resumen`, `/forecast`, `/simular` ni en las
+alertas (sus alertas activas pasan a `descartada` y los faltantes activos se recalculan). Los cobros/pagos que ya tuviera
+se conservan. Repetirlo es idempotente.
+```json
+{ "tipo": "fiado", "id": "FIA-0045" }
+```
+- `tipo`: `fiado | pedido | impuesto`. **Response 200** → `{ "id": "FIA-0045", "anulada": true }`
+- `404 NO_ENCONTRADO` si no existe para esa empresa · `400 VALIDACION` si el body es inválido · `409 CONFLICTO` si el
+  impuesto ya tiene un pago anotado (primero se anula ese pago).
 
 ### 4.5 `POST /empresas/{empresa_id}/pedidos/chequeo`
 Chequeo **antes de confirmar** un pedido a crédito.
@@ -522,6 +584,7 @@ Simulador de escenarios (lo usan la app y el asistente).
   ]
 }
 ```
+- `acciones: []` es válido: devuelve la base (`con_acciones` = `sin_acciones`, `mejora` = 0).
 - Tipos de acción: `reducir_pedido | pagar_en_partes | diferir_pago | cobrar_fiados | limitar_retiros | ajustar_gasto`
 - Parámetros: `reducir_pedido` (`pedido_id`, `nuevo_monto` = nuevo total), `pagar_en_partes` (`partes` ≥ 2, `fechas`
   opcional, por defecto vencimiento y +15 días), `diferir_pago` (`fecha`), `cobrar_fiados` (`fiado_ids`, por defecto todos
@@ -662,7 +725,7 @@ Se llama después de cada movimiento confirmado. Devuelve las alertas nuevas.
 ```json
 {
   "conversacion_id": "CNV-0031",
-  "respuesta": "El 30/11 vence tu pago de S/ 2 400 a Distribuidora Andina. Este mes sacaste S/ 700 más de lo usual para la casa, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ 310 en fiados sin cobrar. Si pides S/ 1 800 y pagas en 2 partes, ese día tendrías S/ 850.",
+  "respuesta": "El 30/11 vence tu pago de S/ 2 400 a Distribuidora Andina. Este mes sacaste de la caja S/ 700 más de lo usual, el pedido es S/ 400 mayor a lo que sueles vender y tienes S/ 310 en fiados sin cobrar. Si pides S/ 1 800 y pagas en 2 partes, ese día tendrías S/ 850.",
   "intencion": "explicar_alerta",
   "herramientas_llamadas": [
     { "nombre": "obtener_alertas", "args": { "estado": "activa" } },
@@ -679,11 +742,17 @@ Se llama después de cada movimiento confirmado. Devuelve las alertas nuevas.
   "fuera_de_alcance": false,
   "ofrecer_humano": true,
   "disclaimer": "Orientación educativa. No es asesoría financiera.",
-  "meta": { "modelo": "llm-local", "modelo_version": "qwen2.5-7b-instruct", "prompt_version": "asistente-v2", "fallback_usado": false }
+  "meta": { "modelo": "llm-local", "modelo_version": "qwen2.5-7b-instruct", "prompt_version": "asistente-v3", "fallback_usado": false }
 }
 ```
 - `intencion`: `estado_caja | explicar_alerta | simular | concepto | crear_meta | prestamo | fuera_de_alcance | otro`
 - Si alguna cifra no se puede verificar, `verificacion_cifras.ok = false` y la respuesta se reemplaza por la plantilla de fallback.
+- `otro` (saludo, gracias, despedida, charla o mensaje poco claro): con LLM, respuesta corta y natural dentro del
+  alcance del negocio, **sin cifras** (el verificador solo admite las del propio mensaje) y con el historial reciente de
+  la conversación; sin LLM (o si no pasa la verificación), una plantilla corta según el tipo de mensaje (saludo,
+  gracias, despedida o una pregunta para entender mejor). Nunca un menú fijo.
+- Textos para Pedro: tono de vecino, de tú; sin porcentajes ni probabilidades; nunca "la casa"/"plata de la casa"
+  (los retiros son "lo que sacaste de la caja"). Una respuesta del LLM con `%` o "casa" se descarta (plantilla).
 - Si la pregunta pide un crédito o entidad específica, inversión, cripto u opinión tributaria o legal: `fuera_de_alcance = true` con una respuesta educativa y una derivación.
 
 ### Herramientas (function calling) disponibles para el LLM
@@ -709,25 +778,25 @@ El LLM **no calcula**: solo llama a estas funciones, que envuelven los endpoints
 
 ```json
 {
-  "score": 71,
+  "score": 72,
   "score_anterior": 64,
   "etapa_actual": "estabilizar",
+  "etapas": ["organizar", "estabilizar", "proteger", "crecer"],
   "subindicadores": [
-    { "id": "constancia_registro", "nombre": "Constancia de registro", "valor": 92, "detalle": "92 días anotando", "peso": 0.20 },
-    { "id": "separacion_personal", "nombre": "Separación personal/negocio", "valor": 70, "detalle": "Sueldo fijo de S/ 400 por semana", "peso": 0.20 },
-    { "id": "colchon_caja", "nombre": "Colchón de caja", "valor": 45, "detalle": "5 días de gastos cubiertos", "peso": 0.15 },
-    { "id": "pedidos_acordes", "nombre": "Pedidos acordes a ventas", "valor": 60, "detalle": "1 de 3 pedidos excedió tus ventas", "peso": 0.15 },
-    { "id": "cobro_fiados", "nombre": "Cobro de fiados a tiempo", "valor": 80, "detalle": "80% cobrados a tiempo", "peso": 0.10 },
-    { "id": "impuestos_al_dia", "nombre": "Impuestos al día", "valor": 100, "detalle": "Al día", "peso": 0.10 },
-    { "id": "meses_sin_faltante", "nombre": "Meses sin faltantes", "valor": 50, "detalle": "1 de 2 meses", "peso": 0.10 }
+    { "id": "constancia_registro", "nombre": "Anotar todos los días", "valor": 100, "detalle": "13 de 13 días anotando este mes", "peso": 0.35, "destacado": true },
+    { "id": "separacion_personal", "nombre": "Ponerte un sueldo fijo", "valor": 65, "detalle": "Sueldo fijo de S/ 400 por semana; este mes sacaste S/ 1 900 (S/ 1 100 más)", "peso": 0.40, "destacado": true },
+    { "id": "impuestos_al_dia", "nombre": "Impuestos al día", "valor": 100, "detalle": "Al día", "peso": 0.25, "destacado": true }
   ],
-  "historial": [ { "mes": "2026-08", "score": 38 }, { "mes": "2026-09", "score": 52 }, { "mes": "2026-10", "score": 64 }, { "mes": "2026-11", "score": 71 } ],
-  "rachas": [ { "tipo": "semanas_registrando", "valor": 4 } ],
+  "historial": [ { "mes": "2026-08", "score": 38 }, { "mes": "2026-09", "score": 52 }, { "mes": "2026-10", "score": 64 }, { "mes": "2026-11", "score": 72 } ],
+  "rachas": [ { "tipo": "semanas_registrando", "valor": 14 }, { "tipo": "dias_seguidos", "valor": 13 } ],
+  "metas_activas": [ { "meta_id": "MET-0001", "plantilla": "apartar_para_pedido", "titulo": "Apartar para el pedido", "detalle": "S/ 1 de cada S/ 10 que vendes", "acumulado": 420.0, "estado": "activa" } ],
   "consentimiento_compartir_historial": false,
+  "fundamento": "Sale de 3 hábitos: anotar todos los días, ponerte un sueldo fijo (el que más cuenta) y tener tus impuestos al día.",
   "meta": { "modelo": "score-reglas", "modelo_version": "0.1.0", "fallback_usado": false }
 }
 ```
-- El score es la suma ponderada de los subindicadores (determinístico y explicable).
+- El score es la suma ponderada de los subindicadores (determinístico y explicable). Los textos (`nombre`, `detalle`,
+  `fundamento`) no usan porcentajes ni hablan de "la casa".
 
 ### 8.2 `POST /empresas/{empresa_id}/metas`
 ```json

@@ -4,7 +4,7 @@ import pytest
 
 from app.core.config import settings
 from app.db import models as m
-from app.services.asistente import orquestador, verificador
+from app.services.asistente import orquestador, plantillas, verificador
 from app.services.asistente.orquestador import clasificar
 
 P = settings.API_PREFIX
@@ -90,7 +90,8 @@ def test_prestamo_muestra_costo_y_alternativas(client_db):
     d = client_db.post(f"{EMP}/asistente/mensajes", json={"mensaje": "y si pido un préstamo?"}).json()
     assert d["intencion"] == "prestamo" and d["fuera_de_alcance"] is False and d["ofrecer_humano"] is True
     assert d["ejemplo_prestamo_informal"] == {"recibes": 1000, "devuelves": 1200, "dias": 30, "cuota_diaria": 40}
-    assert "te cuesta S/ 200 (20 % en 30 días)" in d["respuesta_post"]
+    assert "te cuesta S/ 200 más en solo 30 días, pagando S/ 40 cada día" in d["respuesta_post"]
+    assert "%" not in d["respuesta"] + d["respuesta_post"]
     assert [a["tipo"] for a in d["acciones"]] == ["abrir_simulador", "hablar_humano"]
     assert d["meta"]["fallback_usado"] is False and d["verificacion_cifras"]["ok"] is True
 
@@ -159,4 +160,55 @@ def test_herramienta_que_falla_responde_sin_cifras(client_db, monkeypatch):
 
 
 def test_responder_existe():
-    assert orquestador.PROMPT_VERSION == "asistente-v2"
+    assert orquestador.PROMPT_VERSION == "asistente-v3"
+
+
+# ── charla (intención otro): natural, sin menú fijo ──
+
+
+@pytest.mark.db
+@pytest.mark.parametrize(("mensaje", "inicio"), [
+    ("hola", "¡Hola!"), ("muchas gracias", "¡De nada!"), ("chau", "¡Cuídate!"), ("mmm no sé", "Cuéntame"),
+])  # fmt: skip
+def test_otro_sin_llm_responde_natural(client_db, mensaje, inicio):
+    d = client_db.post(f"{EMP}/asistente/mensajes", json={"mensaje": mensaje}).json()
+    assert d["intencion"] == "otro" and d["respuesta"].startswith(inicio)
+    assert "Puedo ayudarte con:" not in d["respuesta"] and d["herramientas_llamadas"] == []
+
+
+@pytest.mark.db
+def test_otro_con_llm_charla_dentro_del_alcance(client_db, llm_falso):
+    llm_falso.respuesta = _respuesta_llm("¡Hola, Pedro! Todo bien por aquí. ¿Revisamos cómo va tu caja?")
+    d = client_db.post(f"{EMP}/asistente/mensajes", json={"mensaje": "hola, qué tal"}).json()
+    assert d["respuesta"] == "¡Hola, Pedro! Todo bien por aquí. ¿Revisamos cómo va tu caja?"
+    assert d["meta"]["fallback_usado"] is False and d["meta"]["modelo"] == "llm-openrouter"
+    sistema = llm_falso.llamadas[0]["payload"]["messages"][0]["content"]
+    assert "porcentajes" in sistema and "la casa" in sistema and "vecino" in sistema
+    assert "Bodega Don Pedro" in sistema
+
+
+@pytest.mark.db
+def test_otro_con_llm_que_inventa_cifras_o_dice_casa_usa_plantilla(client_db, llm_falso):
+    llm_falso.respuesta = _respuesta_llm("¡Hola! Hoy tienes S/ 2 340 en caja.")
+    d = client_db.post(f"{EMP}/asistente/mensajes", json={"mensaje": "hola"}).json()
+    assert d["respuesta"] == plantillas.SALUDO and d["meta"]["fallback_usado"] is True
+    llm_falso.respuesta = _respuesta_llm("¡Hola! Recuerda separar la plata de la casa.")
+    d = client_db.post(f"{EMP}/asistente/mensajes", json={"mensaje": "hola"}).json()
+    assert d["respuesta"] == plantillas.SALUDO and d["meta"]["fallback_usado"] is True
+
+
+@pytest.mark.db
+def test_otro_con_llm_recibe_el_historial(client_db, llm_falso):
+    llm_falso.respuesta = _respuesta_llm("¡Con gusto!")
+    primero = client_db.post(f"{EMP}/asistente/mensajes", json={"mensaje": "hola"}).json()
+    client_db.post(f"{EMP}/asistente/mensajes", json={"mensaje": "gracias", "conversacion_id": primero["conversacion_id"]})
+    mensajes = llm_falso.llamadas[-1]["payload"]["messages"]
+    assert [x["role"] for x in mensajes] == ["system", "user", "assistant", "user"]
+    assert mensajes[1]["content"] == "hola" and mensajes[-1]["content"] == "gracias"
+
+
+def test_textos_sin_casa_ni_porcentajes():
+    textos = [*plantillas.MICROEXPLICACIONES.values(), plantillas.AYUDA, plantillas.SALUDO, plantillas.GRACIAS]
+    assert not any("casa" in t.lower() or "%" in t for t in textos)
+    for sistema in (orquestador._SISTEMA, orquestador._SISTEMA_CHARLA):
+        assert "porcentajes" in sistema and "la casa" in sistema

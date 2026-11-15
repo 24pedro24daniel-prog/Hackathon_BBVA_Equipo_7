@@ -1,4 +1,4 @@
-"""Score de salud (A12): constancia de registro, separación personal/negocio (retiros vs sueldo), impuestos al día.
+"""Score de salud (A12): constancia de registro, sueldo fijo (retiros vs sueldo), impuestos al día.
 
 Suma ponderada, determinística y explicable. El resultado del mes en curso se guarda en `score_salud` (resultado
 versionado, permitido por PLAN §8); los meses anteriores se leen de ahí para el historial.
@@ -24,7 +24,7 @@ log = logging.getLogger("cajaclara.salud")
 VERSION_FORMULA = "score-v1"
 MODELO_VERSION = "0.1.0"
 PESOS = {"constancia_registro": 0.35, "separacion_personal": 0.40, "impuestos_al_dia": 0.25}
-NOMBRES = {"constancia_registro": "Anotar todos los días", "separacion_personal": "Separar casa y negocio",
+NOMBRES = {"constancia_registro": "Anotar todos los días", "separacion_personal": "Ponerte un sueldo fijo",
            "impuestos_al_dia": "Impuestos al día"}  # fmt: skip
 ETAPAS = ["organizar", "estabilizar", "proteger", "crecer"]
 _FRECUENCIA_TXT = {"semanal": "por semana", "mensual": "al mes", "quincenal": "por quincena", "diaria": "al día"}
@@ -87,7 +87,7 @@ def _separacion(db: Session, empresa_id: str, corte: date) -> tuple[int, str]:
         m.MovimientoProgramado.empresa_id == empresa_id, m.MovimientoProgramado.es_sueldo)).all()  # fmt: skip
     vigente = next((s for s in sueldos if s.activo), None)
     if vigente is None:
-        return 30, f"Aún no defines un sueldo fijo; este mes sacaste {soles(retiros)} para la casa"
+        return 30, f"Aún no defines un sueldo fijo; este mes sacaste {soles(retiros)} de la caja"
     esperado = sum((s.monto * _ocurrencias_sueldo(s, inicio, corte) for s in sueldos), Decimal("0"))
     base = f"Sueldo fijo de {soles(vigente.monto)} {_FRECUENCIA_TXT[vigente.frecuencia.value]}"
     if retiros <= esperado:
@@ -151,7 +151,7 @@ def calcular_score(db: Session, empresa_id: str, fecha_corte: date | None = None
         "rachas": _rachas(db, empresa_id, corte),
         "metas_activas": resumen_metas(db, empresa_id),
         "consentimiento_compartir_historial": consentimiento is not None,
-        "fundamento": "Suma ponderada de 3 reglas: anotar todos los días (35 %), separar casa y negocio (40 %) e "
-                      "impuestos al día (25 %).",
+        "fundamento": "Sale de 3 hábitos: anotar todos los días, ponerte un sueldo fijo (el que más cuenta) y "
+                      "tener tus impuestos al día.",
         "meta": construir_meta("score-reglas", MODELO_VERSION).model_dump(mode="json"),
     }

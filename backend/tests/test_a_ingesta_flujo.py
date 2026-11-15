@@ -49,7 +49,7 @@ def test_pague_el_colegio_responde_alcance_422(client_db):
     r = _interpretar(client_db, "pagué el colegio de mi hijo")
     assert r.status_code == 422
     err = r.json()["error"]
-    assert "solo lleva la plata del negocio" in err["mensaje"] and err["detalles"][0]["campo"] == "alcance"
+    assert "solo llevo la plata del negocio" in err["mensaje"] and err["detalles"][0]["campo"] == "alcance"
 
 
 def test_sin_texto_ni_media_400(client_db):

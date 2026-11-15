@@ -156,6 +156,14 @@ def test_pago_de_impuesto_marca_el_periodo(db):
         _registrar(db, tipo="pago_impuesto", monto=20, impuesto_id=imp.impuesto_id)
 
 
+def test_pagar_de_nuevo_un_impuesto_anulado(db):
+    imp = db.get(m.Impuesto, _tx(db, _registrar(db, tipo="pago_impuesto", monto=20)).impuesto_id)
+    imp.regimen = f"anulado_{imp.regimen}"  # así lo deja la anulación (finanzas/anulacion.py)
+    db.flush()
+    nuevo = db.get(m.Impuesto, _tx(db, _registrar(db, tipo="pago_impuesto", monto=20)).impuesto_id)
+    assert nuevo.impuesto_id != imp.impuesto_id and (nuevo.periodo, nuevo.regimen) == ("2026-11", imp.regimen[8:])
+
+
 def test_credito_solo_en_venta_o_compra(db):
     with pytest.raises(Validacion, match="crédito"):
         _registrar(db, tipo="retiro_personal", monto=50, metodo_pago="credito")

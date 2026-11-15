@@ -34,6 +34,11 @@ def test_score_de_pedro_con_tres_subindicadores(client_db, db):
     assert {r["tipo"] for r in d["rachas"]} == {"semanas_registrando", "dias_seguidos"}
     assert d["metas_activas"][0]["meta_id"] == "MET-0001" and d["consentimiento_compartir_historial"] is False
     assert d["meta"]["modelo"] == "score-reglas"
+    assert subs["separacion_personal"]["nombre"] == "Ponerte un sueldo fijo"
+    assert d["etapas"] == ["organizar", "estabilizar", "proteger", "crecer"] and d["fundamento"]
+    assert all(s["destacado"] is True for s in d["subindicadores"]) and d["metas_activas"][0]["titulo"]
+    textos = [d["fundamento"], *(s["nombre"] + s["detalle"] for s in d["subindicadores"])]
+    assert not any("casa" in t.lower() or "%" in t for t in textos)
 
 
 def test_score_es_idempotente(client_db, db):
@@ -46,7 +51,7 @@ def test_sin_sueldo_fijo_baja_la_separacion(db):
     db.query(m.MovimientoProgramado).filter_by(es_sueldo=True).update({"activo": False})
     r = score.calcular_score(db, "EMP-0001", date(2026, 11, 14), persistir=False)
     sep = next(s for s in r["subindicadores"] if s["id"] == "separacion_personal")
-    assert sep["valor"] == 30 and "Aún no defines un sueldo fijo" in sep["detalle"]
+    assert sep["valor"] == 30 and "Aún no defines un sueldo fijo" in sep["detalle"] and "casa" not in sep["detalle"]
 
 
 def test_crear_meta_plantilla(client_db, db):

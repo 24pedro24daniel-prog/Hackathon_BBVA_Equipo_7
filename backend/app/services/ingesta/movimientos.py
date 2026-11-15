@@ -31,7 +31,7 @@ def listar(db: Session, empresa_id: str, pagina: Pagina, *, desde: date | None =
     base = (
         select(
             Tx.transaccion_id, Tx.fecha_hora, Tx.tipo, Tx.monto, Tx.moneda, Tx.metodo_pago, Tx.canal,
-            Tx.confianza_extraccion, Tx.afecta_caja, Tx.anulada, Tx.categoria_id,
+            Tx.confianza_extraccion, Tx.afecta_caja, Tx.anulada, Tx.categoria_id, Tx.descripcion,
             m.Categoria.nombre.label("categoria"),
             func.coalesce(cliente.nombre_ficticio, proveedor.nombre_ficticio, m.Deuda.acreedor_nombre).label("contraparte"),
             acumulado.label("acumulado"),
@@ -68,6 +68,7 @@ def listar(db: Session, empresa_id: str, pagina: Pagina, *, desde: date | None =
     pagina_filas, siguiente = recortar(filas, pagina.limit,
                                        lambda f: {"f": f.fecha_hora.isoformat(), "id": f.transaccion_id})  # fmt: skip
     saldo_inicial = empresa.saldo_inicial if empresa else 0
+    lineas = _lineas(db, [f.transaccion_id for f in pagina_filas])
     items = [
         {
             "movimiento_id": f.transaccion_id,
@@ -82,7 +83,28 @@ def listar(db: Session, empresa_id: str, pagina: Pagina, *, desde: date | None =
             "confianza_extraccion": float(f.confianza_extraccion) if f.confianza_extraccion is not None else None,
             "afecta_caja": f.afecta_caja,
             "saldo_post": saldo_inicial + f.acumulado,
+            "descripcion": f.descripcion,
+            "items": lineas.get(f.transaccion_id, []),
         }
         for f in pagina_filas
     ]
     return {"items": items, "next_cursor": siguiente}
+
+
+def _lineas(db: Session, ids: list[str]) -> dict[str, list[dict]]:
+    """Detalle (detalle_transaccion) de los movimientos de la página: producto, cantidad, precio y subtotal."""
+    if not ids:
+        return {}
+    D = m.DetalleTransaccion
+    filas = db.execute(
+        select(D.transaccion_id, func.coalesce(m.Producto.nombre, D.descripcion).label("producto"), D.cantidad,
+               D.precio_unitario, D.subtotal)
+        .outerjoin(m.Producto, m.Producto.producto_id == D.producto_id)
+        .where(D.transaccion_id.in_(ids))
+        .order_by(D.transaccion_id, D.detalle_id)
+    ).all()  # fmt: skip
+    salida: dict[str, list[dict]] = {}
+    for f in filas:
+        salida.setdefault(f.transaccion_id, []).append({"producto": f.producto, "cantidad": float(f.cantidad),
+                                                        "precio_unitario": f.precio_unitario, "subtotal": f.subtotal})  # fmt: skip
+    return salida

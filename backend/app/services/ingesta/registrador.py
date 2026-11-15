@@ -25,6 +25,8 @@ from app.services.ingesta import catalogo as cat_mod
 from app.services.ingesta.reglas import tipo_deuda_por_acreedor
 from app.services.ingesta.texto import normalizar, soles
 
+_ANULADO = "anulado_"  # mismo prefijo que finanzas.consultas.PREFIJO_ANULADO (impuestos anulados)
+
 T = TipoMovimiento
 CERO = Decimal("0")
 
@@ -242,12 +244,14 @@ class _Registro:
             if imp is None or imp.empresa_id != emp:
                 raise NoEncontrado("No encontré ese impuesto.")
         else:
-            imp = self.db.scalars(select(m.Impuesto).where(m.Impuesto.empresa_id == emp, m.Impuesto.fecha_pago.is_(None))
-                                  .order_by(m.Impuesto.periodo)).first()  # fmt: skip
+            # Los impuestos anulados (régimen con prefijo `anulado_`) no cuentan: ese mes se puede volver a pagar.
+            vigente = ~m.Impuesto.regimen.startswith(_ANULADO)
+            imp = self.db.scalars(select(m.Impuesto).where(m.Impuesto.empresa_id == emp, m.Impuesto.fecha_pago.is_(None),
+                                                           vigente).order_by(m.Impuesto.periodo)).first()  # fmt: skip
             if imp is None:
                 periodo = self.dia.strftime("%Y-%m")
                 if self.db.scalars(select(m.Impuesto).where(m.Impuesto.empresa_id == emp,
-                                                            m.Impuesto.periodo == periodo)).first():  # fmt: skip
+                                                            m.Impuesto.periodo == periodo, vigente)).first():  # fmt: skip
                     raise Conflicto("El impuesto de este mes ya figura como pagado.")
                 imp_id = nuevo_id(self.db, m.Impuesto, "IMP")
                 imp = self._crear(m.Impuesto(impuesto_id=imp_id, empresa_id=emp,

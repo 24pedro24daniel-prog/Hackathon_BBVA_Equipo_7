@@ -115,4 +115,12 @@ def test_endpoint_simular(client_db, reloj_fijo):
     assert (j["sin_acciones"]["saldo_minimo"], j["con_acciones"]["saldo_minimo"], j["mejora"]) == (-650.0, 850.0, 1500.0)
     assert client_db.post(f"{EMP}/simular", json={"acciones": [{"tipo": "reducir_pedido", "pedido_id": "PED-9",
                                                                 "nuevo_monto": 1}]}).status_code == 400  # fmt: skip
-    assert client_db.post(f"{EMP}/simular", json={"acciones": []}).status_code == 400
+    assert client_db.post(f"{EMP}/simular", json={"acciones": [{"tipo": "no_existe"}]}).status_code == 400
+
+
+def test_simular_sin_acciones_da_la_base(client_db, reloj_fijo):
+    r = client_db.post(f"{EMP}/simular", json={"acciones": []})
+    assert r.status_code == 200, r.text
+    j = r.json()
+    assert j["con_acciones"] == j["sin_acciones"] and j["mejora"] == 0
+    assert j["sin_acciones"]["saldo_minimo"] == -650.0

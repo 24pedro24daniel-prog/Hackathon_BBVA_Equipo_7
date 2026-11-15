@@ -103,7 +103,7 @@ def test_me_pago_rosa_sin_monto_propone_lo_pendiente():
 def test_pague_el_colegio_responde_alcance():
     with pytest.raises(NoInterpretable) as exc:
         _extraer("pagué el colegio de mi hijo")
-    assert "solo lleva la plata del negocio" in exc.value.mensaje
+    assert "solo llevo la plata del negocio" in exc.value.mensaje
     assert exc.value.detalles == [{"campo": "alcance", "problema": "gasto_del_hogar"}]
 
 
@@ -221,9 +221,54 @@ def test_llm_dia_ambiguo_igual_pregunta(llm_falso):
     assert e.campos_faltantes == ["fecha_vencimiento"] and len(e.opciones_aclaracion) == 2
 
 
+# Respuestas reales e inestables del LLM para el mismo pedido: 2400, un producto al costo (3.5), null y el día (30).
+_PEDIDO_BASE = {"es_movimiento": True, "tipo": "compra", "metodo_pago": "credito", "contraparte": "Andina",
+                "confianza": 0.9}  # fmt: skip
+
+
+@pytest.mark.parametrize("texto", ["pedi 2400 a andina para el 30", "pedí 2 400 a Andina para pagar el 30",
+                                   "pedí 2400 a andina para el 30", "pedí 2,400 a Andina para el 30",
+                                   "pedí dos mil cuatrocientos a Andina para el 30"])  # fmt: skip
+@pytest.mark.parametrize("salida_llm", [
+    {"monto": 2400},
+    {"monto": None, "items": [{"producto_id": "PRD-0022", "producto": "leche", "cantidad": 1}]},
+    {"monto": None},
+    {"monto": 30},
+], ids=["2400", "item_3.5", "null", "dia_30"])  # fmt: skip
+def test_llm_monto_del_pedido_es_deterministico(llm_falso, texto, salida_llm):
+    llm_falso.respuesta = _tool_call({**_PEDIDO_BASE, **salida_llm})
+    e = _extraer(texto)
+    mov = e.movimiento
+    assert e.fallback_usado is False
+    assert (mov["tipo"], mov["metodo_pago"], mov["monto"], mov["items"]) == ("compra", "credito", Decimal(2400), [])
+    assert e.origen_monto == "dicho_por_usuario" and e.campos_faltantes == ["fecha_vencimiento"]
+
+
+def test_llm_no_inventa_monto_si_no_hay_cifra(llm_falso):
+    # Sin cifra de dinero en el texto el monto sale del catálogo, aunque el modelo proponga uno.
+    llm_falso.respuesta = _tool_call({"es_movimiento": True, "tipo": "venta", "confianza": 0.9, "monto": 2,
+                                      "items": [{"producto_id": "PRD-0031", "producto": "cerveza", "cantidad": 2}]})  # fmt: skip
+    e = _extraer("vendí 2 cervezas")
+    assert e.movimiento["monto"] == Decimal("13.00") and e.origen_monto == "catalogo"
+
+
+def test_llm_respeta_precio_unitario_dicho(llm_falso):
+    llm_falso.respuesta = _tool_call({"es_movimiento": True, "tipo": "venta", "confianza": 0.9, "monto": 6,
+                                      "items": [{"producto_id": "PRD-0031", "producto": "cerveza", "cantidad": 2}]})  # fmt: skip
+    e = _extraer("vendí 2 cervezas a 6")
+    assert e.movimiento["monto"] == Decimal("12.00") and e.movimiento["items"][0]["precio_unitario"] == Decimal("6.00")
+
+
+def test_llm_venta_no_es_fiado_si_no_lo_dice(llm_falso):
+    llm_falso.respuesta = _tool_call({"es_movimiento": True, "tipo": "venta", "confianza": 0.5, "metodo_pago": "credito",
+                                      "items": [{"producto_id": "PRD-0031", "producto": "cerveza", "cantidad": 2}]})  # fmt: skip
+    e = _extraer("vendí dos cervezas")
+    assert e.movimiento["metodo_pago"] == "efectivo" and e.campos_faltantes == []
+
+
 def test_llm_gasto_del_hogar(llm_falso):
     llm_falso.respuesta = _tool_call({"es_movimiento": True, "es_gasto_del_hogar": True, "tipo": None, "confianza": 0.9})
-    with pytest.raises(NoInterpretable, match="solo lleva la plata del negocio"):
+    with pytest.raises(NoInterpretable, match="solo llevo la plata del negocio"):
         _extraer("pagué el colegio de mi hija")
 
 
@@ -273,3 +318,14 @@ def test_eval_extractor_reglas_supera_umbral():
     assert resultado["n"] >= 100
     assert resultado["exactitud_por_campo"]["tipo"] >= 0.9
     assert resultado["exactitud_total"] >= 0.8
+
+
+def test_llm_no_cambia_el_producto_nombrado(llm_falso):
+    # "gaseosas" está en el catálogo: si el LLM elige otro producto (agua), mandan las reglas.
+    from app.db.seed_demo import PRODUCTO_ID
+
+    llm_falso.respuesta = _tool_call({"es_movimiento": True, "tipo": "venta", "confianza": 0.9,
+                                      "items": [{"producto_id": PRODUCTO_ID["Agua 625 ml"], "producto": "agua", "cantidad": 3}]})  # fmt: skip
+    e = _extraer("vendí 3 gaseosas")
+    assert [i["producto"] for i in e.movimiento["items"]] == ["Gaseosa 500 ml"]
+    assert e.movimiento["monto"] == Decimal("7.50")

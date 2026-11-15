@@ -6,6 +6,15 @@ from app.schemas.common import Canal, Dinero, MetodoPago, ModeloContrato, TipoMo
 from app.schemas.ingesta import MovimientoPropuesto
 
 
+class LineaMovimiento(ModeloContrato):
+    """Una línea del detalle del movimiento (qué se vendió o compró)."""
+
+    producto: str | None = None
+    cantidad: float
+    precio_unitario: Dinero
+    subtotal: Dinero
+
+
 class MovimientoItem(ModeloContrato):
     movimiento_id: str
     fecha_hora: datetime
@@ -19,6 +28,8 @@ class MovimientoItem(ModeloContrato):
     confianza_extraccion: float | None = None
     afecta_caja: bool
     saldo_post: Dinero | None = None
+    descripcion: str | None = None
+    items: list[LineaMovimiento] = []
 
 
 class MovimientosResponse(ModeloContrato):

@@ -111,7 +111,8 @@ def test_comparacion_con_pares_necesita_datos(db, reloj_fijo):
         tx(db, "venta", 1000, date(2026, 11, 5), empresa_id=eid)
         tx(db, "retiro_personal", 100 + 50 * k, date(2026, 11, 6), empresa_id=eid)
     pares = finanzas.analisis(db, E, "categoria", "egreso").comparacion_pares
-    assert pares.n_pares == 5 and pares.mediana_pares == 0.2 and pares.metrica == "retiros_personales_sobre_ventas"
+    # 6 pares: las 5 sintéticas + EMP-0002 ("Pedro · día 3", sin retiros: 0).
+    assert pares.n_pares == 6 and pares.mediana_pares == 0.17 and pares.metrica == "retiros_personales_sobre_ventas"
     assert 0 < pares.valor_empresa < 1
 
 

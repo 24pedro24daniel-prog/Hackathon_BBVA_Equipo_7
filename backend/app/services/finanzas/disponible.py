@@ -34,11 +34,11 @@ def calcular_disponible(proy, critico: DiaCritico | None) -> DisponibleParaGasta
     bruto = proy.saldo_actual + cobros - pagos - proy.minimo - reserva
     valor = max(q.CERO, bruto)
     if valor > 0:
-        mensaje = f"Hoy puedes sacar hasta {soles(valor)} para la casa sin arriesgar tus pagos hasta el {fecha_corta(fin)}."
+        mensaje = f"Hoy puedes sacar hasta {soles(valor)} de la caja para ti sin arriesgar tus pagos hasta el {fecha_corta(fin)}."
     elif critico is not None and critico.saldo_p50 < 0:
-        mensaje = f"Hoy no conviene sacar plata para la casa: comprometería el pago del {fecha_corta(critico.fecha)}."
+        mensaje = f"Hoy no conviene sacar plata de la caja: comprometería el pago del {fecha_corta(critico.fecha)}."
     else:
-        mensaje = "Hoy no conviene sacar plata para la casa: tu caja quedaría por debajo de tu mínimo para operar."
+        mensaje = "Hoy no conviene sacar plata de la caja: te quedarías por debajo de tu mínimo para operar."
     return DisponibleParaGastar(
         valor=valor, formula=FORMULA,
         componentes=ComponentesDisponible(saldo_actual=proy.saldo_actual, cobros_esperados=cobros,

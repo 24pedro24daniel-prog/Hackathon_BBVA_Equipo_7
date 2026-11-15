@@ -11,6 +11,7 @@ class Subindicador(ModeloContrato):
     valor: int = Field(ge=0, le=100)
     detalle: str
     peso: float = Field(ge=0, le=1)
+    destacado: bool = False
 
 
 class PuntoHistorial(ModeloContrato):
@@ -23,14 +24,26 @@ class Racha(ModeloContrato):
     valor: int
 
 
+class MetaActiva(ModeloContrato):
+    meta_id: str
+    plantilla: PlantillaMeta
+    titulo: str
+    detalle: str
+    acumulado: float
+    estado: EstadoMeta
+
+
 class SaludResponse(ModeloContrato):
     score: int = Field(ge=0, le=100)
     score_anterior: int | None = None
     etapa_actual: str
+    etapas: list[str] = []
     subindicadores: list[Subindicador]
     historial: list[PuntoHistorial] = []
     rachas: list[Racha] = []
+    metas_activas: list[MetaActiva] = []
     consentimiento_compartir_historial: bool = False
+    fundamento: str | None = None
     meta: Meta
 
 

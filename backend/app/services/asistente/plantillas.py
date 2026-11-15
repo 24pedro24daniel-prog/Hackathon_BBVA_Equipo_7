@@ -14,15 +14,15 @@ from app.services.ingesta.texto import fecha_corta, soles
 DISCLAIMER = "Orientación educativa. No es asesoría financiera."
 
 MICROEXPLICACIONES: dict[str, str] = {
-    "separar_caja": "Cuando el dinero de la casa y del negocio se mezclan, es difícil saber cuánto puedes pedir.",
+    "separar_caja": "Si sacas de la caja sin un monto fijo, es difícil saber cuánto puedes pedir.",
     "flujo_caja": "El flujo de caja es la plata que entra y sale de tu negocio día a día. Aunque ganes, si los pagos "
                   "llegan antes que los cobros, un día te puede faltar.",
     "fiado": "Un fiado es plata que ya es tuya pero que todavía no está en tu caja. Mientras no la cobres, no la "
              "puedes usar para pagar.",
     "prestamo_informal": "Un préstamo informal (gota a gota) parece rápido, pero cobra mucho: lo que devuelves "
                          "puede ser bastante más de lo que recibes, y la cuota diaria sale de la venta del día.",
-    "sueldo_fijo": "Ponerte un sueldo fijo te ayuda a separar la casa del negocio: sacas siempre lo mismo y el resto "
-                   "se queda trabajando en la caja.",
+    "sueldo_fijo": "Ponerte un sueldo fijo es sacar siempre lo mismo de la caja para ti; el resto se queda "
+                   "trabajando en el negocio.",
     "colchon_caja": "Un colchón de caja es un monto que no tocas, para los días malos o para un pago que se adelanta.",
     "disponible": "Lo disponible para gastar es lo que te queda después de separar tus pagos que vienen, tu mínimo "
                   "para operar y tus impuestos.",
@@ -39,8 +39,11 @@ FUERA_DE_ALCANCE = ("Eso está fuera de lo que puedo orientarte: no recomiendo c
                     "inversiones, criptomonedas ni temas tributarios o legales. Para eso conviene hablar con un "
                     "asesor de una entidad supervisada o con un contador. Si quieres, te paso con una persona del "
                     "equipo.")  # fmt: skip
-AYUDA = ("Puedo ayudarte con: cómo va tu caja, por qué te faltaría plata, qué pasa si cambias un pedido, o cuánto "
-         "cuesta un préstamo. ¿Qué quieres saber?")  # fmt: skip
+AYUDA = ("Cuéntame un poquito más: ¿es sobre tu caja, tus fiados o algún pago que se viene? Con gusto lo vemos "
+         "juntos.")  # fmt: skip
+SALUDO = "¡Hola! ¿Qué tal va el día en la bodega? Si quieres, vemos cómo va tu caja o algún pago que se viene."
+GRACIAS = "¡De nada! Aquí estoy para cuando quieras revisar tu caja o tus cuentas."
+DESPEDIDA = "¡Cuídate! Aquí estaré cuando quieras revisar tu caja."
 CREAR_META = ("Puedes activar una meta: anotar 30 días seguidos, ponerte un sueldo fijo, armar un colchón de caja, "
               "apartar para el pedido o reservar para impuestos. Elige una en «Tu progreso» y la sigo contigo.")  # fmt: skip
 SIMULAR_AYUDA = ("¿Qué quieres probar? Por ejemplo: «¿y si pago en 2 partes?», «¿y si pido menos?» o «¿y si cobro "
@@ -53,6 +56,7 @@ class Borrador:
     cifras: list[tuple[float, str]] = field(default_factory=list)
     extras: dict = field(default_factory=dict)
     ofrecer_humano: bool = False
+    conversacional: bool = False  # charla (saludo, gracias, poco claro): el LLM puede responder libre, sin cifras
 
     def cifra(self, valor, fuente: str) -> str:
         self.cifras.append((float(valor), fuente))
@@ -143,7 +147,8 @@ def prestamo(ejemplo: dict, simulacion: dict | None) -> Borrador:
     for clave in ("recibes", "devuelves", "dias", "cuota_diaria", "costo", "costo_pct"):
         b.cifras.append((float(ejemplo[clave]), f"microexplicaciones.prestamo_informal.ejemplo.{clave}"))
     post = (f"Recibir {soles(ejemplo['recibes'])} y devolver {soles(ejemplo['devuelves'])} te cuesta "
-            f"{soles(ejemplo['costo'])} ({ejemplo['costo_pct']} % en {ejemplo['dias']} días).")  # fmt: skip
+            f"{soles(ejemplo['costo'])} más en solo {ejemplo['dias']} días, pagando "
+            f"{soles(ejemplo['cuota_diaria'])} cada día.")  # fmt: skip
     if simulacion:
         con = simulacion["con_acciones"]
         post += (f" Antes, prueba con tus propias opciones: pedir menos, pagar en 2 partes y cobrar tus fiados. "

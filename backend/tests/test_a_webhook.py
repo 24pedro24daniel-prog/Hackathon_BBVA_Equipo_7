@@ -44,7 +44,7 @@ def test_boton_confirmar_guarda(client_db, db):
 def test_corregir_y_luego_texto_aplica_la_correccion(client_db, db):
     r = _wa(client_db, texto="vendí dos cervezas")
     bid = _boton(r, "corregir:").split(":")[1]
-    assert "¿Qué cambio?" in _wa(client_db, tipo="boton", texto=f"corregir:{bid}")["respuesta_texto"]
+    assert "¿qué le cambio?" in _wa(client_db, tipo="boton", texto=f"corregir:{bid}")["respuesta_texto"]
     corr = _wa(client_db, texto="fue por billetera")
     assert corr["respuesta_texto"].startswith("Corregido:") and "billetera" in corr["respuesta_texto"]
     _wa(client_db, tipo="boton", texto=_boton(corr, "confirmar:"))
@@ -75,7 +75,7 @@ def test_pregunta_va_al_asistente(client_db, db):
 
 def test_gasto_de_la_casa_explica_alcance(client_db):
     r = _wa(client_db, texto="pagué el colegio de mi hijo")
-    assert "solo lleva la plata del negocio" in r["respuesta_texto"] and r["botones"] == []
+    assert "solo llevo la plata del negocio" in r["respuesta_texto"] and r["botones"] == []
 
 
 def test_monto_faltante_y_respuesta_con_numero(client_db, db):
@@ -121,4 +121,4 @@ def test_reenvio_del_mismo_mensaje_es_idempotente(client_db, db):
 
 
 def test_boton_de_otro_borrador(client_db):
-    assert "ya no existe" in _wa(client_db, tipo="boton", texto="confirmar:BOR-9999")["respuesta_texto"]
+    assert "ya no está" in _wa(client_db, tipo="boton", texto="confirmar:BOR-9999")["respuesta_texto"]

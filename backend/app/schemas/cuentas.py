@@ -1,5 +1,6 @@
 """F4 — Fiados, pedidos, chequeo y recordatorio (contract.md §4.3–4.5). Dueño: B."""
 from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -56,6 +57,7 @@ class PedidoItem(BaseModel):
 
 class EstadoImpuestos(BaseModel):
     estado: str  # al_dia | vencido | pendiente
+    impuesto_id: str | None = None  # el impuesto impago más próximo (null si es solo la estimación del siguiente mes)
     proximo_vencimiento: date | None = None
     monto_estimado: Dinero | None = None
     nombre: str | None = None  # EXT
@@ -65,6 +67,16 @@ class PedidosResponse(BaseModel):
     total_pendiente: Dinero
     items: list[PedidoItem]
     impuestos: EstadoImpuestos
+
+
+class AnularCuentaRequest(BaseModel):
+    tipo: Literal["fiado", "pedido", "impuesto"]
+    id: str = Field(min_length=1, max_length=20)
+
+
+class AnularCuentaResponse(BaseModel):
+    id: str
+    anulada: bool = True
 
 
 class ChequeoRequest(BaseModel):

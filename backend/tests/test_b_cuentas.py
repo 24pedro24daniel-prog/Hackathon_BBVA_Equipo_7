@@ -60,8 +60,8 @@ def test_pedidos_endpoint(client_db, reloj_fijo):
     j = client_db.get(f"{EMP}/pedidos").json()
     assert j["total_pendiente"] == 2400.0 and j["items"][0]["pedido_id"] == "PED-0012"
     assert j["items"][0]["fecha_pedido"] == "2026-11-13" and j["items"][0]["estado"] == "pendiente"
-    assert j["impuestos"] == {"estado": "al_dia", "proximo_vencimiento": "2026-12-15", "monto_estimado": 20.0,
-                              "nombre": "RUS de noviembre"}  # fmt: skip
+    assert j["impuestos"] == {"estado": "al_dia", "impuesto_id": "IMP-0004", "proximo_vencimiento": "2026-12-15",
+                              "monto_estimado": 20.0, "nombre": "RUS de noviembre"}  # fmt: skip
     assert client_db.get(f"{P}/empresas/EMP-9999/pedidos").status_code == 404
 
 
@@ -118,3 +118,58 @@ def test_redondeo_de_estimaciones():
     assert chq.redondear_estimacion(Decimal("456")) == Decimal("460.00")
     assert chq.redondear_abajo(Decimal("1800")) == Decimal("1800.00")
     assert chq.redondear_abajo(Decimal("1799")) == Decimal("1700.00")
+
+
+# ── anular una cuenta registrada por error ──
+
+
+def _anular(client_db, tipo, id_):
+    return client_db.post(f"{EMP}/cuentas/anular", json={"tipo": tipo, "id": id_})
+
+
+def test_anular_fiado_deja_de_contar(client_db, db, reloj_fijo):
+    r = _anular(client_db, "fiado", "FIA-0045")
+    assert r.status_code == 200, r.text
+    assert r.json() == {"id": "FIA-0045", "anulada": True}
+    fiados = client_db.get(f"{EMP}/fiados").json()
+    assert [i["fiado_id"] for i in fiados["items"]] == ["FIA-0046", "FIA-0047"] and fiados["total_pendiente"] == 190.0
+    assert db.get(m.CuadernoFiado, "FIA-0045") is not None  # no se borra
+    assert all(t.anulada for t in db.query(m.Transaccion).filter_by(fiado_id="FIA-0045", tipo="venta"))
+    assert client_db.get(f"{EMP}/resumen?periodo=2026-11").json()["indicadores"]["pendiente_cobro"]["valor"] == 190.0
+    assert _anular(client_db, "fiado", "FIA-0045").status_code == 200  # idempotente
+
+
+def test_anular_pedido_lo_saca_del_forecast_y_alertas(client_db, db, reloj_fijo):
+    alertas = client_db.get(f"{EMP}/alertas").json()["items"]
+    assert any(a["accion"]["payload"].get("pedido_id") == "PED-0012" for a in alertas)
+    r = _anular(client_db, "pedido", "PED-0012")
+    assert r.status_code == 200 and r.json() == {"id": "PED-0012", "anulada": True}
+    j = client_db.get(f"{EMP}/pedidos").json()
+    assert j["items"] == [] and j["total_pendiente"] == 0
+    fc = client_db.get(f"{EMP}/forecast").json()
+    assert all(e.get("ref_id") != "PED-0012" for e in fc["proximos_eventos"])
+    assert fc["dia_critico"] is None or fc["dia_critico"]["saldo_p50"] > -650
+    activas = client_db.get(f"{EMP}/alertas").json()["items"]
+    assert all(a["accion"]["payload"].get("pedido_id") != "PED-0012" for a in activas)
+    assert {a.estado for a in db.query(m.Alerta).filter_by(entidad_id="PED-0012")} == {"descartada"}
+    assert db.get(m.Deuda, "PED-0012") is not None
+
+
+def test_anular_impuesto(client_db, db, reloj_fijo):
+    r = _anular(client_db, "impuesto", "IMP-0004")
+    assert r.status_code == 200, r.text
+    imp = client_db.get(f"{EMP}/pedidos").json()["impuestos"]
+    assert imp["impuesto_id"] is None and imp["nombre"] == "RUS de diciembre"  # noviembre ya no figura
+    fc = client_db.get(f"{EMP}/forecast").json()
+    assert all(e.get("ref_id") != "IMP-0004" for e in fc["proximos_eventos"])
+    assert db.get(m.Impuesto, "IMP-0004").periodo == "2026-11"  # sigue en la tabla, marcado
+    assert _anular(client_db, "impuesto", "IMP-0001").status_code == 409  # ya tiene pago anotado
+
+
+def test_anular_errores(client_db, reloj_fijo):
+    assert _anular(client_db, "fiado", "FIA-9999").status_code == 404
+    assert _anular(client_db, "pedido", "FIA-0045").status_code == 404
+    assert client_db.post(f"{P}/empresas/EMP-0002/cuentas/anular", json={"tipo": "fiado", "id": "FIA-0045"}).status_code == 404
+    r = _anular(client_db, "cliente", "FIA-0045")
+    assert r.status_code == 400 and r.json()["error"]["codigo"] == "VALIDACION"
+    assert client_db.post(f"{EMP}/cuentas/anular", json={"tipo": "fiado"}).status_code == 400

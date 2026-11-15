@@ -1,4 +1,7 @@
-"""Dataset sintético de la demo: Pedro, "Bodega Don Pedro" (EMP-0001). Todo es ficticio.
+"""Dataset sintético de la demo: Pedro, "Bodega Don Pedro" (EMP-0001) y "Pedro · día 3" (EMP-0002). Todo es ficticio.
+
+EMP-0002 es la misma bodega recién empezando: solo 3 días de registros (12 al 14/11), para mostrar los estados de
+"pocos datos" (forecast no disponible: 3 < 28 días). Caja al 14/11: S/ 1 120 (ventas 1 870, egresos 1 600).
 
 Historia que debe cuadrar (context.md §9), con "hoy" = 14/11/2026 (sábado):
 - 92 días de registros: del 15/08 al 13/11 (el 14/11 aún no tiene movimientos).
@@ -291,11 +294,11 @@ class _Generador:
         if d.weekday() == 5:
             es_sueldo = d >= INICIO_SUELDO
             self._agregar(_Mov(_dt(d, 20, 30), TipoMovimiento.retiro_personal, "retiro personal", SUELDO_SEMANAL,
-                               descripcion="Sueldo de la semana" if es_sueldo else "Para la casa",
+                               descripcion="Sueldo de la semana" if es_sueldo else "Retiro de la semana",
                                programado_id=PRG_SUELDO if es_sueldo else None))  # fmt: skip
         if d in RETIROS_EXTRA:
             self._agregar(_Mov(_dt(d, 20, 45), TipoMovimiento.retiro_personal, "retiro personal",
-                               Decimal(RETIROS_EXTRA[d]), descripcion="Saqué para la casa"))  # fmt: skip
+                               Decimal(RETIROS_EXTRA[d]), descripcion="Saqué de la caja"))  # fmt: skip
 
     # ── obligaciones ──
     def luz_y_agua(self) -> None:
@@ -456,6 +459,99 @@ class _Generador:
         return SALDO_CORTE - sum((mv.con_signo for mv in self.movs if mv.afecta_caja), Decimal("0"))
 
 
+# ── EMP-0002: "Pedro · día 3" ───────────────────────────────────────────────────────────────────
+
+EMPRESA_DIA3_ID = "EMP-0002"
+NOMBRE_EMPRESA_DIA3 = "Pedro · día 3"
+INICIO_DIA3 = date(2026, 11, 12)
+SALDO_CORTE_DIA3 = Decimal("1120.00")
+IMP_DIA3 = "IMP-0005"
+PRODUCTO_ID_DIA3 = {nombre: formatear_id("PRD", 41 + i) for i, (nombre, *_) in enumerate(PRODUCTOS)}
+
+# (fecha, hora, minuto, tipo, categoría, monto, método, canal, descripción, líneas [(producto, cantidad)])
+MOVS_DIA3 = [
+    (date(2026, 11, 12), 7, 10, TipoMovimiento.venta, "abarrotes", "420.00", MetodoPago.efectivo, Canal.voz,
+     "Ventas de la mañana", []),
+    (date(2026, 11, 12), 9, 30, TipoMovimiento.compra, "mercaderia", "600.00", MetodoPago.efectivo, Canal.texto,
+     "Gaseosas y cervezas (Distribuidora Andina)", []),
+    (date(2026, 11, 12), 13, 5, TipoMovimiento.venta, "bebidas", "210.00", MetodoPago.billetera_digital,
+     Canal.billetera_api, "Ventas por billetera", []),
+    (date(2026, 11, 12), 19, 40, TipoMovimiento.venta, "abarrotes", "310.00", MetodoPago.efectivo, Canal.voz,
+     "Ventas de la tarde", []),
+    (date(2026, 11, 13), 8, 0, TipoMovimiento.gasto_negocio, "otros gastos", "60.00", MetodoPago.efectivo, Canal.texto,
+     "Bolsas y envases", []),
+    (date(2026, 11, 13), 11, 20, TipoMovimiento.venta, "abarrotes", "250.00", MetodoPago.efectivo, Canal.voz,
+     "Ventas de la mañana", []),
+    (date(2026, 11, 13), 15, 45, TipoMovimiento.compra, "mercaderia", "480.00", MetodoPago.efectivo, Canal.voz,
+     "Pan y leche (Panadería San Jorge)", []),
+    (date(2026, 11, 13), 20, 10, TipoMovimiento.venta, "bebidas", "180.00", MetodoPago.billetera_digital,
+     Canal.billetera_api, "Ventas por billetera", []),
+    (date(2026, 11, 14), 7, 30, TipoMovimiento.venta, "abarrotes", "200.00", MetodoPago.efectivo, Canal.voz,
+     "Ventas de la mañana", []),
+    (date(2026, 11, 14), 9, 0, TipoMovimiento.pago_impuesto, "impuestos", "20.00", MetodoPago.efectivo, Canal.texto,
+     "Nuevo RUS 2026-10", []),
+    (date(2026, 11, 14), 10, 42, TipoMovimiento.venta, "bebidas", "13.00", MetodoPago.efectivo, Canal.voz,
+     "2 Cerveza 620 ml", [("Cerveza 620 ml", 2)]),
+    (date(2026, 11, 14), 12, 15, TipoMovimiento.gasto_negocio, "servicios", "440.00", MetodoPago.efectivo, Canal.texto,
+     "Luz del local", []),
+    (date(2026, 11, 14), 13, 40, TipoMovimiento.venta, "bebidas", "287.00", MetodoPago.billetera_digital,
+     Canal.billetera_api, "Ventas por billetera", []),
+]  # fmt: skip
+
+
+def _movs_dia3() -> list[_Mov]:
+    movs = []
+    for d, h, mi, tipo, cat, monto, metodo, canal, desc, lineas in MOVS_DIA3:
+        movs.append(_Mov(_dt(d, h, mi), tipo, cat, Decimal(monto), metodo, canal, desc,
+                         None if canal in (Canal.manual, Canal.billetera_api) else Decimal("0.920"),
+                         impuesto_id=IMP_DIA3 if tipo == TipoMovimiento.pago_impuesto else None,
+                         lineas=[_Linea(n, Decimal(c), PRODUCTO[n][1], PRODUCTO[n][2]) for n, c in lineas]))  # fmt: skip
+    return movs
+
+
+def _objetos_dia3(primer_mov: int, primer_det: int) -> list:
+    """Objetos de EMP-0002 (mismo catálogo que Pedro, IDs propios). Los IDs de movimientos siguen a los de EMP-0001."""
+    movs = _movs_dia3()
+    saldo_inicial = SALDO_CORTE_DIA3 - sum((mv.con_signo for mv in movs if mv.afecta_caja), Decimal("0"))
+    alta = _dt(INICIO_DIA3, 7, 0)
+    objs: list = [
+        m.Empresa(empresa_id=EMPRESA_DIA3_ID, rubro_id="RUB-01", nombre_ficticio=NOMBRE_EMPRESA_DIA3,
+                  telefono_whatsapp="+51900000002", zona="SJL", n_trabajadores=1, tiene_ruc=True,
+                  regimen_tributario="nuevo_rus", saldo_inicial=saldo_inicial, fecha_saldo_inicial=INICIO_DIA3,
+                  minimo_operativo=MINIMO_OPERATIVO, fecha_alta=alta),
+        m.PreferenciasAlertas(empresa_id=EMPRESA_DIA3_ID, canales=["whatsapp", "app"], max_por_dia=2,
+                              silencio_desde=time(21, 0), silencio_hasta=time(7, 0), resumen_semanal=True),
+    ]  # fmt: skip
+    for nombre, cat, precio, costo, alias in PRODUCTOS:
+        objs.append(m.Producto(producto_id=PRODUCTO_ID_DIA3[nombre], empresa_id=EMPRESA_DIA3_ID, categoria_id=CAT[cat],
+                               nombre=nombre, alias=alias, precio_venta=Decimal(precio),
+                               costo_unitario=Decimal(costo) if costo else None, activo=True))  # fmt: skip
+    objs.append(m.Impuesto(impuesto_id=IMP_DIA3, empresa_id=EMPRESA_DIA3_ID, regimen="nuevo_rus", periodo="2026-10",
+                           monto=RUS_MENSUAL, fecha_vencimiento=date(2026, 11, 15), fecha_pago=date(2026, 11, 14),
+                           canal=Canal.texto))  # fmt: skip
+    n_det = primer_det - 1
+    neto: dict[date, Decimal] = {}
+    for i, mov in enumerate(movs):
+        tid = formatear_id("MOV", primer_mov + i)
+        objs.append(m.Transaccion(transaccion_id=tid, empresa_id=EMPRESA_DIA3_ID, fecha_hora=mov.fecha_hora,
+                                  tipo=mov.tipo, categoria_id=CAT[mov.categoria], descripcion=mov.descripcion,
+                                  monto=mov.monto, metodo_pago=mov.metodo, afecta_caja=mov.afecta_caja, canal=mov.canal,
+                                  confianza_extraccion=mov.confianza, impuesto_id=mov.impuesto_id,
+                                  creado_en=mov.fecha_hora + timedelta(minutes=1)))  # fmt: skip
+        for ln in mov.lineas:
+            n_det += 1
+            objs.append(m.DetalleTransaccion(detalle_id=formatear_id("DET", n_det), transaccion_id=tid,
+                                             producto_id=PRODUCTO_ID_DIA3[ln.producto], cantidad=ln.cantidad,
+                                             precio_unitario=ln.precio, costo_unitario=ln.costo, subtotal=ln.subtotal))  # fmt: skip
+        if mov.afecta_caja:
+            neto[mov.fecha_hora.date()] = neto.get(mov.fecha_hora.date(), Decimal("0")) + mov.con_signo
+    saldo = saldo_inicial
+    for d in _dias(INICIO_DIA3, CORTE):
+        saldo += neto.get(d, Decimal("0"))
+        objs.append(m.SaldoDiario(empresa_id=EMPRESA_DIA3_ID, fecha=d, saldo_cierre=saldo, deficit_14d=None))
+    return objs
+
+
 def _maestras() -> list:
     objs: list = [m.Rubro(rubro_id=r, nombre=n) for r, n in RUBROS]
     objs += [m.Categoria(categoria_id=c, nombre=n, tipo=t, es_del_negocio=e) for c, n, t, e in CATEGORIAS]
@@ -524,9 +620,10 @@ def construir_objetos(semilla: int = SEMILLA) -> list:
                                                  "impuestos_al_dia": sub[2]}))  # fmt: skip
     objs.append(m.Evento(evento_id="EVT-0001", empresa_id=EMPRESA_ID, tipo_evento=TipoEvento.retiro_excesivo,
                          fecha_inicio=date(2026, 11, 1), fecha_fin=FIN_HISTORIA,
-                         descripcion="Retiros para la casa S/ 700 por encima de lo usual"))  # fmt: skip
+                         descripcion="Retiros de la caja S/ 700 por encima de lo usual"))  # fmt: skip
     objs.append(m.Evento(evento_id="EVT-0002", empresa_id=EMPRESA_ID, tipo_evento=TipoEvento.cliente_no_paga,
                          fecha_inicio=date(2026, 10, 27), descripcion="La Sra. Carmen no paga su fiado de S/ 120"))  # fmt: skip
+    objs += _objetos_dia3(len(gen.movs) + 1, n_det + 1)
     return objs
 
 
@@ -552,7 +649,7 @@ def _saldo_diario(gen: _Generador) -> list[m.SaldoDiario]:
 
 
 def sembrar(db: Session, semilla: int = SEMILLA) -> int:
-    """Inserta el dataset de Pedro. Devuelve el número de filas. No hace commit."""
+    """Inserta el dataset de Pedro (EMP-0001 y EMP-0002). Devuelve el número de filas. No hace commit."""
     objs = construir_objetos(semilla)
     # Sin relationships el ORM no ordena por FK entre tablas: se inserta tabla por tabla en orden de dependencias.
     por_tabla: dict[str, list] = {}

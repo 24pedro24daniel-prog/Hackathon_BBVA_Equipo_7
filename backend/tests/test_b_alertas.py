@@ -24,7 +24,7 @@ def test_get_alertas_evalua_y_muestra_el_faltante_con_sus_causas(client_db, db, 
     f = items[0]
     assert (f["fecha_evento"], f["monto"], f["nivel_riesgo"], f["dias_para_evento"]) == ("2026-11-30", 650.0, "alto", 16)
     assert [(c["descripcion"], c["monto"]) for c in f["causas"]] == [
-        ("Sacaste más para la casa", 700.0), ("Pediste más de lo que vendes", 400.0), ("Fiados sin cobrar", 310.0)]
+        ("Sacaste más de la caja de lo usual", 700.0), ("Pediste más de lo que vendes", 400.0), ("Fiados sin cobrar", 310.0)]
     assert -650 + sum(c["monto"] for c in f["causas"]) == 760  # "sin esas tres cerraría con S/ 760"
     assert f["titulo"] == "El 30/11 te faltarían S/ 650 para pagar a Distribuidora Andina"
     assert f["insight"] == "Para pagar S/ 2 400 a Distribuidora Andina te faltarían S/ 650."
